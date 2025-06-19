@@ -76,19 +76,19 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className="text-center">
             <div className="text-2xl font-bold text-primary">
-              ${parseFloat(investingAccount.monthlyRoundUps).toLocaleString()}
+              £{parseFloat(investingAccount.monthlyRoundUps).toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">This Month's Round-ups</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-success">
-              ${parseFloat(investingAccount.totalInvested).toLocaleString()}
+              £{parseFloat(investingAccount.totalInvested).toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">Total Invested</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-accent">
-              +${parseFloat(investingAccount.totalReturns).toLocaleString()}
+              +£{parseFloat(investingAccount.totalReturns).toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">Total Returns</div>
           </div>
@@ -105,7 +105,7 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
                 <div key={transaction.id} className="flex justify-between">
                   <span className="text-gray-600">{transaction.merchant}</span>
                   <span className="text-primary font-medium">
-                    +${parseFloat(transaction.roundUp || "0").toFixed(2)}
+                    +£{parseFloat(transaction.roundUp || "0").toFixed(2)}
                   </span>
                 </div>
               ))}

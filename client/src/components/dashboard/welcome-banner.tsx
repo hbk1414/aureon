@@ -21,7 +21,7 @@ export default function WelcomeBanner({ user, portfolio }: WelcomeBannerProps) {
         </div>
         <div className="text-right">
           <div className="text-3xl font-bold">
-            ${portfolio.totalBalance.toLocaleString()}
+            £{portfolio.totalBalance.toLocaleString()}
           </div>
           <div className="text-blue-100 text-sm">Total Portfolio</div>
         </div>

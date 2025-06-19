@@ -82,7 +82,7 @@ export default function DebtPayoffStrategy({ debtAccounts }: DebtPayoffStrategyP
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Balance</span>
-                  <span className="font-medium">${parseFloat(debt.balance).toLocaleString()}</span>
+                  <span className="font-medium">£{parseFloat(debt.balance).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">APR</span>
@@ -93,7 +93,7 @@ export default function DebtPayoffStrategy({ debtAccounts }: DebtPayoffStrategyP
                     {debt.suggestedPayment ? 'Suggested Payment' : 'Minimum Payment'}
                   </span>
                   <span className={`font-medium ${debt.suggestedPayment ? 'text-primary' : ''}`}>
-                    ${parseFloat(debt.suggestedPayment || debt.minimumPayment).toLocaleString()}/month
+                    £{parseFloat(debt.suggestedPayment || debt.minimumPayment).toLocaleString()}/month
                   </span>
                 </div>
               </div>

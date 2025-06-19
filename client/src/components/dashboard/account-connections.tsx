@@ -52,7 +52,7 @@ export default function AccountConnections({ accounts }: AccountConnectionsProps
                   <div className={`font-semibold ${
                     parseFloat(account.balance) >= 0 ? 'text-gray-800' : 'text-danger'
                   }`}>
-                    ${Math.abs(parseFloat(account.balance)).toLocaleString()}
+                    £{Math.abs(parseFloat(account.balance)).toLocaleString()}
                   </div>
                   <div className="text-xs text-success">Connected</div>
                 </div>

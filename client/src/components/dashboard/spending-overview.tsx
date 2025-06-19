@@ -65,19 +65,19 @@ export default function SpendingOverview({ spending }: SpendingOverviewProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className="text-center">
             <div className="text-2xl font-bold text-gray-800">
-              ${spending.total.toLocaleString()}
+              £{spending.total.toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">Total Spent</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-success">
-              ${spending.budget.toLocaleString()}
+              £{spending.budget.toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">Monthly Budget</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-primary">
-              ${spending.remaining.toLocaleString()}
+              £{spending.remaining.toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">Remaining</div>
           </div>
@@ -103,7 +103,7 @@ export default function SpendingOverview({ spending }: SpendingOverviewProps) {
                   />
                 </div>
                 <div className="font-semibold text-gray-800 w-16 text-right">
-                  ${category.amount.toLocaleString()}
+                  £{category.amount.toLocaleString()}
                 </div>
               </div>
             </div>

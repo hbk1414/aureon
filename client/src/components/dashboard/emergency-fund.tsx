@@ -73,16 +73,16 @@ export default function EmergencyFund({ emergencyFund }: EmergencyFundProps) {
         <div className="space-y-3">
           <div className="flex justify-between">
             <span className="text-gray-600 text-sm">Current</span>
-            <span className="font-semibold">${emergencyFund.current.toLocaleString()}</span>
+            <span className="font-semibold">£{emergencyFund.current.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600 text-sm">Goal (3 months)</span>
-            <span className="font-semibold">${emergencyFund.goal.toLocaleString()}</span>
+            <span className="font-semibold">£{emergencyFund.goal.toLocaleString()}</span>
           </div>
           <div className="flex justify-between border-t pt-3">
             <span className="text-gray-600 text-sm">Remaining</span>
             <span className="font-semibold text-primary">
-              ${emergencyFund.remaining.toLocaleString()}
+              £{emergencyFund.remaining.toLocaleString()}
             </span>
           </div>
         </div>
