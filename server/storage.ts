@@ -208,6 +208,64 @@ export class MemStorage implements IStorage {
     };
     this.userPreferences.set(1, preferences);
 
+    // Create demo AI tasks
+    const demoTasks: AiTask[] = [
+      {
+        id: 1,
+        userId: 1,
+        title: "Review High-Interest Credit Card Payments",
+        description: "Your Capital One card has a 24.9% APR. Consider paying an extra $150 this month to reduce interest charges by $37.",
+        taskType: "weekly",
+        category: "debt",
+        priority: "high",
+        isCompleted: false,
+        createdAt: new Date(),
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        metadata: {
+          estimatedImpact: "Save $37 in interest charges",
+          actionItems: ["Log into Capital One account", "Set up extra payment", "Schedule automatic payments"],
+          generatedAt: new Date().toISOString(),
+        },
+      },
+      {
+        id: 2,
+        userId: 1,
+        title: "Optimize Emergency Fund Savings",
+        description: "Increase your emergency fund by $200 this month. You're 66% to your goal - great progress!",
+        taskType: "monthly",
+        category: "savings",
+        priority: "medium",
+        isCompleted: false,
+        createdAt: new Date(),
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        metadata: {
+          estimatedImpact: "Build 3-month emergency buffer",
+          actionItems: ["Transfer $200 to savings", "Set up automatic monthly transfer", "Review emergency fund goal"],
+          generatedAt: new Date().toISOString(),
+        },
+      },
+      {
+        id: 3,
+        userId: 1,
+        title: "Track Daily Coffee Spending",
+        description: "You've spent $13.59 on coffee this week. Consider brewing at home 2 days to save $120/month.",
+        taskType: "daily",
+        category: "budgeting",
+        priority: "low",
+        isCompleted: false,
+        createdAt: new Date(),
+        dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        metadata: {
+          estimatedImpact: "Save $120/month on coffee expenses",
+          actionItems: ["Buy coffee beans and brewing supplies", "Prep coffee at home 2x/week", "Track coffee spending"],
+          generatedAt: new Date().toISOString(),
+        },
+      },
+    ];
+
+    demoTasks.forEach(task => this.aiTasks.set(task.id, task));
+    this.currentTaskId = 4;
+
     this.currentUserId = 2;
   }
 
