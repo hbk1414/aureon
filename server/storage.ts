@@ -1,9 +1,12 @@
 import {
   users, connectedAccounts, transactions, financialGoals, aiTasks, debtAccounts, investingAccounts, userPreferences,
+  couples, sharedGoals, sharedGoalContributions,
   type User, type InsertUser, type ConnectedAccount, type InsertConnectedAccount,
   type Transaction, type InsertTransaction, type FinancialGoal, type InsertFinancialGoal,
   type AiTask, type InsertAiTask, type DebtAccount, type InsertDebtAccount,
-  type InvestingAccount, type InsertInvestingAccount, type UserPreferences, type InsertUserPreferences
+  type InvestingAccount, type InsertInvestingAccount, type UserPreferences, type InsertUserPreferences,
+  type Couple, type InsertCouple, type SharedGoal, type InsertSharedGoal,
+  type SharedGoalContribution, type InsertSharedGoalContribution
 } from "@shared/schema";
 
 export interface IStorage {
@@ -46,6 +49,18 @@ export interface IStorage {
   getUserPreferences(userId: number): Promise<UserPreferences | undefined>;
   createUserPreferences(preferences: InsertUserPreferences): Promise<UserPreferences>;
   updateUserPreferences(userId: number, updates: Partial<UserPreferences>): Promise<void>;
+
+  // Couples operations
+  getUserCouple(userId: number): Promise<Couple | undefined>;
+  createCouple(couple: InsertCouple): Promise<Couple>;
+  updateCouple(coupleId: number, updates: Partial<Couple>): Promise<void>;
+
+  // Shared goals operations
+  getCoupleSharedGoals(coupleId: number): Promise<SharedGoal[]>;
+  createSharedGoal(goal: InsertSharedGoal): Promise<SharedGoal>;
+  updateSharedGoal(goalId: number, updates: Partial<SharedGoal>): Promise<void>;
+  getSharedGoalContributions(goalId: number): Promise<SharedGoalContribution[]>;
+  createSharedGoalContribution(contribution: InsertSharedGoalContribution): Promise<SharedGoalContribution>;
 }
 
 export class MemStorage implements IStorage {
@@ -57,6 +72,9 @@ export class MemStorage implements IStorage {
   private debtAccounts = new Map<number, DebtAccount>();
   private investingAccounts = new Map<number, InvestingAccount>();
   private userPreferences = new Map<number, UserPreferences>();
+  private couples = new Map<number, Couple>();
+  private sharedGoals = new Map<number, SharedGoal>();
+  private sharedGoalContributions = new Map<number, SharedGoalContribution>();
 
   private currentUserId = 1;
   private currentAccountId = 1;
@@ -66,6 +84,9 @@ export class MemStorage implements IStorage {
   private currentDebtId = 1;
   private currentInvestingId = 1;
   private currentPreferencesId = 1;
+  private currentCoupleId = 1;
+  private currentSharedGoalId = 1;
+  private currentContributionId = 1;
 
   constructor() {
     this.initializeData();
@@ -82,6 +103,55 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
     };
     this.users.set(1, demoUser);
+
+    // Create demo partner user
+    const partnerUser: User = {
+      id: 2,
+      username: "sarah_doe",
+      firstName: "Sarah",
+      lastName: "Doe",
+      email: "sarah@example.com",
+      createdAt: new Date(),
+    };
+    this.users.set(2, partnerUser);
+
+    // Create demo couple relationship
+    const demoCouple: Couple = {
+      id: 1,
+      primaryUserId: 1,
+      partnerUserId: 2,
+      relationshipType: "spouse",
+      isActive: true,
+      createdAt: new Date(),
+    };
+    this.couples.set(1, demoCouple);
+
+    // Create demo shared goals
+    const vacationGoal: SharedGoal = {
+      id: 1,
+      coupleId: 1,
+      title: "Holiday to Italy",
+      targetAmount: "5000",
+      currentAmount: "3200",
+      deadline: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000), // 6 months from now
+      category: "vacation",
+      isCompleted: false,
+      createdAt: new Date(),
+    };
+    this.sharedGoals.set(1, vacationGoal);
+
+    const houseGoal: SharedGoal = {
+      id: 2,
+      coupleId: 1,
+      title: "House Deposit",
+      targetAmount: "50000",
+      currentAmount: "18500",
+      deadline: new Date(Date.now() + 730 * 24 * 60 * 60 * 1000), // 2 years from now
+      category: "house",
+      isCompleted: false,
+      createdAt: new Date(),
+    };
+    this.sharedGoals.set(2, houseGoal);
 
     // Create demo connected accounts
     const chaseAccount: ConnectedAccount = {
@@ -449,6 +519,64 @@ export class MemStorage implements IStorage {
     if (preferences) {
       Object.assign(preferences, updates);
     }
+  }
+
+  async getUserCouple(userId: number): Promise<Couple | undefined> {
+    return Array.from(this.couples.values()).find(
+      couple => couple.primaryUserId === userId || couple.partnerUserId === userId
+    );
+  }
+
+  async createCouple(insertCouple: InsertCouple): Promise<Couple> {
+    const couple: Couple = {
+      id: this.currentCoupleId++,
+      ...insertCouple,
+      createdAt: new Date(),
+    };
+    this.couples.set(couple.id, couple);
+    return couple;
+  }
+
+  async updateCouple(coupleId: number, updates: Partial<Couple>): Promise<void> {
+    const existing = this.couples.get(coupleId);
+    if (existing) {
+      Object.assign(existing, updates);
+    }
+  }
+
+  async getCoupleSharedGoals(coupleId: number): Promise<SharedGoal[]> {
+    return Array.from(this.sharedGoals.values()).filter(goal => goal.coupleId === coupleId);
+  }
+
+  async createSharedGoal(insertGoal: InsertSharedGoal): Promise<SharedGoal> {
+    const goal: SharedGoal = {
+      id: this.currentSharedGoalId++,
+      ...insertGoal,
+      createdAt: new Date(),
+    };
+    this.sharedGoals.set(goal.id, goal);
+    return goal;
+  }
+
+  async updateSharedGoal(goalId: number, updates: Partial<SharedGoal>): Promise<void> {
+    const existing = this.sharedGoals.get(goalId);
+    if (existing) {
+      Object.assign(existing, updates);
+    }
+  }
+
+  async getSharedGoalContributions(goalId: number): Promise<SharedGoalContribution[]> {
+    return Array.from(this.sharedGoalContributions.values()).filter(contrib => contrib.goalId === goalId);
+  }
+
+  async createSharedGoalContribution(insertContribution: InsertSharedGoalContribution): Promise<SharedGoalContribution> {
+    const contribution: SharedGoalContribution = {
+      id: this.currentContributionId++,
+      ...insertContribution,
+      contributedAt: new Date(),
+    };
+    this.sharedGoalContributions.set(contribution.id, contribution);
+    return contribution;
   }
 }
 

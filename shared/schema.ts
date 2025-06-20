@@ -86,6 +86,35 @@ export const userPreferences = pgTable("user_preferences", {
   notificationsEnabled: boolean("notifications_enabled").default(true).notNull(),
 });
 
+export const couples = pgTable("couples", {
+  id: serial("id").primaryKey(),
+  primaryUserId: integer("primary_user_id").notNull().references(() => users.id),
+  partnerUserId: integer("partner_user_id").notNull().references(() => users.id),
+  relationshipType: text("relationship_type").notNull().default("spouse"), // spouse, partner, sibling
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const sharedGoals = pgTable("shared_goals", {
+  id: serial("id").primaryKey(),
+  coupleId: integer("couple_id").notNull().references(() => couples.id),
+  title: text("title").notNull(),
+  targetAmount: decimal("target_amount", { precision: 12, scale: 2 }).notNull(),
+  currentAmount: decimal("current_amount", { precision: 12, scale: 2 }).notNull().default("0"),
+  deadline: timestamp("deadline"),
+  category: text("category").notNull(), // vacation, house, emergency, wedding
+  isCompleted: boolean("is_completed").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const sharedGoalContributions = pgTable("shared_goal_contributions", {
+  id: serial("id").primaryKey(),
+  goalId: integer("goal_id").notNull().references(() => sharedGoals.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  contributedAt: timestamp("contributed_at").notNull().defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertConnectedAccountSchema = createInsertSchema(connectedAccounts).omit({ id: true, lastSync: true });
@@ -95,6 +124,9 @@ export const insertAiTaskSchema = createInsertSchema(aiTasks).omit({ id: true, c
 export const insertDebtAccountSchema = createInsertSchema(debtAccounts).omit({ id: true });
 export const insertInvestingAccountSchema = createInsertSchema(investingAccounts).omit({ id: true });
 export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({ id: true });
+export const insertCoupleSchema = createInsertSchema(couples).omit({ id: true, createdAt: true });
+export const insertSharedGoalSchema = createInsertSchema(sharedGoals).omit({ id: true, createdAt: true });
+export const insertSharedGoalContributionSchema = createInsertSchema(sharedGoalContributions).omit({ id: true, contributedAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -113,3 +145,9 @@ export type InvestingAccount = typeof investingAccounts.$inferSelect;
 export type InsertInvestingAccount = z.infer<typeof insertInvestingAccountSchema>;
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
+export type Couple = typeof couples.$inferSelect;
+export type InsertCouple = z.infer<typeof insertCoupleSchema>;
+export type SharedGoal = typeof sharedGoals.$inferSelect;
+export type InsertSharedGoal = z.infer<typeof insertSharedGoalSchema>;
+export type SharedGoalContribution = typeof sharedGoalContributions.$inferSelect;
+export type InsertSharedGoalContribution = z.infer<typeof insertSharedGoalContributionSchema>;

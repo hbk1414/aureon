@@ -19,7 +19,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         aiTasks,
         debtAccounts,
         investingAccount,
-        preferences
+        preferences,
+        couple
       ] = await Promise.all([
         storage.getUser(userId),
         storage.getConnectedAccounts(userId),
@@ -28,11 +29,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.getUserAiTasks(userId, false), // Only incomplete tasks
         storage.getUserDebtAccounts(userId),
         storage.getUserInvestingAccount(userId),
-        storage.getUserPreferences(userId)
+        storage.getUserPreferences(userId),
+        storage.getUserCouple(userId)
       ]);
 
       if (!user) {
         return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get couples data
+      let partner = null;
+      let sharedGoals = [];
+      let couplesSavings = null;
+      
+      if (couple) {
+        const partnerId = couple.primaryUserId === userId ? couple.partnerUserId : couple.primaryUserId;
+        const partnerUser = await storage.getUser(partnerId);
+        if (partnerUser) {
+          partner = {
+            name: `${partnerUser.firstName} ${partnerUser.lastName}`,
+            relationshipType: couple.relationshipType
+          };
+        }
+        
+        sharedGoals = await storage.getCoupleSharedGoals(couple.id);
+        
+        // Calculate couples savings totals
+        const totalSaved = sharedGoals.reduce((sum, goal) => sum + parseFloat(goal.currentAmount.toString()), 0);
+        couplesSavings = {
+          totalSaved: Math.round(totalSaved),
+          monthlyContribution: 450 // Mock monthly contribution
+        };
+        
+        // Add progress percentage to goals
+        sharedGoals = sharedGoals.map(goal => ({
+          ...goal,
+          progress: Math.round((parseFloat(goal.currentAmount.toString()) / parseFloat(goal.targetAmount.toString())) * 100)
+        }));
       }
 
       // Calculate spending categories
@@ -93,6 +126,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           debtFreeDays: debtAccounts.length > 0 ? 247 : 0, // Mock calculation
         },
         recentTransactions: transactions.slice(0, 5),
+        partner,
+        sharedGoals,
+        couplesSavings
       });
     } catch (error) {
       console.error("Dashboard error:", error);

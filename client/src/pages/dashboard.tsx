@@ -7,6 +7,7 @@ import DebtPayoffStrategy from "@/components/dashboard/debt-payoff-strategy";
 import MicroInvesting from "@/components/dashboard/micro-investing";
 import AiTasks from "@/components/dashboard/ai-tasks";
 import EmergencyFund from "@/components/dashboard/emergency-fund";
+import Couples from "@/components/dashboard/couples";
 import QuickStats from "@/components/dashboard/quick-stats";
 import { useFinancialData } from "@/hooks/use-financial-data";
 
@@ -74,6 +75,14 @@ export default function Dashboard() {
             <MicroInvesting 
               investingAccount={dashboardData.investingAccount}
               recentTransactions={dashboardData.recentTransactions}
+            />
+
+            {/* Couples Section */}
+            <Couples 
+              partner={dashboardData.partner}
+              sharedGoals={dashboardData.sharedGoals || []}
+              totalSaved={dashboardData.couplesSavings?.totalSaved || 0}
+              monthlyContribution={dashboardData.couplesSavings?.monthlyContribution || 0}
             />
           </div>
 
