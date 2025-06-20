@@ -16,7 +16,7 @@ export default function Header({ user }: HeaderProps) {
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
               <Bot className="text-accent text-2xl mr-3" />
-              <h1 className="text-xl font-bold text-gray-800">FinanceAI</h1>
+              <h1 className="text-xl font-bold text-gray-800">Wealthly</h1>
             </div>
           </div>
           <div className="flex items-center space-x-4">
