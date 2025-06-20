@@ -9,7 +9,7 @@ interface WelcomeBannerProps {
 
 export default function WelcomeBanner({ user, portfolio }: WelcomeBannerProps) {
   return (
-    <div className="bg-gradient-to-r from-primary to-primary-light rounded-xl p-6 text-white shadow-lg">
+    <div className="bg-primary rounded-xl p-6 text-white shadow-lg">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold mb-2">
