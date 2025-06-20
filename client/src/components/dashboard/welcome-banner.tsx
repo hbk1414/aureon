@@ -19,7 +19,7 @@ export default function WelcomeBanner({ user, portfolio }: WelcomeBannerProps) {
             Your AI agent has prepared new financial tasks for today.
           </p>
         </div>
-        <div className="text-right bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+        <div className="text-right bg-white/5 rounded-lg p-4 border border-white/10">
           <div className="text-3xl font-bold text-white drop-shadow-sm">
             £{portfolio.totalBalance.toLocaleString()}
           </div>
