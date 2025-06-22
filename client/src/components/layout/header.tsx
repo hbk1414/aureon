@@ -1,5 +1,6 @@
-import { Bell, Bot } from "lucide-react";
+import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import aureonLogo from "@assets/ChatGPT Image Jun 23, 2025, 12_12_44 AM_1750635007093.png";
 
 interface HeaderProps {
   user: {
@@ -15,8 +16,12 @@ export default function Header({ user }: HeaderProps) {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
-              <Bot className="text-accent text-2xl mr-3" />
-              <h1 className="text-xl font-bold text-gray-800">Wealthly</h1>
+              <img 
+                src={aureonLogo} 
+                alt="AUREON" 
+                className="h-8 w-8 mr-3"
+              />
+              <h1 className="text-xl font-bold text-gray-800">AUREON</h1>
             </div>
           </div>
           <div className="flex items-center space-x-4">
