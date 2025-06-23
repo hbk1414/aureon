@@ -39,25 +39,28 @@ export function useFinancialData() {
         return sum + parseFloat(account.balance || '0');
       }, 0);
 
-      // Mock spending data for now
+      // Mock spending data for new users
       const spending = {
-        totalThisMonth: 2450,
-        categories: [
+        total: connectedAccounts.length > 0 ? 2450 : 0,
+        budget: connectedAccounts.length > 0 ? 3000 : 0,
+        remaining: connectedAccounts.length > 0 ? 550 : 0,
+        totalThisMonth: connectedAccounts.length > 0 ? 2450 : 0,
+        categories: connectedAccounts.length > 0 ? [
           { name: 'Shopping', amount: 850, percentage: 35 },
           { name: 'Dining', amount: 680, percentage: 28 },
           { name: 'Transport', amount: 420, percentage: 17 },
           { name: 'Entertainment', amount: 300, percentage: 12 },
           { name: 'Utilities', amount: 200, percentage: 8 }
-        ]
+        ] : []
       };
 
-      // Mock emergency fund data
+      // Mock emergency fund data for new users
       const emergencyFund = {
-        currentAmount: 5200,
+        currentAmount: connectedAccounts.length > 0 ? 5200 : 0,
         targetAmount: 15000,
-        monthsOfExpenses: 2.1,
+        monthsOfExpenses: connectedAccounts.length > 0 ? 2.1 : 0,
         targetMonths: 6,
-        monthlyContribution: 500
+        monthlyContribution: connectedAccounts.length > 0 ? 500 : 0
       };
 
       return {

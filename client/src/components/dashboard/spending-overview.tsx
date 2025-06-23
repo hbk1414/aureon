@@ -65,49 +65,55 @@ export default function SpendingOverview({ spending }: SpendingOverviewProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className="text-center">
             <div className="text-2xl font-bold text-gray-800">
-              £{spending.total.toLocaleString()}
+              £{(spending.total || 0).toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">Total Spent</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-success">
-              £{spending.budget.toLocaleString()}
+              £{(spending.budget || 0).toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">Monthly Budget</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-primary">
-              £{spending.remaining.toLocaleString()}
+              £{(spending.remaining || 0).toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">Remaining</div>
           </div>
         </div>
 
         <div className="space-y-4">
-          {spending.categories.slice(0, 3).map((category) => (
-            <div key={category.name} className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className={`w-10 h-10 ${getCategoryColor(category.name)} rounded-lg flex items-center justify-center mr-3`}>
-                  {getCategoryIcon(category.name)}
+          {spending.categories && spending.categories.length > 0 ? 
+            spending.categories.slice(0, 3).map((category) => (
+              <div key={category.name} className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className={`w-10 h-10 ${getCategoryColor(category.name)} rounded-lg flex items-center justify-center mr-3`}>
+                    {getCategoryIcon(category.name)}
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-800">{category.name}</div>
+                    <div className="text-sm text-gray-600">{category.percentage}% of spending</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-medium text-gray-800">{category.name}</div>
-                  <div className="text-sm text-gray-600">{category.transactions} transactions</div>
+                <div className="flex items-center">
+                  <div className="w-32 bg-gray-200 rounded-full h-2 mr-4">
+                    <div 
+                      className={`${getProgressColor(category.name)} h-2 rounded-full`}
+                      style={{ width: `${Math.min(category.percentage, 100)}%` }}
+                    />
+                  </div>
+                  <div className="font-semibold text-gray-800 w-16 text-right">
+                    £{category.amount.toLocaleString()}
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center">
-                <div className="w-32 bg-gray-200 rounded-full h-2 mr-4">
-                  <div 
-                    className={`${getProgressColor(category.name)} h-2 rounded-full`}
-                    style={{ width: `${Math.min(category.percentage, 100)}%` }}
-                  />
-                </div>
-                <div className="font-semibold text-gray-800 w-16 text-right">
-                  £{category.amount.toLocaleString()}
-                </div>
-              </div>
+            )) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>No spending data available yet.</p>
+              <p className="text-sm mt-2">Connect your bank accounts to see spending insights.</p>
             </div>
-          ))}
+          )}
         </div>
       </CardContent>
     </Card>
