@@ -20,10 +20,10 @@ AUREON is a comprehensive financial management platform that combines AI-driven 
 - **Development**: tsx for TypeScript execution in development
 
 ### Data Storage Solutions
-- **Database**: PostgreSQL with Neon serverless driver
-- **ORM**: Drizzle ORM for type-safe database operations
-- **Connection Pooling**: Neon serverless connection pooling
-- **Migrations**: Drizzle Kit for schema management
+- **Authentication**: Firebase Authentication with Google and email/password sign-in
+- **Database**: Firestore NoSQL database for real-time data storage
+- **User Management**: Firebase Auth for user sessions and authentication state
+- **Data Structure**: Firestore collections for users, accounts, transactions, goals, AI tasks
 
 ## Key Components
 
@@ -100,6 +100,11 @@ The application uses a comprehensive schema with the following main entities:
 ```
 Changelog:
 - June 23, 2025. Initial setup
+- June 23, 2025. Implemented Firebase Authentication and Firestore database integration
+  - Added Google and email/password authentication
+  - Created Firestore collections for user data, accounts, transactions, goals, AI tasks
+  - Implemented protected routes and authentication state management
+  - Updated dashboard to use Firebase Auth user context
 ```
 
 ## User Preferences
