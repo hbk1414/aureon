@@ -32,11 +32,15 @@ To enable authentication in your Firebase project, please follow these steps:
 
 ## 4. Enable Firestore Database
 
+**IMPORTANT**: You need to enable Firestore Database for the app to work properly.
+
 1. In the left sidebar, click on "Firestore Database"
 2. Click "Create database"
-3. Choose "Start in test mode" for now
-4. Select a location (choose one closest to your users)
+3. Choose "Start in test mode" for now (allows read/write access for testing)
+4. Select a location (choose one closest to your users, e.g., europe-west1 for Europe)
 5. Click "Done"
+
+Note: The Firestore transport errors you're seeing indicate that Firestore Database hasn't been created yet. Once you create the database, these errors will disappear.
 
 ## 5. Security Rules (Optional - for production)
 
