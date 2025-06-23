@@ -1,6 +1,6 @@
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import aureonLogo from "@assets/ChatGPT Image Jun 23, 2025, 12_12_44 AM_1750635007093.png";
+import aureonLogo from "@assets/ChatGPT Image Jun 23, 2025, 12_13_52 PM_1750677255821.png";
 
 interface HeaderProps {
   user: {
