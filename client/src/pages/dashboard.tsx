@@ -13,7 +13,7 @@ import QuickActions from "@/components/dashboard/quick-actions";
 import { useFinancialData } from "@/hooks/use-financial-data";
 
 export default function Dashboard() {
-  const { data: dashboardData, isLoading, error } = useFinancialData(1); // Using demo user ID
+  const dashboardQuery = useFinancialData();
 
   if (isLoading) {
     return (
