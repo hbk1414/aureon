@@ -52,7 +52,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50">
       <Header user={dashboardData.user} />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Main Dashboard Area */}
           <div className="lg:col-span-3 space-y-6">
@@ -63,15 +63,13 @@ export default function Dashboard() {
 
             <QuickActions />
             
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <AccountConnections 
-                accounts={dashboardData.connectedAccounts}
-              />
-              
-              <SpendingOverview 
-                spending={dashboardData.spending}
-              />
-            </div>
+            <AccountConnections 
+              accounts={dashboardData.connectedAccounts}
+            />
+            
+            <SpendingOverview 
+              spending={dashboardData.spending}
+            />
             
             <DebtPayoffStrategy 
               debtAccounts={dashboardData.debtAccounts}
