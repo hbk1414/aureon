@@ -145,7 +145,7 @@ export default function AiTasks({ tasks }: AiTasksProps) {
             {tasks.slice(0, 3).map((task) => (
               <div 
                 key={task.id}
-                className={`border-l-4 ${getTaskBorderColor(task.category)} ${getTaskBgColor(task.category)} rounded-r-lg p-4`}
+                className={`border-l-4 ${getTaskBorderColor(task.category)} ${getTaskBgColor(task.category)} rounded-r-lg p-4 hover:shadow-md hover:bg-opacity-80 transition-all duration-200`}
               >
                 <div className="flex items-start justify-between mb-2">
                   <span className="font-medium text-gray-800 text-sm">{task.title}</span>
@@ -168,7 +168,7 @@ export default function AiTasks({ tasks }: AiTasksProps) {
                     size="sm"
                     className="text-gray-600 text-xs hover:text-gray-800"
                   >
-                    Later
+                    Learn More
                   </Button>
                 </div>
               </div>

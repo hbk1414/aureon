@@ -28,7 +28,7 @@ export default function AccountConnections({ accounts }: AccountConnectionsProps
           {accounts.map((account) => (
             <div 
               key={account.id}
-              className="border border-gray-200 rounded-lg p-4 hover:border-primary transition-colors"
+              className="border border-gray-200 rounded-lg p-4 hover:border-primary hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center">

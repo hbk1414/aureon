@@ -9,6 +9,7 @@ import AiTasks from "@/components/dashboard/ai-tasks";
 import EmergencyFund from "@/components/dashboard/emergency-fund";
 import Couples from "@/components/dashboard/couples";
 import QuickStats from "@/components/dashboard/quick-stats";
+import QuickActions from "@/components/dashboard/quick-actions";
 import { useFinancialData } from "@/hooks/use-financial-data";
 
 export default function Dashboard() {
@@ -51,7 +52,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50">
       <Header user={dashboardData.user} />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Main Dashboard Area */}
           <div className="lg:col-span-3 space-y-6">
@@ -59,23 +60,33 @@ export default function Dashboard() {
               user={dashboardData.user} 
               portfolio={dashboardData.portfolio}
             />
+
+            <QuickActions />
             
-            <AccountConnections 
-              accounts={dashboardData.connectedAccounts}
-            />
-            
-            <SpendingOverview 
-              spending={dashboardData.spending}
-            />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <AccountConnections 
+                accounts={dashboardData.connectedAccounts}
+              />
+              
+              <SpendingOverview 
+                spending={dashboardData.spending}
+              />
+            </div>
             
             <DebtPayoffStrategy 
               debtAccounts={dashboardData.debtAccounts}
             />
             
-            <MicroInvesting 
-              investingAccount={dashboardData.investingAccount}
-              recentTransactions={dashboardData.recentTransactions}
-            />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <MicroInvesting 
+                investingAccount={dashboardData.investingAccount}
+                recentTransactions={dashboardData.recentTransactions}
+              />
+
+              <EmergencyFund 
+                emergencyFund={dashboardData.emergencyFund}
+              />
+            </div>
 
             {/* Couples Section */}
             <Couples 
@@ -86,14 +97,10 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
+          {/* Sidebar - Hidden on mobile, shows as bottom section */}
+          <div className="lg:col-span-1 space-y-6 order-first lg:order-last">
             <AiTasks 
               tasks={dashboardData.aiTasks}
-            />
-            
-            <EmergencyFund 
-              emergencyFund={dashboardData.emergencyFund}
             />
             
             <QuickStats 
