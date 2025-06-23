@@ -19,7 +19,7 @@ export default function Header({ user }: HeaderProps) {
               <img 
                 src={aureonLogo} 
                 alt="AUREON" 
-                className="h-8 w-8 mr-3"
+                className="h-12 w-12 mr-3"
               />
               <h1 className="text-xl font-bold text-gray-800">AUREON</h1>
             </div>
