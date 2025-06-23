@@ -15,7 +15,7 @@ import { useFinancialData } from "@/hooks/use-financial-data";
 export default function Dashboard() {
   const dashboardQuery = useFinancialData();
 
-  if (isLoading) {
+  if (dashboardQuery.isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header user={{ name: "Loading...", initials: "" }} />
@@ -26,7 +26,7 @@ export default function Dashboard() {
     );
   }
 
-  if (error) {
+  if (dashboardQuery.error) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header user={{ name: "Error", initials: "" }} />
@@ -37,6 +37,8 @@ export default function Dashboard() {
     );
   }
 
+  const dashboardData = dashboardQuery.data;
+  
   if (!dashboardData) {
     return (
       <div className="min-h-screen bg-gray-50">
