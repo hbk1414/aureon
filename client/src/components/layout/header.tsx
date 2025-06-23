@@ -1,15 +1,42 @@
-import { Bell } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import aureonLogo from "@assets/ChatGPT Image Jun 23, 2025, 12_13_52 PM_1750677255821.png";
 
 interface HeaderProps {
-  user: {
+  user?: {
     name: string;
     initials: string;
   };
 }
 
 export default function Header({ user }: HeaderProps) {
+  const { signOut, user: authUser } = useAuth();
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out",
+      });
+      setLocation("/auth");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const displayName = user?.name || authUser?.displayName || authUser?.email?.split('@')[0] || 'User';
+  const initials = user?.initials || displayName.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -30,10 +57,14 @@ export default function Header({ user }: HeaderProps) {
             </Button>
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">{user.initials}</span>
+                <span className="text-white text-sm font-medium">{initials}</span>
               </div>
-              <span className="text-sm font-medium text-gray-700">{user.name}</span>
+              <span className="text-sm font-medium text-gray-700">{displayName}</span>
             </div>
+            <Button variant="outline" size="sm" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
         </div>
       </div>
