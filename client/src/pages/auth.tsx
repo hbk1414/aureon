@@ -27,9 +27,21 @@ export default function Auth() {
       });
       setLocation("/dashboard");
     } catch (error: any) {
+      let errorMessage = "Failed to sign in with Google";
+      
+      if (error.code === "auth/configuration-not-found") {
+        errorMessage = "Google authentication not configured. Please enable Google sign-in in Firebase Console.";
+      } else if (error.code === "auth/popup-closed-by-user") {
+        errorMessage = "Sign-in was cancelled.";
+      } else if (error.code === "auth/popup-blocked") {
+        errorMessage = "Pop-up was blocked. Please allow pop-ups and try again.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to sign in with Google",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -56,9 +68,23 @@ export default function Auth() {
       });
       setLocation("/dashboard");
     } catch (error: any) {
+      let errorMessage = "Failed to sign in";
+      
+      if (error.code === "auth/configuration-not-found") {
+        errorMessage = "Authentication not configured. Please enable Email/Password authentication in Firebase Console.";
+      } else if (error.code === "auth/user-not-found") {
+        errorMessage = "No account found with this email.";
+      } else if (error.code === "auth/wrong-password") {
+        errorMessage = "Incorrect password.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Please enter a valid email address.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to sign in",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -85,9 +111,23 @@ export default function Auth() {
       });
       setLocation("/dashboard");
     } catch (error: any) {
+      let errorMessage = "Failed to create account";
+      
+      if (error.code === "auth/configuration-not-found") {
+        errorMessage = "Authentication not configured. Please enable Email/Password authentication in Firebase Console.";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "Password should be at least 6 characters.";
+      } else if (error.code === "auth/email-already-in-use") {
+        errorMessage = "An account with this email already exists.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Please enter a valid email address.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to create account",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
