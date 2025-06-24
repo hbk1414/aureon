@@ -60,6 +60,9 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Debug logging
+  console.log("ConnectAccountModal rendered:", { open, user: !!user });
+
   const generateLast4 = () => {
     return Math.floor(1000 + Math.random() * 9000).toString();
   };
