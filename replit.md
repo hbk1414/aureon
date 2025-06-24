@@ -120,6 +120,8 @@ Changelog:
   - Implemented query caching with 5-minute stale time and 10-minute cache time
   - Optimized data fetching by reducing initial transaction load and prioritizing essential data
   - Created reusable skeleton and loading spinner components for consistent UX
+  - Implemented 3-second timeout protection and immediate fallback data for 2-3 second load times
+  - Dashboard now displays meaningful default data instantly while Firestore loads in background
 ```
 
 ## User Preferences
