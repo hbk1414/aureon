@@ -7,10 +7,15 @@ import { useToast } from "@/hooks/use-toast";
 
 interface EmergencyFundProps {
   emergencyFund: {
-    current: number;
-    goal: number;
-    percentage: number;
-    remaining: number;
+    currentAmount?: number;
+    targetAmount?: number;
+    monthsOfExpenses?: number;
+    targetMonths?: number;
+    monthlyContribution?: number;
+    current?: number;
+    goal?: number;
+    percentage?: number;
+    remaining?: number;
   } | null;
 }
 
@@ -57,18 +62,15 @@ export default function EmergencyFund({ emergencyFund }: EmergencyFundProps) {
     );
   }
 
-  // Provide safe defaults for all properties
-  const safeEmergencyFund = {
-    currentAmount: emergencyFund.currentAmount || 0,
-    targetAmount: emergencyFund.targetAmount || 15000,
-    monthsOfExpenses: emergencyFund.monthsOfExpenses || 0,
-    targetMonths: emergencyFund.targetMonths || 6,
-    monthlyContribution: emergencyFund.monthlyContribution || 0,
-    current: emergencyFund.currentAmount || 0,
-    goal: emergencyFund.targetAmount || 15000,
-    remaining: Math.max((emergencyFund.targetAmount || 15000) - (emergencyFund.currentAmount || 0), 0),
-    percentage: emergencyFund.targetAmount ? Math.min((emergencyFund.currentAmount || 0) / emergencyFund.targetAmount * 100, 100) : 0
-  };
+
+
+  // Create safe defaults for all emergency fund properties
+  const current = emergencyFund?.current ?? emergencyFund?.currentAmount ?? 0;
+  const goal = emergencyFund?.goal ?? emergencyFund?.targetAmount ?? 15000;
+  const remaining = Math.max(goal - current, 0);
+  const percentage = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
+  const monthsOfExpenses = emergencyFund?.monthsOfExpenses ?? 0;
+  const targetMonths = emergencyFund?.targetMonths ?? 6;
 
   return (
     <Card>
@@ -78,24 +80,30 @@ export default function EmergencyFund({ emergencyFund }: EmergencyFundProps) {
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2">
             <span className="text-gray-600">Progress</span>
-            <span className="font-medium">{emergencyFund.percentage}%</span>
+            <span className="font-medium">{percentage.toFixed(1)}%</span>
           </div>
-          <Progress value={emergencyFund.percentage} className="h-3" />
+          <div className="text-center text-sm text-gray-600 mb-2">
+            {monthsOfExpenses.toFixed(1)} months of expenses saved
+          </div>
+          <div className="text-center text-xs text-gray-500 mb-3">
+            Goal: {targetMonths} months
+          </div>
+          <Progress value={percentage} className="h-3" />
         </div>
 
         <div className="space-y-3">
           <div className="flex justify-between">
             <span className="text-gray-600 text-sm">Current</span>
-            <span className="font-semibold">£{emergencyFund.current.toLocaleString()}</span>
+            <span className="font-semibold">£{current.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600 text-sm">Goal (3 months)</span>
-            <span className="font-semibold">£{emergencyFund.goal.toLocaleString()}</span>
+            <span className="text-gray-600 text-sm">Goal ({targetMonths} months)</span>
+            <span className="font-semibold">£{goal.toLocaleString()}</span>
           </div>
           <div className="flex justify-between border-t pt-3">
             <span className="text-gray-600 text-sm">Remaining</span>
             <span className="font-semibold text-primary">
-              £{emergencyFund.remaining.toLocaleString()}
+              £{remaining.toLocaleString()}
             </span>
           </div>
         </div>
