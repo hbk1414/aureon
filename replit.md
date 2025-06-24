@@ -115,6 +115,11 @@ Changelog:
   - Dashboard now loads real user data from Firestore instead of mock data
   - Added user document structure: creditScore, savingsRate, monthlyBudget, totalSpent, emergencyFund, accounts, aiTasks
   - Implemented proper error handling for missing user documents with fallback to defaults
+- June 24, 2025. Enhanced dashboard loading performance and user experience
+  - Added comprehensive skeleton loading states for all dashboard components
+  - Implemented query caching with 5-minute stale time and 10-minute cache time
+  - Optimized data fetching by reducing initial transaction load and prioritizing essential data
+  - Created reusable skeleton and loading spinner components for consistent UX
 ```
 
 ## User Preferences

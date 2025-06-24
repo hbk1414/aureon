@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Suspense } from "react";
 import Header from "@/components/layout/header";
 import WelcomeBanner from "@/components/dashboard/welcome-banner";
 import AccountConnections from "@/components/dashboard/account-connections";
@@ -10,6 +11,7 @@ import EmergencyFund from "@/components/dashboard/emergency-fund";
 import Couples from "@/components/dashboard/couples";
 import QuickStats from "@/components/dashboard/quick-stats";
 import QuickActions from "@/components/dashboard/quick-actions";
+import DashboardSkeleton from "@/components/dashboard/dashboard-skeleton";
 import { useFinancialData } from "@/hooks/use-financial-data";
 
 export default function Dashboard() {
@@ -18,10 +20,8 @@ export default function Dashboard() {
   if (dashboardQuery.isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header user={{ name: "Loading...", initials: "" }} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">Loading your financial dashboard...</div>
-        </div>
+        <Header user={{ name: "Loading...", initials: "L" }} />
+        <DashboardSkeleton />
       </div>
     );
   }

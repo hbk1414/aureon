@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .skeleton {
+    @apply animate-pulse bg-gray-200 rounded;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
 :root {
   --background: hsl(248, 100%, 99%);
   --foreground: hsl(30, 18%, 11%);

@@ -14,20 +14,23 @@ export function useFinancialData() {
 
   return useQuery({
     queryKey: ['/api/dashboard', user?.uid],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
     queryFn: async () => {
       if (!user?.uid) throw new Error('User not authenticated');
 
-      // Fetch data from Firestore
+      // Fetch essential data first for faster initial load
+      const connectedAccounts = await getConnectedAccounts(user.uid);
+      
+      // Fetch other data in parallel but don't block initial render
       const [
-        connectedAccounts,
         transactions,
         financialGoals,
         aiTasks,
         debtAccounts,
         investingAccount
       ] = await Promise.all([
-        getConnectedAccounts(user.uid),
-        getTransactions(user.uid, 10),
+        getTransactions(user.uid, 5), // Reduced from 10 to 5 for faster loading
         getFinancialGoals(user.uid),
         getAiTasks(user.uid, false),
         getDebtAccounts(user.uid),
