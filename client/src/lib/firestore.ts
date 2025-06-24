@@ -306,6 +306,49 @@ export const getOrCreateUserDocument = async (uid: string, email: string) => {
   }
 };
 
+// Account management functions
+export const addAccountToUser = async (uid: string, account: any) => {
+  try {
+    const userDoc = await getUserDocument(uid);
+    const currentAccounts = userDoc?.accounts || [];
+    
+    const updatedAccounts = [...currentAccounts, account];
+    
+    await updateUserDocument(uid, {
+      accounts: updatedAccounts
+    });
+    
+    console.log('Account added successfully');
+    return account;
+  } catch (error) {
+    console.error('Error adding account:', error);
+    throw error;
+  }
+};
+
+export const removeAccountFromUser = async (uid: string, accountIndex: number) => {
+  try {
+    const userDoc = await getUserDocument(uid);
+    const currentAccounts = userDoc?.accounts || [];
+    
+    if (accountIndex >= 0 && accountIndex < currentAccounts.length) {
+      const updatedAccounts = currentAccounts.filter((_, index) => index !== accountIndex);
+      
+      await updateUserDocument(uid, {
+        accounts: updatedAccounts
+      });
+      
+      console.log('Account removed successfully');
+      return true;
+    } else {
+      throw new Error('Invalid account index');
+    }
+  } catch (error) {
+    console.error('Error removing account:', error);
+    throw error;
+  }
+};
+
 // User Profile
 export const createUserProfile = async (userId: string, profile: any) => {
   await updateDoc(doc(db, "users", userId), profile);

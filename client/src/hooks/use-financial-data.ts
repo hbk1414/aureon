@@ -115,7 +115,10 @@ export function useFinancialData() {
               monthlyContribution: 500
             },
             aiTasks: userData.aiTasks || getFallbackData(user).aiTasks,
-            connectedAccounts: userData.accounts || []
+            connectedAccounts: userData.accounts || [],
+            portfolio: {
+              totalBalance: userData.accounts?.reduce((sum: number, account: any) => sum + (account.balance || 0), 0) || 0
+            }
           };
         }
       } catch (error) {
