@@ -1,6 +1,7 @@
 import { 
   collection, 
   doc, 
+  setDoc,
   addDoc, 
   updateDoc, 
   deleteDoc, 
@@ -10,7 +11,8 @@ import {
   where, 
   orderBy, 
   limit,
-  Timestamp 
+  Timestamp,
+  serverTimestamp
 } from "firebase/firestore";
 import { db } from "./firebase";
 import type { 
@@ -187,6 +189,121 @@ export const getInvestingAccount = async (userId: string) => {
 
 export const updateInvestingAccount = async (accountId: string, updates: Partial<InvestingAccount>) => {
   await updateDoc(doc(db, "investingAccounts", accountId), updates);
+};
+
+// Default user data structure
+const createDefaultUserData = (email: string) => ({
+  email,
+  creditScore: 720,
+  savingsRate: 15, // 15% savings rate
+  monthlyBudget: 3000,
+  totalSpent: 0,
+  emergencyFund: {
+    currentAmount: 0,
+    targetAmount: 15000,
+    monthsOfExpenses: 0,
+    targetMonths: 6,
+    monthlyContribution: 500 // Default £500 monthly contribution
+  },
+  accounts: [],
+  aiTasks: [
+    {
+      id: 1,
+      title: "Set up emergency fund auto-transfer",
+      description: "Automatically transfer £500 monthly to emergency savings to reach your 6-month goal",
+      completed: false,
+      priority: "high",
+      category: "savings",
+      createdAt: serverTimestamp()
+    },
+    {
+      id: 2,
+      title: "Review monthly budget allocation",
+      description: "Optimize your £3,000 monthly budget to increase savings rate",
+      completed: false,
+      priority: "medium", 
+      category: "budgeting",
+      createdAt: serverTimestamp()
+    }
+  ],
+  createdAt: serverTimestamp(),
+  updatedAt: serverTimestamp()
+});
+
+export const createUserDocument = async (uid: string, email: string) => {
+  try {
+    // Check if document already exists with timeout
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), 2000)
+    );
+    
+    const existingDoc = await Promise.race([
+      getUserDocument(uid),
+      timeoutPromise
+    ]);
+    
+    if (existingDoc) {
+      console.log('User document already exists');
+      return existingDoc;
+    }
+    
+    const defaultData = createDefaultUserData(email);
+    await setDoc(doc(db, 'users', uid), defaultData);
+    console.log('User document created successfully');
+    return defaultData;
+  } catch (error) {
+    console.error('Error creating user document:', error);
+    // Don't throw error, just log it to prevent auth flow interruption
+    return null;
+  }
+};
+
+export const getUserDocument = async (uid: string) => {
+  try {
+    const docRef = doc(db, 'users', uid);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return docSnap.data();
+    } else {
+      console.log('No user document found');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error getting user document:', error);
+    // Don't throw error, return null to allow fallback
+    return null;
+  }
+};
+
+export const updateUserDocument = async (uid: string, updates: any) => {
+  try {
+    const docRef = doc(db, 'users', uid);
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: serverTimestamp()
+    });
+    console.log('User document updated successfully');
+  } catch (error) {
+    console.error('Error updating user document:', error);
+    throw error;
+  }
+};
+
+export const getOrCreateUserDocument = async (uid: string, email: string) => {
+  try {
+    let userData = await getUserDocument(uid);
+    
+    if (!userData) {
+      // Create new user document with defaults
+      userData = await createUserDocument(uid, email);
+    }
+    
+    return userData;
+  } catch (error) {
+    console.error('Error getting or creating user document:', error);
+    throw error;
+  }
 };
 
 // User Profile

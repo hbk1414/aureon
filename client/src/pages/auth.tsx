@@ -104,7 +104,13 @@ export default function Auth() {
 
     setLoading(true);
     try {
-      await signUpWithEmail(email, password);
+      const userCredential = await signUpWithEmail(email, password);
+      
+      // Create user document in background, don't wait for it
+      if (userCredential?.user) {
+        createUserDocument(userCredential.user.uid, email).catch(console.error);
+      }
+      
       toast({
         title: "Success",
         description: "Account created successfully",
