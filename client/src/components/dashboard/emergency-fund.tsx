@@ -39,7 +39,7 @@ export default function EmergencyFund({ emergencyFund }: EmergencyFundProps) {
   });
 
   const handleAddToFund = () => {
-    // Add $150 as suggested by AI
+    // Add £150 as suggested by AI
     addToFundMutation.mutate(150);
   };
 
@@ -56,6 +56,19 @@ export default function EmergencyFund({ emergencyFund }: EmergencyFundProps) {
       </Card>
     );
   }
+
+  // Provide safe defaults for all properties
+  const safeEmergencyFund = {
+    currentAmount: emergencyFund.currentAmount || 0,
+    targetAmount: emergencyFund.targetAmount || 15000,
+    monthsOfExpenses: emergencyFund.monthsOfExpenses || 0,
+    targetMonths: emergencyFund.targetMonths || 6,
+    monthlyContribution: emergencyFund.monthlyContribution || 0,
+    current: emergencyFund.currentAmount || 0,
+    goal: emergencyFund.targetAmount || 15000,
+    remaining: Math.max((emergencyFund.targetAmount || 15000) - (emergencyFund.currentAmount || 0), 0),
+    percentage: emergencyFund.targetAmount ? Math.min((emergencyFund.currentAmount || 0) / emergencyFund.targetAmount * 100, 100) : 0
+  };
 
   return (
     <Card>
