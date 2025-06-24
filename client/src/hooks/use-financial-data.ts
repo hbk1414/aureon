@@ -83,7 +83,7 @@ export function useFinancialData() {
         stats: {
           totalSaved: totalBalance,
           monthlyIncome: 5000,
-          savingsRate: 0.25,
+          savingsRate: 15,
           creditScore: 750
         },
         // Mock couples data
