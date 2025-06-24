@@ -1,66 +1,165 @@
-import { Plus, University, CreditCard } from "lucide-react";
+import { useState } from "react";
+import { Plus, Building, CreditCard, TrendingUp, X, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import type { ConnectedAccount } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { removeAccountFromUser } from "@/lib/firestore";
+import ConnectAccountModal from "./connect-account-modal";
+import { useQueryClient } from "@tanstack/react-query";
+
+interface Account {
+  bankName: string;
+  type: string;
+  balance: number;
+  last4: string;
+  connectedAt?: string;
+}
 
 interface AccountConnectionsProps {
-  accounts: ConnectedAccount[];
+  accounts: Account[];
 }
 
 export default function AccountConnections({ accounts }: AccountConnectionsProps) {
-  const handleConnectAccount = () => {
-    // TODO: Implement account connection modal
-    console.log('Open account connection modal');
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [removingIndex, setRemovingIndex] = useState<number | null>(null);
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const formatBalance = (balance: number) => {
+    return new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: 'GBP',
+    }).format(balance);
+  };
+
+  const handleRemoveAccount = async (index: number) => {
+    if (!user?.uid) return;
+    
+    setRemovingIndex(index);
+    try {
+      await removeAccountFromUser(user.uid, index);
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({
+        queryKey: ['/api/dashboard', user.uid]
+      });
+      
+      toast({
+        title: "Success",
+        description: "Account removed successfully",
+      });
+    } catch (error) {
+      console.error("Error removing account:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setRemovingIndex(null);
+    }
+  };
+
+  const handleAccountAdded = () => {
+    // Invalidate queries to refresh data
+    if (user?.uid) {
+      queryClient.invalidateQueries({
+        queryKey: ['/api/dashboard', user.uid]
+      });
+    }
+  };
+
+  const handleConnectClick = () => {
+    console.log("Connect account button clicked");
+    setShowConnectModal(true);
   };
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold text-gray-800">Connected Accounts</h3>
-          <Button onClick={handleConnectAccount} className="bg-primary text-white hover:bg-blue-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Connect Account
-          </Button>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {accounts.map((account) => (
-            <div 
-              key={account.id}
-              className="border border-gray-200 rounded-lg p-4 hover:border-primary hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-3 ${
-                    account.accountType.includes('Credit') 
-                      ? 'bg-red-600' 
-                      : 'bg-blue-600'
-                  }`}>
-                    {account.accountType.includes('Credit') ? (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center">
+              <Building className="mr-2 h-5 w-5" />
+              Connected Accounts
+            </span>
+            <Button size="sm" onClick={handleConnectClick}>
+              <Plus className="mr-2 h-4 w-4" />
+              Connect Account
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {accounts && accounts.length > 0 ? (
+            <div className="space-y-4">
+              {accounts.map((account, index) => (
+                <div 
+                  key={`${account.bankName}-${account.last4}-${index}`} 
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors group"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
                       <CreditCard className="text-white w-5 h-5" />
-                    ) : (
-                      <University className="text-white w-5 h-5" />
-                    )}
+                    </div>
+                    <div>
+                      <p className="font-medium">{account.bankName}</p>
+                      <p className="text-sm text-gray-500">
+                        {account.type} • •••• {account.last4}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-medium text-gray-800">{account.bankName}</div>
-                    <div className="text-sm text-gray-600">{account.accountType}</div>
+                  <div className="flex items-center space-x-3">
+                    <div className="text-right">
+                      <p className="font-semibold">{formatBalance(account.balance)}</p>
+                      <p className="text-sm text-gray-500">
+                        {account.connectedAt ? 
+                          `Connected ${new Date(account.connectedAt).toLocaleDateString()}` :
+                          'Recently connected'
+                        }
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveAccount(index)}
+                      disabled={removingIndex === index}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      {removingIndex === index ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </Button>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className={`font-semibold ${
-                    parseFloat(account.balance) >= 0 ? 'text-gray-800' : 'text-danger'
-                  }`}>
-                    £{Math.abs(parseFloat(account.balance)).toLocaleString()}
-                  </div>
-                  <div className="text-xs text-success">Connected</div>
-                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Building className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No accounts connected</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Connect your bank accounts to get started with financial tracking.
+              </p>
+              <div className="mt-6">
+                <Button onClick={handleConnectClick}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Connect Your First Account
+                </Button>
               </div>
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+          )}
+        </CardContent>
+      </Card>
+
+      <ConnectAccountModal
+        open={showConnectModal}
+        onOpenChange={setShowConnectModal}
+        onAccountAdded={handleAccountAdded}
+      />
+    </>
   );
 }

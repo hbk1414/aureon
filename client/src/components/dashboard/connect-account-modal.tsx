@@ -63,6 +63,10 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
   // Debug logging
   console.log("ConnectAccountModal rendered:", { open, user: !!user });
 
+  if (!open) {
+    return null;
+  }
+
   const generateLast4 = () => {
     return Math.floor(1000 + Math.random() * 9000).toString();
   };
