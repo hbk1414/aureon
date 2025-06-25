@@ -291,7 +291,17 @@ export function useFinancialData() {
               remaining: Math.max(0, (onboarding?.monthlyBudget || 3000) - (onboarding?.totalSpent || spendingData.totalSpent)),
               totalThisMonth: onboarding?.totalSpent || spendingData.totalSpent,
               categories: spendingData.categories
-            }
+            },
+            debtAccounts: onboarding?.debts?.map((debt: any, index: number) => ({
+              id: index + 1,
+              userId: 1,
+              name: debt.type || 'Debt',
+              balance: debt.totalAmount || '0',
+              apr: debt.interestRate || '0',
+              minimumPayment: debt.monthlyRepayment || '0',
+              suggestedPayment: null,
+              priority: index + 1
+            })) || []
           };
           console.log('Applied onboarding data overrides:', onboardingOverrides);
         } catch (e) {
