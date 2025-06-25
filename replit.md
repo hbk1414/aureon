@@ -130,6 +130,7 @@ Changelog:
   - Fixed account connection speed with optimistic updates and automatic data refresh without page reloads
   - Implemented local storage backup for onboarding completion to handle Firestore connection issues
   - Fixed onboarding navigation flow to properly redirect to dashboard after completion
+  - Enhanced onboarding completion with loading spinner, full-screen overlay, and progress messages for better user feedback during profile creation
 ```
 
 ## User Preferences

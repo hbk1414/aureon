@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, ChevronRight, User, Target, PiggyBank, CreditCard, Home, TrendingUp, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight, User, Target, PiggyBank, CreditCard, Home, TrendingUp, Calendar, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createUserDocument } from "@/lib/firestore";
 import { useToast } from "@/hooks/use-toast";
@@ -639,7 +639,16 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full">
+      <div className="max-w-2xl w-full relative">
+        {isSubmitting && (
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+              <p className="text-lg font-medium text-gray-900">Creating Your Profile</p>
+              <p className="text-sm text-gray-600 mt-2">Setting up your personalized dashboard...</p>
+            </div>
+          </div>
+        )}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -672,12 +681,14 @@ export default function Onboarding() {
               <Button
                 onClick={nextStep}
                 disabled={!canContinue() || isSubmitting}
+                className={isSubmitting ? "opacity-90" : ""}
               >
+                {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 {currentStep === totalSteps ? 
-                  (isSubmitting ? "Creating Profile..." : "Complete Setup") : 
+                  (isSubmitting ? "Creating Your Profile..." : "Complete Setup") : 
                   "Next"
                 }
-                {currentStep < totalSteps && <ChevronRight className="h-4 w-4 ml-2" />}
+                {currentStep < totalSteps && !isSubmitting && <ChevronRight className="h-4 w-4 ml-2" />}
               </Button>
             </div>
           </CardContent>
