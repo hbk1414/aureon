@@ -203,9 +203,10 @@ export function useFinancialData() {
 
         if (dataToUse) {
           console.log('Using data from onboarding/Firestore:', dataToUse);
+          const fallbackData = getFallbackData(user);
           // Use onboarding/Firestore data if available
           return {
-            ...getFallbackData(user),
+            ...fallbackData,
             stats: {
               totalSaved: dataToUse?.emergencyFund?.currentAmount || 0,
               monthlyIncome: dataToUse?.monthlyIncome || 3500,
@@ -225,14 +226,17 @@ export function useFinancialData() {
                 { name: 'Utilities', amount: Math.round((dataToUse as any).totalSpent * 0.08), percentage: 8 }
               ] : []
             },
-            emergencyFund: dataToUse?.emergencyFund || {
-              currentAmount: 0,
-              targetAmount: 15000,
-              monthsOfExpenses: 0,
-              targetMonths: 6,
+            emergencyFund: {
+              current: dataToUse?.emergencyFund?.currentAmount || 0,
+              target: dataToUse?.emergencyFund?.targetAmount || 15000,
+              progress: Math.round(((dataToUse?.emergencyFund?.currentAmount || 0) / (dataToUse?.emergencyFund?.targetAmount || 15000)) * 100),
+              currentAmount: dataToUse?.emergencyFund?.currentAmount || 0,
+              targetAmount: dataToUse?.emergencyFund?.targetAmount || 15000,
+              monthsOfExpenses: Math.round((dataToUse?.emergencyFund?.currentAmount || 0) / (dataToUse?.monthlyBudget || 3000)),
+              targetMonths: dataToUse?.emergencyFundTarget || 6,
               monthlyContribution: 500
             },
-            aiTasks: userData?.aiTasks || getFallbackData(user).aiTasks,
+            aiTasks: dataToUse?.aiTasks || getFallbackData(user).aiTasks,
             connectedAccounts: getLocalAccountsFallback(user?.uid).length > 0 
               ? getLocalAccountsFallback(user?.uid) 
               : userData?.accounts || [],
@@ -257,23 +261,56 @@ export function useFinancialData() {
       // Calculate real spending from local transactions
       const spendingData = calculateSpendingBreakdown(localTransactions);
       
+      // Check for onboarding data to override fallback values
+      const localOnboardingData = localStorage.getItem(`onboarding_data_${user.uid}`);
+      let onboardingOverrides = {};
+      
+      if (localOnboardingData) {
+        try {
+          const onboarding = JSON.parse(localOnboardingData);
+          onboardingOverrides = {
+            stats: {
+              totalSaved: onboarding?.emergencyFund?.currentAmount || fallbackData.stats.totalSaved,
+              monthlyIncome: onboarding?.monthlyIncome || fallbackData.stats.monthlyIncome,
+              savingsRate: onboarding?.savingsRate || fallbackData.stats.savingsRate,
+              creditScore: onboarding?.creditScore || fallbackData.stats.creditScore
+            },
+            emergencyFund: {
+              current: onboarding?.emergencyFund?.currentAmount || fallbackData.emergencyFund.current,
+              target: onboarding?.emergencyFund?.targetAmount || fallbackData.emergencyFund.target,
+              progress: Math.round(((onboarding?.emergencyFund?.currentAmount || 0) / (onboarding?.emergencyFund?.targetAmount || 15000)) * 100),
+              currentAmount: onboarding?.emergencyFund?.currentAmount || fallbackData.emergencyFund.currentAmount,
+              targetAmount: onboarding?.emergencyFund?.targetAmount || fallbackData.emergencyFund.targetAmount,
+              monthsOfExpenses: Math.round((onboarding?.emergencyFund?.currentAmount || 0) / (onboarding?.monthlyBudget || 3000)),
+              targetMonths: onboarding?.emergencyFundTarget || fallbackData.emergencyFund.targetMonths,
+              monthlyContribution: 500
+            },
+            spending: {
+              total: onboarding?.totalSpent || spendingData.totalSpent,
+              budget: onboarding?.monthlyBudget || 3000,
+              remaining: Math.max(0, (onboarding?.monthlyBudget || 3000) - (onboarding?.totalSpent || spendingData.totalSpent)),
+              totalThisMonth: onboarding?.totalSpent || spendingData.totalSpent,
+              categories: spendingData.categories
+            }
+          };
+          console.log('Applied onboarding data overrides:', onboardingOverrides);
+        } catch (e) {
+          console.error('Error parsing onboarding data for overrides:', e);
+        }
+      }
+      
       console.log('Using fallback data with local accounts:', {
         localAccounts,
         localTransactions: localTransactions.length,
         spendingData,
-        fallbackAccounts: fallbackData.connectedAccounts
+        fallbackAccounts: fallbackData.connectedAccounts,
+        onboardingOverrides
       });
       
       return {
         ...fallbackData,
+        ...onboardingOverrides,
         connectedAccounts: localAccounts.length > 0 ? localAccounts : fallbackData.connectedAccounts,
-        spending: {
-          total: spendingData.totalSpent,
-          budget: 3000,
-          remaining: Math.max(0, 3000 - spendingData.totalSpent),
-          totalThisMonth: spendingData.totalSpent,
-          categories: spendingData.categories
-        },
         portfolio: {
           totalBalance: localAccounts.length > 0 
             ? localAccounts.reduce((sum: number, account: any) => sum + (account.balance || 0), 0)
