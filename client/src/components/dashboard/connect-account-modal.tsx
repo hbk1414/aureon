@@ -132,8 +132,9 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
       onAccountAdded();
       onOpenChange(false);
       
-      // Force a page refresh to ensure the account appears
-      window.location.reload();
+      // Log the saved account for debugging
+      const savedAccounts = JSON.parse(localStorage.getItem(`accounts_${user.uid}`) || '[]');
+      console.log('Accounts saved to localStorage:', savedAccounts);
     } catch (error) {
       console.error("Error connecting account:", error);
       toast({
