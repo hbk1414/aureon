@@ -2,6 +2,18 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./use-auth";
 import { getUserDocument } from "@/lib/firestore";
 
+// Local storage fallback helper
+const getLocalAccountsFallback = (uid?: string): any[] => {
+  if (!uid) return [];
+  try {
+    const stored = localStorage.getItem(`accounts_${uid}`);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('Error reading local accounts fallback:', error);
+    return [];
+  }
+};
+
 // Fast fallback data for immediate display
 const getFallbackData = (user: any) => ({
   user: {
@@ -115,7 +127,7 @@ export function useFinancialData() {
               monthlyContribution: 500
             },
             aiTasks: userData.aiTasks || getFallbackData(user).aiTasks,
-            connectedAccounts: userData.accounts || [],
+            connectedAccounts: userData.accounts || getLocalAccountsFallback(user?.uid),
             portfolio: {
               totalBalance: userData.accounts?.reduce((sum: number, account: any) => sum + (account.balance || 0), 0) || 0
             }

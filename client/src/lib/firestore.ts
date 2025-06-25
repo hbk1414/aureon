@@ -306,34 +306,71 @@ export const getOrCreateUserDocument = async (uid: string, email: string) => {
   }
 };
 
+// Local storage fallback for when Firestore is unavailable
+const getLocalAccounts = (uid: string): any[] => {
+  try {
+    const stored = localStorage.getItem(`accounts_${uid}`);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('Error reading local accounts:', error);
+    return [];
+  }
+};
+
+const setLocalAccounts = (uid: string, accounts: any[]): void => {
+  try {
+    localStorage.setItem(`accounts_${uid}`, JSON.stringify(accounts));
+  } catch (error) {
+    console.error('Error saving local accounts:', error);
+  }
+};
+
 // Account management functions
 export const addAccountToUser = async (uid: string, account: any) => {
   try {
     console.log('addAccountToUser called with:', { uid, account });
     
-    // Add timeout protection
+    // Try Firestore first with shorter timeout
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Operation timeout')), 5000)
+      setTimeout(() => reject(new Error('Firestore timeout')), 2000)
     );
     
-    const getUserPromise = getUserDocument(uid);
-    const userDoc = await Promise.race([getUserPromise, timeoutPromise]);
-    console.log('Retrieved user document:', userDoc);
-    
-    const currentAccounts = userDoc?.accounts || [];
-    console.log('Current accounts:', currentAccounts);
-    
-    const updatedAccounts = [...currentAccounts, account];
-    console.log('Updated accounts:', updatedAccounts);
-    
-    const updatePromise = updateUserDocument(uid, {
-      accounts: updatedAccounts
-    });
-    
-    await Promise.race([updatePromise, timeoutPromise]);
-    
-    console.log('Account added successfully');
-    return account;
+    try {
+      const getUserPromise = getUserDocument(uid);
+      const userDoc = await Promise.race([getUserPromise, timeoutPromise]);
+      console.log('Retrieved user document:', userDoc);
+      
+      const currentAccounts = userDoc?.accounts || [];
+      console.log('Current accounts:', currentAccounts);
+      
+      const updatedAccounts = [...currentAccounts, account];
+      console.log('Updated accounts:', updatedAccounts);
+      
+      const updatePromise = updateUserDocument(uid, {
+        accounts: updatedAccounts
+      });
+      
+      await Promise.race([updatePromise, timeoutPromise]);
+      
+      console.log('Account added successfully to Firestore');
+      
+      // Also save to local storage as backup
+      setLocalAccounts(uid, updatedAccounts);
+      
+      return account;
+    } catch (firestoreError) {
+      console.warn('Firestore failed, using local storage fallback:', firestoreError);
+      
+      // Fallback to local storage
+      const currentAccounts = getLocalAccounts(uid);
+      console.log('Current local accounts:', currentAccounts);
+      
+      const updatedAccounts = [...currentAccounts, account];
+      setLocalAccounts(uid, updatedAccounts);
+      
+      console.log('Account added successfully to local storage');
+      return account;
+    }
   } catch (error) {
     console.error('Error adding account:', error);
     throw error;
@@ -342,20 +379,46 @@ export const addAccountToUser = async (uid: string, account: any) => {
 
 export const removeAccountFromUser = async (uid: string, accountIndex: number) => {
   try {
-    const userDoc = await getUserDocument(uid);
-    const currentAccounts = userDoc?.accounts || [];
+    // Try Firestore first with timeout
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Firestore timeout')), 2000)
+    );
     
-    if (accountIndex >= 0 && accountIndex < currentAccounts.length) {
-      const updatedAccounts = currentAccounts.filter((_, index) => index !== accountIndex);
+    try {
+      const userDoc = await Promise.race([getUserDocument(uid), timeoutPromise]);
+      const currentAccounts = userDoc?.accounts || [];
       
-      await updateUserDocument(uid, {
-        accounts: updatedAccounts
-      });
+      if (accountIndex >= 0 && accountIndex < currentAccounts.length) {
+        const updatedAccounts = currentAccounts.filter((_, index) => index !== accountIndex);
+        
+        await Promise.race([
+          updateUserDocument(uid, { accounts: updatedAccounts }),
+          timeoutPromise
+        ]);
+        
+        // Also update local storage
+        setLocalAccounts(uid, updatedAccounts);
+        
+        console.log('Account removed successfully from Firestore');
+        return true;
+      } else {
+        throw new Error('Invalid account index');
+      }
+    } catch (firestoreError) {
+      console.warn('Firestore failed, using local storage fallback:', firestoreError);
       
-      console.log('Account removed successfully');
-      return true;
-    } else {
-      throw new Error('Invalid account index');
+      // Fallback to local storage
+      const currentAccounts = getLocalAccounts(uid);
+      
+      if (accountIndex >= 0 && accountIndex < currentAccounts.length) {
+        const updatedAccounts = currentAccounts.filter((_, index) => index !== accountIndex);
+        setLocalAccounts(uid, updatedAccounts);
+        
+        console.log('Account removed successfully from local storage');
+        return true;
+      } else {
+        throw new Error('Invalid account index');
+      }
     }
   } catch (error) {
     console.error('Error removing account:', error);
