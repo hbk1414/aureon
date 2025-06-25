@@ -131,6 +131,13 @@ Changelog:
   - Implemented local storage backup for onboarding completion to handle Firestore connection issues
   - Fixed onboarding navigation flow to properly redirect to dashboard after completion
   - Enhanced onboarding completion with loading spinner, full-screen overlay, and progress messages for better user feedback during profile creation
+- June 25, 2025. Implemented comprehensive micro investing feature with round-up calculations
+  - Built spare change analysis calculating round-ups from actual spending transactions to nearest pound
+  - Created realistic transaction generator with authentic UK merchants (Tesco, Costa, TfL, Sainsbury's, etc.)
+  - Added investment options tailored for UK market: FTSE 100 Index Fund, Global Diversified ETF, Technology Growth Fund
+  - Implemented annual potential calculation showing projected investing amount if spending trends continue
+  - Enhanced dashboard to display real-time round-up amounts available for investment with detailed breakdown
+  - Added risk categorization (Low/Medium/High) with expected returns and professional investment recommendations
 ```
 
 ## User Preferences

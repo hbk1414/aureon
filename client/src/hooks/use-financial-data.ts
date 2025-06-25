@@ -18,7 +18,61 @@ const getLocalTransactionsFallback = (uid?: string): any[] => {
   if (!uid) return [];
   try {
     const stored = localStorage.getItem(`transactions_${uid}`);
-    return stored ? JSON.parse(stored) : [];
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    
+    // Generate realistic transactions with round-up calculations
+    const generateRealisticTransactions = () => {
+      const transactions = [];
+      const merchants = [
+        { name: "Tesco", category: "Groceries", baseAmount: [12.45, 28.73, 45.67, 15.32] },
+        { name: "Costa Coffee", category: "Dining", baseAmount: [4.25, 3.85, 5.50, 6.75] },
+        { name: "TfL", category: "Transport", baseAmount: [2.80, 5.60, 8.40, 11.20] },
+        { name: "Sainsbury's", category: "Groceries", baseAmount: [23.89, 67.45, 34.12, 89.67] },
+        { name: "Amazon", category: "Shopping", baseAmount: [19.99, 45.67, 78.90, 123.45] },
+        { name: "Nando's", category: "Dining", baseAmount: [18.75, 25.50, 32.25, 28.95] },
+        { name: "Shell", category: "Transport", baseAmount: [45.67, 52.34, 38.91, 67.23] },
+        { name: "Boots", category: "Shopping", baseAmount: [8.99, 15.75, 23.45, 11.20] },
+        { name: "Pret A Manger", category: "Dining", baseAmount: [6.85, 9.50, 7.25, 8.75] },
+        { name: "Uber", category: "Transport", baseAmount: [12.50, 18.75, 25.30, 14.60] }
+      ];
+
+      // Generate 20 transactions over the last month
+      for (let i = 0; i < 20; i++) {
+        const merchant = merchants[Math.floor(Math.random() * merchants.length)];
+        const baseAmount = merchant.baseAmount[Math.floor(Math.random() * merchant.baseAmount.length)];
+        
+        // Add small random variation to make amounts more realistic
+        const variation = (Math.random() - 0.5) * 2; // ±1 variation
+        const amount = Math.max(0.01, baseAmount + variation);
+        
+        // Calculate round-up (difference to next pound)
+        const roundUp = Math.ceil(amount) - amount;
+        
+        const date = new Date();
+        date.setDate(date.getDate() - Math.floor(Math.random() * 30));
+        
+        transactions.push({
+          id: i + 1,
+          accountId: 1,
+          amount: amount.toFixed(2),
+          category: merchant.category,
+          merchant: merchant.name,
+          description: `Purchase at ${merchant.name}`,
+          date: date.toISOString(),
+          roundUp: roundUp.toFixed(2)
+        });
+      }
+      
+      // Sort by date (newest first)
+      return transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    };
+    
+    const transactions = generateRealisticTransactions();
+    localStorage.setItem(`transactions_${uid}`, JSON.stringify(transactions));
+    return transactions;
+    
   } catch (error) {
     console.error('Error reading local transactions fallback:', error);
     return [];
@@ -321,10 +375,19 @@ export function useFinancialData() {
         ...fallbackData,
         ...onboardingOverrides,
         connectedAccounts: localAccounts.length > 0 ? localAccounts : fallbackData.connectedAccounts,
+        recentTransactions: localTransactions,
         portfolio: {
           totalBalance: localAccounts.length > 0 
             ? localAccounts.reduce((sum: number, account: any) => sum + (account.balance || 0), 0)
             : fallbackData.portfolio.totalBalance
+        },
+        investingAccount: {
+          id: 1,
+          userId: 1,
+          totalInvested: "0.00",
+          totalReturns: "0.00",
+          roundUpEnabled: false,
+          monthlyRoundUps: "0.00"
         }
       };
     },
