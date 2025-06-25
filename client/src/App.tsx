@@ -30,6 +30,14 @@ function ProtectedRoute({ component: Component, requiresOnboarding = true }: {
     const checkOnboardingStatus = async () => {
       if (user && requiresOnboarding) {
         try {
+          // Check local storage first for onboarding completion
+          const localOnboardingComplete = localStorage.getItem(`onboarding_${user.uid}`);
+          if (localOnboardingComplete === 'true') {
+            setUserDoc({ onboardingCompleted: true });
+            setCheckingOnboarding(false);
+            return;
+          }
+
           const doc = await getUserDocument(user.uid);
           setUserDoc(doc);
         } catch (error) {

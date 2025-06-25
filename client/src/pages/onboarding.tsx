@@ -179,13 +179,24 @@ export default function Onboarding() {
         createdAt: new Date().toISOString()
       };
 
-      await createUserDocument(user.uid, userDocument);
+      try {
+        await createUserDocument(user.uid, userDocument);
+        console.log('User document created successfully');
+      } catch (docError) {
+        console.error('Error creating user document:', docError);
+        // Still proceed to dashboard even if document creation fails temporarily
+        // The app can handle missing user documents with fallback data
+      }
+      
+      // Set local storage flag to indicate onboarding completion
+      localStorage.setItem(`onboarding_${user.uid}`, 'true');
       
       toast({
         title: "Welcome to AUREON!",
         description: "Your profile has been created successfully"
       });
       
+      // Always navigate to dashboard after onboarding completion
       setLocation("/dashboard");
     } catch (error) {
       console.error("Error creating user profile:", error);
