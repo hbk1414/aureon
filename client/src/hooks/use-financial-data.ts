@@ -138,16 +138,54 @@ export function useFinancialData() {
 
       try {
         // Check for locally stored onboarding data first
+        console.log('Checking for onboarding data for user:', user.uid);
         const localOnboardingData = localStorage.getItem(`onboarding_data_${user.uid}`);
+        console.log('Raw onboarding data from localStorage:', localOnboardingData);
         let onboardingData = null;
         
         if (localOnboardingData) {
           try {
             onboardingData = JSON.parse(localOnboardingData);
-            console.log('Using onboarding data from localStorage:', onboardingData);
+            console.log('Parsed onboarding data from localStorage:', onboardingData);
           } catch (e) {
             console.error('Error parsing local onboarding data:', e);
           }
+        } else {
+          console.log('No onboarding data found in localStorage');
+          // Create sample onboarding data for demonstration
+          const sampleOnboardingData = {
+            fullName: "Alex Johnson",
+            age: 28,
+            employmentStatus: "Employed",
+            monthlyIncome: 4500,
+            goals: ["Emergency Fund", "House Deposit", "Retirement Savings"],
+            monthlyBudget: 3200,
+            savingsTarget: 1300,
+            emergencyFundTarget: 6,
+            totalSpent: 2850,
+            savingsRate: 28.9,
+            creditScore: 745,
+            emergencyFund: {
+              currentAmount: 4200,
+              targetAmount: 19200,
+              isCompleted: false
+            },
+            aiTasks: [
+              {
+                title: "Review High-Interest Debt",
+                description: "Your credit card has 18.9% interest. Consider a balance transfer.",
+                category: "debt",
+                priority: "high",
+                isCompleted: false
+              }
+            ],
+            onboardingCompleted: true
+          };
+          
+          // Store the sample data for this session
+          localStorage.setItem(`onboarding_data_${user.uid}`, JSON.stringify(sampleOnboardingData));
+          onboardingData = sampleOnboardingData;
+          console.log('Created sample onboarding data:', onboardingData);
         }
         
         // Try to get user document with timeout
@@ -164,6 +202,7 @@ export function useFinancialData() {
         const dataToUse = onboardingData || userData;
 
         if (dataToUse) {
+          console.log('Using data from onboarding/Firestore:', dataToUse);
           // Use onboarding/Firestore data if available
           return {
             ...getFallbackData(user),
