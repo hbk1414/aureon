@@ -191,6 +191,9 @@ export default function Onboarding() {
       // Set local storage flag to indicate onboarding completion
       localStorage.setItem(`onboarding_${user.uid}`, 'true');
       
+      // Store onboarding data locally for dashboard use
+      localStorage.setItem(`onboarding_data_${user.uid}`, JSON.stringify(userDocument));
+      
       toast({
         title: "Welcome to AUREON!",
         description: "Your profile has been created successfully"

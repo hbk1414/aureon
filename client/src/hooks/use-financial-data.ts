@@ -137,6 +137,19 @@ export function useFinancialData() {
       if (!user?.uid) throw new Error('User not authenticated');
 
       try {
+        // Check for locally stored onboarding data first
+        const localOnboardingData = localStorage.getItem(`onboarding_data_${user.uid}`);
+        let onboardingData = null;
+        
+        if (localOnboardingData) {
+          try {
+            onboardingData = JSON.parse(localOnboardingData);
+            console.log('Using onboarding data from localStorage:', onboardingData);
+          } catch (e) {
+            console.error('Error parsing local onboarding data:', e);
+          }
+        }
+        
         // Try to get user document with timeout
         const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Timeout')), 3000)
@@ -147,30 +160,33 @@ export function useFinancialData() {
           timeoutPromise
         ]);
 
-        if (userData) {
-          // Use Firestore data if available
+        // Use onboarding data if available, otherwise use Firestore data
+        const dataToUse = onboardingData || userData;
+
+        if (dataToUse) {
+          // Use onboarding/Firestore data if available
           return {
             ...getFallbackData(user),
             stats: {
-              totalSaved: userData?.totalSpent || 0,
-              monthlyIncome: 5000,
-              savingsRate: userData?.savingsRate || 15,
-              creditScore: userData?.creditScore || 720
+              totalSaved: dataToUse?.emergencyFund?.currentAmount || 0,
+              monthlyIncome: dataToUse?.monthlyIncome || 3500,
+              savingsRate: dataToUse?.savingsRate || 15,
+              creditScore: dataToUse?.creditScore || 720
             },
             spending: {
-              total: userData?.totalSpent || 0,
-              budget: userData?.monthlyBudget || 3000,
-              remaining: Math.max((userData?.monthlyBudget || 3000) - (userData?.totalSpent || 0), 0),
-              totalThisMonth: userData?.totalSpent || 0,
-              categories: userData?.totalSpent > 0 ? [
-                { name: 'Shopping', amount: Math.round(userData.totalSpent * 0.35), percentage: 35 },
-                { name: 'Dining', amount: Math.round(userData.totalSpent * 0.28), percentage: 28 },
-                { name: 'Transport', amount: Math.round(userData.totalSpent * 0.17), percentage: 17 },
-                { name: 'Entertainment', amount: Math.round(userData.totalSpent * 0.12), percentage: 12 },
-                { name: 'Utilities', amount: Math.round(userData.totalSpent * 0.08), percentage: 8 }
+              total: dataToUse?.totalSpent || 0,
+              budget: dataToUse?.monthlyBudget || 3000,
+              remaining: Math.max((dataToUse?.monthlyBudget || 3000) - (dataToUse?.totalSpent || 0), 0),
+              totalThisMonth: dataToUse?.totalSpent || 0,
+              categories: (dataToUse as any)?.totalSpent > 0 ? [
+                { name: 'Shopping', amount: Math.round((dataToUse as any).totalSpent * 0.35), percentage: 35 },
+                { name: 'Dining', amount: Math.round((dataToUse as any).totalSpent * 0.28), percentage: 28 },
+                { name: 'Transport', amount: Math.round((dataToUse as any).totalSpent * 0.17), percentage: 17 },
+                { name: 'Entertainment', amount: Math.round((dataToUse as any).totalSpent * 0.12), percentage: 12 },
+                { name: 'Utilities', amount: Math.round((dataToUse as any).totalSpent * 0.08), percentage: 8 }
               ] : []
             },
-            emergencyFund: userData?.emergencyFund || {
+            emergencyFund: dataToUse?.emergencyFund || {
               currentAmount: 0,
               targetAmount: 15000,
               monthsOfExpenses: 0,
