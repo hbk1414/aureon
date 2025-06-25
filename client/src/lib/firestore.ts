@@ -444,14 +444,19 @@ export const addAccountToUser = async (uid: string, account: any) => {
       const updatedAccounts = [...currentAccounts, account];
       setLocalAccounts(uid, updatedAccounts);
       
-      // Generate spending transactions for the new account
-      const existingTransactions = getLocalTransactions(uid);
-      const newTransactions = generateSpendingTransactions([account]);
-      const allTransactions = [...existingTransactions, ...newTransactions];
-      setLocalTransactions(uid, allTransactions);
+      // Save account immediately first
+      setLocalAccounts(uid, updatedAccounts);
+      
+      // Generate spending transactions in background
+      setTimeout(() => {
+        const existingTransactions = getLocalTransactions(uid);
+        const newTransactions = generateSpendingTransactions([account]);
+        const allTransactions = [...existingTransactions, ...newTransactions];
+        setLocalTransactions(uid, allTransactions);
+        console.log('Generated transactions:', newTransactions.length);
+      }, 100); // Small delay to ensure account appears first
       
       console.log('Account added successfully to local storage');
-      console.log('Generated transactions:', newTransactions.length);
       return account;
     }
   } catch (error) {

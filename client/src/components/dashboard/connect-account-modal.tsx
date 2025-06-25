@@ -115,28 +115,37 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
       };
 
       console.log("Adding account to user:", newAccount);
-      await addAccountToUser(user.uid, newAccount);
-      console.log("Account added successfully");
       
-      toast({
-        title: "Success",
-        description: `${bankName} ${accountType} connected successfully`,
-      });
-
+      // Close modal immediately for instant feedback
+      onOpenChange(false);
+      
       // Reset form
       setBankName("");
       setAccountType("");
       setBalance("6750");
       
-      // Close modal first
-      onOpenChange(false);
+      // Show success message immediately
+      toast({
+        title: "Success",
+        description: `${bankName} ${accountType} connected successfully`,
+      });
       
-      // Force refresh the dashboard data
+      // Trigger optimistic update immediately
       onAccountAdded();
       
-      // Log the saved account for debugging
-      const savedAccounts = JSON.parse(localStorage.getItem(`accounts_${user.uid}`) || '[]');
-      console.log('Accounts saved to localStorage:', savedAccounts);
+      // Add account in background (async)
+      addAccountToUser(user.uid, newAccount).then(() => {
+        console.log("Account added successfully to storage");
+        // Trigger another refresh to ensure data consistency
+        onAccountAdded();
+      }).catch((error) => {
+        console.error('Error adding account:', error);
+        toast({
+          title: "Warning",
+          description: "Account shown but may not be fully synced",
+          variant: "destructive",
+        });
+      });
     } catch (error) {
       console.error("Error connecting account:", error);
       toast({
