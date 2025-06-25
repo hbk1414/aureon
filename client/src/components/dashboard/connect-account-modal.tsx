@@ -128,9 +128,11 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
       setAccountType("");
       setBalance("6750");
       
+      // Close modal first
+      onOpenChange(false);
+      
       // Force refresh the dashboard data
       onAccountAdded();
-      onOpenChange(false);
       
       // Log the saved account for debugging
       const savedAccounts = JSON.parse(localStorage.getItem(`accounts_${user.uid}`) || '[]');

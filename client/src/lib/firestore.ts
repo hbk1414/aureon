@@ -482,6 +482,11 @@ export const removeAccountFromUser = async (uid: string, accountIndex: number) =
         // Also update local storage
         setLocalAccounts(uid, updatedAccounts);
         
+        // Remove associated transactions from local storage
+        const localTransactions = getLocalTransactions(uid);
+        const filteredTransactions = localTransactions.filter(tx => tx.accountId !== accountIndex + 1);
+        setLocalTransactions(uid, filteredTransactions);
+        
         console.log('Account removed successfully from Firestore');
         return true;
       } else {
@@ -496,6 +501,11 @@ export const removeAccountFromUser = async (uid: string, accountIndex: number) =
       if (accountIndex >= 0 && accountIndex < currentAccounts.length) {
         const updatedAccounts = currentAccounts.filter((_, index) => index !== accountIndex);
         setLocalAccounts(uid, updatedAccounts);
+        
+        // Remove associated transactions from local storage
+        const localTransactions = getLocalTransactions(uid);
+        const filteredTransactions = localTransactions.filter(tx => tx.accountId !== accountIndex + 1);
+        setLocalTransactions(uid, filteredTransactions);
         
         console.log('Account removed successfully from local storage');
         return true;
