@@ -309,14 +309,28 @@ export const getOrCreateUserDocument = async (uid: string, email: string) => {
 // Account management functions
 export const addAccountToUser = async (uid: string, account: any) => {
   try {
-    const userDoc = await getUserDocument(uid);
+    console.log('addAccountToUser called with:', { uid, account });
+    
+    // Add timeout protection
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Operation timeout')), 5000)
+    );
+    
+    const getUserPromise = getUserDocument(uid);
+    const userDoc = await Promise.race([getUserPromise, timeoutPromise]);
+    console.log('Retrieved user document:', userDoc);
+    
     const currentAccounts = userDoc?.accounts || [];
+    console.log('Current accounts:', currentAccounts);
     
     const updatedAccounts = [...currentAccounts, account];
+    console.log('Updated accounts:', updatedAccounts);
     
-    await updateUserDocument(uid, {
+    const updatePromise = updateUserDocument(uid, {
       accounts: updatedAccounts
     });
+    
+    await Promise.race([updatePromise, timeoutPromise]);
     
     console.log('Account added successfully');
     return account;

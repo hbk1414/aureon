@@ -72,6 +72,8 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
   };
 
   const handleSubmit = async () => {
+    console.log("Submit button clicked", { bankName, accountType, balance, user: !!user });
+    
     if (!user?.uid) {
       toast({
         title: "Error",
@@ -101,6 +103,8 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
     }
 
     setIsLoading(true);
+    console.log("Starting account creation...");
+    
     try {
       const newAccount = {
         bankName,
@@ -110,7 +114,9 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
         connectedAt: new Date().toISOString()
       };
 
+      console.log("Adding account to user:", newAccount);
       await addAccountToUser(user.uid, newAccount);
+      console.log("Account added successfully");
       
       toast({
         title: "Success",
@@ -135,6 +141,8 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
       setIsLoading(false);
     }
   };
+
+  console.log("Rendering modal with state:", { open, bankName, accountType, balance });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
