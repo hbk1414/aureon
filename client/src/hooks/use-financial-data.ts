@@ -127,9 +127,15 @@ export function useFinancialData() {
               monthlyContribution: 500
             },
             aiTasks: userData.aiTasks || getFallbackData(user).aiTasks,
-            connectedAccounts: userData?.accounts || getLocalAccountsFallback(user?.uid),
+            connectedAccounts: getLocalAccountsFallback(user?.uid).length > 0 
+              ? getLocalAccountsFallback(user?.uid) 
+              : userData?.accounts || [],
             portfolio: {
-              totalBalance: (userData?.accounts || getLocalAccountsFallback(user?.uid)).reduce((sum: number, account: any) => sum + (account.balance || 0), 0) || 0
+              totalBalance: (() => {
+                const localAccounts = getLocalAccountsFallback(user?.uid);
+                const accounts = localAccounts.length > 0 ? localAccounts : (userData?.accounts || []);
+                return accounts.reduce((sum: number, account: any) => sum + (account.balance || 0), 0);
+              })()
             }
           };
         }
@@ -137,8 +143,24 @@ export function useFinancialData() {
         console.log('Using fallback data due to Firestore issue:', error);
       }
 
-      // Return fallback data immediately if Firestore fails or times out
-      return getFallbackData(user);
+      // Return fallback data with local storage accounts if Firestore fails or times out
+      const fallbackData = getFallbackData(user);
+      const localAccounts = getLocalAccountsFallback(user?.uid);
+      
+      console.log('Using fallback data with local accounts:', {
+        localAccounts,
+        fallbackAccounts: fallbackData.connectedAccounts
+      });
+      
+      return {
+        ...fallbackData,
+        connectedAccounts: localAccounts.length > 0 ? localAccounts : fallbackData.connectedAccounts,
+        portfolio: {
+          totalBalance: localAccounts.length > 0 
+            ? localAccounts.reduce((sum: number, account: any) => sum + (account.balance || 0), 0)
+            : fallbackData.portfolio.totalBalance
+        }
+      };
     },
     enabled: !!user?.uid,
   });
