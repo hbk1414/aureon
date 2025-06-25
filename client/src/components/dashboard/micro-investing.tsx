@@ -24,11 +24,17 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
     let transactionCount = 0;
     
     recentTransactions.forEach(transaction => {
-      const amount = parseFloat(transaction.amount) || 0;
-      if (amount > 0) {
-        const roundUp = Math.ceil(amount) - amount;
-        totalRoundUp += roundUp;
+      // Use pre-calculated round-up if available, otherwise calculate
+      if (transaction.roundUp) {
+        totalRoundUp += parseFloat(transaction.roundUp) || 0;
         transactionCount++;
+      } else {
+        const amount = parseFloat(transaction.amount) || 0;
+        if (amount > 0) {
+          const roundUp = Math.ceil(amount) - amount;
+          totalRoundUp += roundUp;
+          transactionCount++;
+        }
       }
     });
     
@@ -104,37 +110,45 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
           </div>
         </div>
 
-        {/* Round-up Analysis */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6">
+        {/* Spare Change Analysis - Always visible */}
+        <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border-2 border-emerald-200 rounded-lg p-6 mb-6">
           <div className="flex items-center mb-4">
-            <Coins className="h-6 w-6 text-indigo-600 mr-2" />
-            <h4 className="text-lg font-semibold text-gray-800">Spare Change Analysis</h4>
+            <Coins className="h-8 w-8 text-emerald-600 mr-3" />
+            <div>
+              <h4 className="text-xl font-bold text-gray-800">Your Spare Change</h4>
+              <p className="text-sm text-gray-600">Ready to invest from recent purchases</p>
+            </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div className="text-center bg-white rounded-lg p-4">
-              <div className="text-3xl font-bold text-indigo-600">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="text-center bg-white rounded-xl p-6 shadow-sm border border-emerald-100">
+              <div className="text-4xl font-bold text-emerald-600 mb-2">
                 £{roundUpData.total.toFixed(2)}
               </div>
-              <div className="text-sm text-gray-600">Available to Invest</div>
-              <div className="text-xs text-gray-500 mt-1">
-                From {roundUpData.count} transactions
+              <div className="text-lg font-medium text-gray-800">Available Now</div>
+              <div className="text-sm text-gray-500 mt-1">
+                From {roundUpData.count} transactions this month
               </div>
             </div>
-            <div className="text-center bg-white rounded-lg p-4">
-              <div className="text-3xl font-bold text-emerald-600">
+            <div className="text-center bg-white rounded-xl p-6 shadow-sm border border-blue-100">
+              <div className="text-4xl font-bold text-blue-600 mb-2">
                 £{(roundUpData.total * 12).toFixed(2)}
               </div>
-              <div className="text-sm text-gray-600">Potential Annual Investing</div>
-              <div className="text-xs text-gray-500 mt-1">
-                If this trend continues
+              <div className="text-lg font-medium text-gray-800">Annual Potential</div>
+              <div className="text-sm text-gray-500 mt-1">
+                If spending continues at this rate
               </div>
             </div>
           </div>
           
-          <div className="text-sm text-gray-600 bg-white rounded-lg p-3">
-            <strong>How it works:</strong> Each purchase gets rounded up to the nearest pound. 
-            For example, a £4.23 coffee becomes £5.00, investing the 77p difference.
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="flex items-start">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+              <div className="text-sm text-gray-700">
+                <strong>How round-ups work:</strong> Every purchase gets rounded up to the nearest pound. 
+                A £4.23 coffee becomes £5.00, with the 77p difference ready to invest automatically.
+              </div>
+            </div>
           </div>
         </div>
 
