@@ -34,6 +34,28 @@ export default function AccountConnections({ accounts }: AccountConnectionsProps
     }).format(balance);
   };
 
+  const getBankLogo = (bankName: string) => {
+    const bankLogos: { [key: string]: string } = {
+      'Barclays': '🏦', // Blue bank building
+      'HSBC': '🔴', // Red circle
+      'Lloyds': '🐎', // Black horse
+      'NatWest': '💜', // Purple
+      'Santander': '🔥', // Red flame
+      'TSB': '💙', // Blue heart
+      'Nationwide': '🏠', // House
+      'Halifax': '❌', // X mark
+      'First Direct': '1️⃣', // Number 1
+      'Monzo': '🌟', // Hot coral star
+      'Starling': '⭐', // Star
+      'Revolut': '🚀', // Rocket
+      'Chase': '🔷', // Blue diamond
+      'Virgin Money': '🔴', // Red circle
+      'Metro Bank': '🌈', // Rainbow
+    };
+    
+    return bankLogos[bankName] || '🏛️'; // Default bank building
+  };
+
   const handleRemoveAccount = async (index: number) => {
     if (!user?.uid) return;
     
@@ -100,8 +122,8 @@ export default function AccountConnections({ accounts }: AccountConnectionsProps
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors group"
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                      <CreditCard className="text-white w-5 h-5" />
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-lg font-bold">
+                      {getBankLogo(account.bankName)}
                     </div>
                     <div>
                       <p className="font-medium">{account.bankName}</p>
