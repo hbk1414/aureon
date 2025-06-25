@@ -128,8 +128,12 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
       setAccountType("");
       setBalance("6750");
       
+      // Force refresh the dashboard data
       onAccountAdded();
       onOpenChange(false);
+      
+      // Force a page refresh to ensure the account appears
+      window.location.reload();
     } catch (error) {
       console.error("Error connecting account:", error);
       toast({

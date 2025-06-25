@@ -127,9 +127,9 @@ export function useFinancialData() {
               monthlyContribution: 500
             },
             aiTasks: userData.aiTasks || getFallbackData(user).aiTasks,
-            connectedAccounts: userData.accounts || getLocalAccountsFallback(user?.uid),
+            connectedAccounts: userData?.accounts || getLocalAccountsFallback(user?.uid),
             portfolio: {
-              totalBalance: userData.accounts?.reduce((sum: number, account: any) => sum + (account.balance || 0), 0) || 0
+              totalBalance: (userData?.accounts || getLocalAccountsFallback(user?.uid)).reduce((sum: number, account: any) => sum + (account.balance || 0), 0) || 0
             }
           };
         }
