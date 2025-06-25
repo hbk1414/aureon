@@ -35,25 +35,25 @@ export default function AccountConnections({ accounts }: AccountConnectionsProps
   };
 
   const getBankLogo = (bankName: string) => {
-    const bankLogos: { [key: string]: string } = {
-      'Barclays': '🏦', // Blue bank building
-      'HSBC': '🔴', // Red circle
-      'Lloyds': '🐎', // Black horse
-      'NatWest': '💜', // Purple
-      'Santander': '🔥', // Red flame
-      'TSB': '💙', // Blue heart
-      'Nationwide': '🏠', // House
-      'Halifax': '❌', // X mark
-      'First Direct': '1️⃣', // Number 1
-      'Monzo': '🌟', // Hot coral star
-      'Starling': '⭐', // Star
-      'Revolut': '🚀', // Rocket
-      'Chase': '🔷', // Blue diamond
-      'Virgin Money': '🔴', // Red circle
-      'Metro Bank': '🌈', // Rainbow
+    const bankData: { [key: string]: { initials: string; bgColor: string; textColor: string } } = {
+      'Barclays': { initials: 'B', bgColor: 'bg-blue-600', textColor: 'text-white' },
+      'HSBC': { initials: 'H', bgColor: 'bg-red-600', textColor: 'text-white' },
+      'Lloyds': { initials: 'L', bgColor: 'bg-green-700', textColor: 'text-white' },
+      'NatWest': { initials: 'N', bgColor: 'bg-purple-600', textColor: 'text-white' },
+      'Santander': { initials: 'S', bgColor: 'bg-red-500', textColor: 'text-white' },
+      'TSB': { initials: 'T', bgColor: 'bg-blue-500', textColor: 'text-white' },
+      'Nationwide': { initials: 'N', bgColor: 'bg-blue-800', textColor: 'text-white' },
+      'Halifax': { initials: 'H', bgColor: 'bg-blue-400', textColor: 'text-white' },
+      'First Direct': { initials: '1°', bgColor: 'bg-black', textColor: 'text-white' },
+      'Monzo': { initials: 'M', bgColor: 'bg-pink-500', textColor: 'text-white' },
+      'Starling': { initials: 'S', bgColor: 'bg-teal-500', textColor: 'text-white' },
+      'Revolut': { initials: 'R', bgColor: 'bg-gray-900', textColor: 'text-white' },
+      'Chase': { initials: 'C', bgColor: 'bg-blue-700', textColor: 'text-white' },
+      'Virgin Money': { initials: 'V', bgColor: 'bg-red-600', textColor: 'text-white' },
+      'Metro Bank': { initials: 'M', bgColor: 'bg-orange-500', textColor: 'text-white' },
     };
     
-    return bankLogos[bankName] || '🏛️'; // Default bank building
+    return bankData[bankName] || { initials: bankName.charAt(0).toUpperCase(), bgColor: 'bg-gray-600', textColor: 'text-white' };
   };
 
   const handleRemoveAccount = async (index: number) => {
@@ -122,9 +122,14 @@ export default function AccountConnections({ accounts }: AccountConnectionsProps
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors group"
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-lg font-bold">
-                      {getBankLogo(account.bankName)}
-                    </div>
+                    {(() => {
+                      const logoData = getBankLogo(account.bankName);
+                      return (
+                        <div className={`w-10 h-10 ${logoData.bgColor} rounded-lg flex items-center justify-center ${logoData.textColor} text-sm font-bold shadow-sm`}>
+                          {logoData.initials}
+                        </div>
+                      );
+                    })()}
                     <div>
                       <p className="font-medium">{account.bankName}</p>
                       <p className="text-sm text-gray-500">
