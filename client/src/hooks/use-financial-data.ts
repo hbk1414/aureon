@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./use-auth";
 import { getUserDocument } from "@/lib/firestore";
 
-// Local storage fallback helper
+// Local storage fallback helpers
 const getLocalAccountsFallback = (uid?: string): any[] => {
   if (!uid) return [];
   try {
@@ -12,6 +12,57 @@ const getLocalAccountsFallback = (uid?: string): any[] => {
     console.error('Error reading local accounts fallback:', error);
     return [];
   }
+};
+
+const getLocalTransactionsFallback = (uid?: string): any[] => {
+  if (!uid) return [];
+  try {
+    const stored = localStorage.getItem(`transactions_${uid}`);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('Error reading local transactions fallback:', error);
+    return [];
+  }
+};
+
+// Calculate spending breakdown from transactions
+const calculateSpendingBreakdown = (transactions: any[]) => {
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+  
+  // Filter transactions for current month
+  const thisMonthTransactions = transactions.filter(tx => {
+    const txDate = new Date(tx.date);
+    return txDate.getMonth() === currentMonth && 
+           txDate.getFullYear() === currentYear &&
+           tx.amount < 0; // Only spending (negative amounts)
+  });
+  
+  // Calculate total spent this month
+  const totalSpent = Math.abs(thisMonthTransactions.reduce((sum, tx) => sum + tx.amount, 0));
+  
+  // Group by category
+  const categoryTotals: Record<string, number> = {};
+  thisMonthTransactions.forEach(tx => {
+    const category = tx.category || 'Other';
+    categoryTotals[category] = (categoryTotals[category] || 0) + Math.abs(tx.amount);
+  });
+  
+  // Convert to category breakdown with percentages
+  const categories = Object.entries(categoryTotals)
+    .map(([name, amount]) => ({
+      name,
+      amount: Math.round(amount * 100) / 100,
+      percentage: Math.round((amount / totalSpent) * 100)
+    }))
+    .sort((a, b) => b.amount - a.amount);
+  
+  return {
+    totalSpent: Math.round(totalSpent * 100) / 100,
+    categories,
+    transactionCount: thisMonthTransactions.length
+  };
 };
 
 // Fast fallback data for immediate display
@@ -143,18 +194,31 @@ export function useFinancialData() {
         console.log('Using fallback data due to Firestore issue:', error);
       }
 
-      // Return fallback data with local storage accounts if Firestore fails or times out
+      // Return fallback data with local storage accounts and transactions if Firestore fails
       const fallbackData = getFallbackData(user);
       const localAccounts = getLocalAccountsFallback(user?.uid);
+      const localTransactions = getLocalTransactionsFallback(user?.uid);
+      
+      // Calculate real spending from local transactions
+      const spendingData = calculateSpendingBreakdown(localTransactions);
       
       console.log('Using fallback data with local accounts:', {
         localAccounts,
+        localTransactions: localTransactions.length,
+        spendingData,
         fallbackAccounts: fallbackData.connectedAccounts
       });
       
       return {
         ...fallbackData,
         connectedAccounts: localAccounts.length > 0 ? localAccounts : fallbackData.connectedAccounts,
+        spending: {
+          total: spendingData.totalSpent,
+          budget: 3000,
+          remaining: Math.max(0, 3000 - spendingData.totalSpent),
+          totalThisMonth: spendingData.totalSpent,
+          categories: spendingData.categories
+        },
         portfolio: {
           totalBalance: localAccounts.length > 0 
             ? localAccounts.reduce((sum: number, account: any) => sum + (account.balance || 0), 0)

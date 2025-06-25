@@ -325,6 +325,82 @@ const setLocalAccounts = (uid: string, accounts: any[]): void => {
   }
 };
 
+const getLocalTransactions = (uid: string): any[] => {
+  try {
+    const stored = localStorage.getItem(`transactions_${uid}`);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('Error reading local transactions:', error);
+    return [];
+  }
+};
+
+const setLocalTransactions = (uid: string, transactions: any[]): void => {
+  try {
+    localStorage.setItem(`transactions_${uid}`, JSON.stringify(transactions));
+  } catch (error) {
+    console.error('Error saving local transactions:', error);
+  }
+};
+
+// Generate realistic spending transactions for connected accounts
+const generateSpendingTransactions = (accounts: any[]): any[] => {
+  const transactions: any[] = [];
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+
+  // Sample transaction templates with realistic UK spending
+  const transactionTemplates = [
+    { merchant: 'Tesco Express', category: 'Groceries', amount: 15.47 },
+    { merchant: 'Sainsbury\'s', category: 'Groceries', amount: 42.18 },
+    { merchant: 'ASDA', category: 'Groceries', amount: 38.92 },
+    { merchant: 'Shell', category: 'Transport', amount: 65.00 },
+    { merchant: 'BP', category: 'Transport', amount: 58.45 },
+    { merchant: 'TfL', category: 'Transport', amount: 12.50 },
+    { merchant: 'McDonald\'s', category: 'Dining', amount: 8.99 },
+    { merchant: 'Nando\'s', category: 'Dining', amount: 24.50 },
+    { merchant: 'Costa Coffee', category: 'Dining', amount: 4.85 },
+    { merchant: 'Amazon', category: 'Shopping', amount: 29.99 },
+    { merchant: 'ASOS', category: 'Shopping', amount: 67.50 },
+    { merchant: 'John Lewis', category: 'Shopping', amount: 89.00 },
+    { merchant: 'Netflix', category: 'Entertainment', amount: 15.99 },
+    { merchant: 'Spotify', category: 'Entertainment', amount: 9.99 },
+    { merchant: 'Vue Cinema', category: 'Entertainment', amount: 12.50 },
+    { merchant: 'British Gas', category: 'Utilities', amount: 78.50 },
+    { merchant: 'Thames Water', category: 'Utilities', amount: 45.20 },
+    { merchant: 'EE Mobile', category: 'Utilities', amount: 35.00 }
+  ];
+
+  accounts.forEach((account, accountIndex) => {
+    // Generate 15-25 transactions per account for this month
+    const numTransactions = Math.floor(Math.random() * 11) + 15;
+    
+    for (let i = 0; i < numTransactions; i++) {
+      const template = transactionTemplates[Math.floor(Math.random() * transactionTemplates.length)];
+      const day = Math.floor(Math.random() * 25) + 1; // Days 1-25 of current month
+      const transactionDate = new Date(currentYear, currentMonth, day);
+      
+      // Add some variation to amounts (±20%)
+      const variation = (Math.random() * 0.4) - 0.2; // -20% to +20%
+      const amount = Math.round((template.amount * (1 + variation)) * 100) / 100;
+      
+      transactions.push({
+        id: `tx_${accountIndex}_${i}_${Date.now()}`,
+        accountId: accountIndex + 1,
+        amount: -amount, // Negative for spending
+        category: template.category,
+        merchant: template.merchant,
+        description: template.merchant,
+        date: transactionDate.toISOString(),
+        roundUp: Math.round((Math.ceil(amount) - amount) * 100) / 100
+      });
+    }
+  });
+
+  return transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+};
+
 // Account management functions
 export const addAccountToUser = async (uid: string, account: any) => {
   try {
@@ -368,7 +444,14 @@ export const addAccountToUser = async (uid: string, account: any) => {
       const updatedAccounts = [...currentAccounts, account];
       setLocalAccounts(uid, updatedAccounts);
       
+      // Generate spending transactions for the new account
+      const existingTransactions = getLocalTransactions(uid);
+      const newTransactions = generateSpendingTransactions([account]);
+      const allTransactions = [...existingTransactions, ...newTransactions];
+      setLocalTransactions(uid, allTransactions);
+      
       console.log('Account added successfully to local storage');
+      console.log('Generated transactions:', newTransactions.length);
       return account;
     }
   } catch (error) {
