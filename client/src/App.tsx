@@ -5,13 +5,20 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "@/pages/dashboard";
 import Auth from "@/pages/auth";
+import Onboarding from "@/pages/onboarding";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/use-auth";
-import { useEffect } from "react";
+import { getUserDocument } from "@/lib/firestore";
+import { useEffect, useState } from "react";
 
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+function ProtectedRoute({ component: Component, requiresOnboarding = true }: { 
+  component: React.ComponentType; 
+  requiresOnboarding?: boolean;
+}) {
   const { user, loading } = useAuth();
   const [, setLocation] = useLocation();
+  const [userDoc, setUserDoc] = useState<any>(null);
+  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -19,7 +26,27 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
     }
   }, [user, loading, setLocation]);
 
-  if (loading) {
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (user && requiresOnboarding) {
+        try {
+          const doc = await getUserDocument(user.uid);
+          setUserDoc(doc);
+        } catch (error) {
+          console.log("No user document found, needs onboarding");
+        }
+      }
+      setCheckingOnboarding(false);
+    };
+
+    if (user) {
+      checkOnboardingStatus();
+    } else {
+      setCheckingOnboarding(false);
+    }
+  }, [user, requiresOnboarding]);
+
+  if (loading || checkingOnboarding) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -34,6 +61,11 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
     return null;
   }
 
+  // If user needs onboarding and hasn't completed it
+  if (requiresOnboarding && (!userDoc || !userDoc?.onboardingCompleted)) {
+    return <Onboarding />;
+  }
+
   return <Component />;
 }
 
@@ -41,6 +73,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={Auth} />
+      <Route path="/onboarding">
+        <ProtectedRoute component={Onboarding} requiresOnboarding={false} />
+      </Route>
       <Route path="/dashboard">
         <ProtectedRoute component={Dashboard} />
       </Route>

@@ -132,7 +132,7 @@ export function useFinancialData() {
   return useQuery({
     queryKey: ['/api/dashboard', user?.uid],
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     queryFn: async () => {
       if (!user?.uid) throw new Error('User not authenticated');
 
@@ -152,17 +152,17 @@ export function useFinancialData() {
           return {
             ...getFallbackData(user),
             stats: {
-              totalSaved: userData.totalSpent || 0,
+              totalSaved: userData?.totalSpent || 0,
               monthlyIncome: 5000,
-              savingsRate: userData.savingsRate || 15,
-              creditScore: userData.creditScore || 720
+              savingsRate: userData?.savingsRate || 15,
+              creditScore: userData?.creditScore || 720
             },
             spending: {
-              total: userData.totalSpent || 0,
-              budget: userData.monthlyBudget || 3000,
-              remaining: Math.max((userData.monthlyBudget || 3000) - (userData.totalSpent || 0), 0),
-              totalThisMonth: userData.totalSpent || 0,
-              categories: userData.totalSpent > 0 ? [
+              total: userData?.totalSpent || 0,
+              budget: userData?.monthlyBudget || 3000,
+              remaining: Math.max((userData?.monthlyBudget || 3000) - (userData?.totalSpent || 0), 0),
+              totalThisMonth: userData?.totalSpent || 0,
+              categories: userData?.totalSpent > 0 ? [
                 { name: 'Shopping', amount: Math.round(userData.totalSpent * 0.35), percentage: 35 },
                 { name: 'Dining', amount: Math.round(userData.totalSpent * 0.28), percentage: 28 },
                 { name: 'Transport', amount: Math.round(userData.totalSpent * 0.17), percentage: 17 },
@@ -170,14 +170,14 @@ export function useFinancialData() {
                 { name: 'Utilities', amount: Math.round(userData.totalSpent * 0.08), percentage: 8 }
               ] : []
             },
-            emergencyFund: userData.emergencyFund || {
+            emergencyFund: userData?.emergencyFund || {
               currentAmount: 0,
               targetAmount: 15000,
               monthsOfExpenses: 0,
               targetMonths: 6,
               monthlyContribution: 500
             },
-            aiTasks: userData.aiTasks || getFallbackData(user).aiTasks,
+            aiTasks: userData?.aiTasks || getFallbackData(user).aiTasks,
             connectedAccounts: getLocalAccountsFallback(user?.uid).length > 0 
               ? getLocalAccountsFallback(user?.uid) 
               : userData?.accounts || [],

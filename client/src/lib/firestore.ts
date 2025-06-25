@@ -230,7 +230,7 @@ const createDefaultUserData = (email: string) => ({
   updatedAt: serverTimestamp()
 });
 
-export const createUserDocument = async (uid: string, email: string) => {
+export const createUserDocument = async (uid: string, userData: any) => {
   try {
     // Check if document already exists with timeout
     const timeoutPromise = new Promise((_, reject) => 
@@ -247,10 +247,14 @@ export const createUserDocument = async (uid: string, email: string) => {
       return existingDoc;
     }
     
-    const defaultData = createDefaultUserData(email);
-    await setDoc(doc(db, 'users', uid), defaultData);
+    // Use provided userData or default data
+    const dataToSave = userData || createDefaultUserData(userData.email || '');
+    await setDoc(doc(db, 'users', uid), {
+      ...dataToSave,
+      createdAt: serverTimestamp(),
+    });
     console.log('User document created successfully');
-    return defaultData;
+    return dataToSave;
   } catch (error) {
     console.error('Error creating user document:', error);
     // Don't throw error, just log it to prevent auth flow interruption
@@ -538,3 +542,4 @@ export const getUserProfile = async (userId: string) => {
   }
   return null;
 };
+
