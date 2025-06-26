@@ -86,6 +86,20 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
   };
 
   const roundUpData = calculateRoundUps();
+  
+  // Get local round-ups for immediate display
+  const getLocalRoundUps = () => {
+    if (!user?.uid) return [];
+    const localKey = `roundUps_${user.uid}`;
+    try {
+      return JSON.parse(localStorage.getItem(localKey) || '[]').slice(-5);
+    } catch {
+      return [];
+    }
+  };
+  
+  const localStorageRoundUps = getLocalRoundUps();
+  console.log('Local storage round-ups:', localStorageRoundUps.length);
 
   // Toggle round-up setting
   const toggleRoundUpMutation = useMutation({
@@ -214,6 +228,7 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
         const allRoundUps = [...existingRoundUps, ...newRoundUps];
         localStorage.setItem(localKey, JSON.stringify(allRoundUps));
         console.log('Stored transactions locally:', newRoundUps.length);
+        console.log('Total round-ups in storage:', allRoundUps.length);
         
         // Try Firestore but don't block on it
         for (const transaction of transactions) {
@@ -237,10 +252,10 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
       }
     },
     onSuccess: () => {
-      // Force refresh to show new round-up transactions immediately
-      queryClient.invalidateQueries({ queryKey: ['recentRoundUps', user?.uid] });
-      queryClient.invalidateQueries({ queryKey: ['/api/user/financial-data'] });
-      queryClient.refetchQueries({ queryKey: ['recentRoundUps', user?.uid] });
+      // Force component re-render to show new round-ups
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       toast({
         title: "Investment successful",
         description: `£${roundUpData.total.toFixed(2)} invested from your spare change!`,
@@ -367,9 +382,9 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
           {localRoundUpEnabled && (
             <div className="mt-6">
               <h5 className="text-sm font-medium text-gray-700 mb-3">Recent Round-ups</h5>
-              {recentRoundUps.length > 0 ? (
+              {(localStorageRoundUps.length > 0 || recentRoundUps.length > 0) ? (
                 <div className="space-y-2">
-                  {recentRoundUps.slice(0, 5).map((roundUp: any, index: number) => (
+                  {(localStorageRoundUps.length > 0 ? localStorageRoundUps : recentRoundUps).slice(0, 5).map((roundUp: any, index: number) => (
                     <div key={roundUp.id || index} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded text-sm">
                       <div className="flex flex-col">
                         <span className="text-gray-800 font-medium">{roundUp.merchant || 'Unknown Merchant'}</span>
