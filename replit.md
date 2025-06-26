@@ -152,6 +152,13 @@ Changelog:
   - Improved recent round-ups display showing merchant name, transaction flow (£4.23 → £5.00), and round-up amount
   - Implemented proper investment tracking with batch writes to mark transactions as invested
   - All sections now properly respect toggle state with conditional visibility
+- June 26, 2025. Added monthly breakdown chart with enhanced user experience
+  - Created bar chart showing 6 months of round-up savings and investment history
+  - Implemented distinct color scheme: blue for available round-ups, green for invested amounts
+  - Added proper tooltip functionality displaying correct labels for each bar type
+  - Positioned invest button above chart for improved user flow and visual hierarchy
+  - Chart updates in real-time showing investment progress over time with historical sample data
+  - Complete reset functionality removes all references to past transactions after investment
 ```
 
 ## User Preferences

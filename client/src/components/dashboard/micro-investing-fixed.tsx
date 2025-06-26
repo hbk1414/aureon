@@ -236,7 +236,6 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
                       />
                       <Tooltip 
                         formatter={(value: number, name: string, props: any) => {
-                          console.log('Tooltip name:', name, 'dataKey:', props?.dataKey);
                           if (props?.dataKey === 'roundUps' || name === 'Available Round-Ups') {
                             return [`£${value.toFixed(2)}`, 'Available Round-Ups'];
                           } else {
