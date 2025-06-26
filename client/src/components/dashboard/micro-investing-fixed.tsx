@@ -239,22 +239,54 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
                         labelFormatter={(label) => `Month: ${label}`}
                       />
                       <Legend />
-                      <Bar dataKey="roundUps" fill="#10b981" name="Available Round-Ups" />
-                      <Bar dataKey="invested" fill="#059669" name="Invested" />
+                      <Bar dataKey="roundUps" fill="#3b82f6" name="Available Round-Ups" />
+                      <Bar dataKey="invested" fill="#10b981" name="Invested" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center">
-                    <div className="w-3 h-3 bg-emerald-500 rounded-sm mr-2"></div>
+                    <div className="w-3 h-3 bg-blue-500 rounded-sm mr-2"></div>
                     <span>Available to invest this month</span>
                   </div>
                   <div className="flex items-center">
-                    <div className="w-3 h-3 bg-emerald-600 rounded-sm mr-2"></div>
+                    <div className="w-3 h-3 bg-emerald-500 rounded-sm mr-2"></div>
                     <span>Already invested</span>
                   </div>
                 </div>
               </div>
+
+              {/* Invest Button */}
+              {displayData.totalAvailable > 0 && (
+                <div className="mt-4 text-center">
+                  <Button
+                    onClick={() => investMutation.mutate()}
+                    disabled={investMutation.isPending || investmentComplete}
+                    className={`w-full px-8 py-3 text-lg font-medium ${
+                      investmentComplete 
+                        ? 'bg-green-600 hover:bg-green-700 text-white' 
+                        : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    }`}
+                  >
+                    {investMutation.isPending ? (
+                      <>
+                        <TrendingUp className="mr-2 h-5 w-5 animate-pulse" />
+                        Investing...
+                      </>
+                    ) : investmentComplete ? (
+                      <>
+                        <Check className="mr-2 h-5 w-5" />
+                        Invested!
+                      </>
+                    ) : (
+                      <>
+                        <TrendingUp className="mr-2 h-5 w-5" />
+                        Invest £{displayData.totalAvailable.toFixed(2)}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
 
               {/* Your Recent Purchases (only show when there are transactions) */}
               {displayData.transactions.length > 0 && (
@@ -280,38 +312,6 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
                       +{displayData.transactions.length - 5} more purchases
                     </p>
                   )}
-                </div>
-              )}
-
-              {/* Invest Button */}
-              {displayData.totalAvailable > 0 && (
-                <div className="mt-6 text-center">
-                  <Button
-                    onClick={() => investMutation.mutate()}
-                    disabled={investMutation.isPending || investmentComplete}
-                    className={`px-8 py-3 text-lg font-medium ${
-                      investmentComplete 
-                        ? 'bg-green-600 hover:bg-green-700 text-white' 
-                        : 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                    }`}
-                  >
-                    {investMutation.isPending ? (
-                      <>
-                        <TrendingUp className="mr-2 h-5 w-5 animate-pulse" />
-                        Investing...
-                      </>
-                    ) : investmentComplete ? (
-                      <>
-                        <Check className="mr-2 h-5 w-5" />
-                        Invested!
-                      </>
-                    ) : (
-                      <>
-                        <TrendingUp className="mr-2 h-5 w-5" />
-                        Invest £{displayData.totalAvailable.toFixed(2)}
-                      </>
-                    )}
-                  </Button>
                 </div>
               )}
             </div>
