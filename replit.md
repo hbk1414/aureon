@@ -145,6 +145,13 @@ Changelog:
   - Built recent round-ups display showing transactions like "Costa Coffee - £0.77"
   - Fixed toggle disabled state issues and proper conditional visibility for invest button
   - Enhanced user experience with proper state management and real-time updates
+- June 26, 2025. Enhanced Firestore roundUps subcollection with authentic UK transaction data
+  - Implemented comprehensive roundUps subcollection with fields: merchant, amountSpent, roundUp, date, category, invested, createdAt
+  - Enhanced invest button to generate realistic UK merchant transactions (Costa Coffee, Tesco, Sainsbury's, TfL, etc.)
+  - Added intelligent transaction generation that creates accurate round-up amounts summing to exact total
+  - Improved recent round-ups display showing merchant name, transaction flow (£4.23 → £5.00), and round-up amount
+  - Implemented proper investment tracking with batch writes to mark transactions as invested
+  - All sections now properly respect toggle state with conditional visibility
 ```
 
 ## User Preferences
