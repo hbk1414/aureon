@@ -21,6 +21,7 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
   
   const [localRoundUpEnabled, setLocalRoundUpEnabled] = useState(true);
   const [investmentComplete, setInvestmentComplete] = useState(false);
+  const [forceRefresh, setForceRefresh] = useState(0);
 
   // Generate realistic past spending that created your spare change
   const generatePastSpendingTransactions = () => {
@@ -78,6 +79,7 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
     const spendingKey = `yourPastSpending_${user.uid}`;
     let spendingData = localStorage.getItem(spendingKey);
     
+    // If no data exists, generate some spending transactions
     if (!spendingData) {
       const generated = generatePastSpendingTransactions();
       localStorage.setItem(spendingKey, JSON.stringify(generated));
@@ -87,12 +89,18 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
     return JSON.parse(spendingData);
   };
 
+  // Get fresh data on every render (includes forceRefresh dependency)
   const pastSpending = getPastSpendingData();
+  
+  // After investment, show no spare change available
+  const displayData = investmentComplete ? 
+    { transactions: pastSpending.transactions, totalAvailable: 0 } : 
+    pastSpending;
 
   // Investment mutation - just records the investment, doesn't create new transactions
   const investMutation = useMutation({
     mutationFn: async () => {
-      console.log('Investing spare change:', pastSpending.totalAvailable);
+      console.log('Investing spare change:', displayData.totalAvailable);
       
       // Record the investment
       const investmentKey = `investments_${user?.uid}`;
@@ -100,7 +108,7 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
       
       investments.push({
         id: Date.now(),
-        amount: pastSpending.totalAvailable,
+        amount: displayData.totalAvailable,
         date: new Date().toISOString(),
         type: 'round_up_investment'
       });
@@ -119,13 +127,12 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
       setInvestmentComplete(true);
       toast({
         title: "Spare change invested!",
-        description: `£${pastSpending.totalAvailable.toFixed(2)} from your recent purchases has been invested.`,
+        description: `£${displayData.totalAvailable.toFixed(2)} from your recent purchases has been invested.`,
       });
       
-      // Refresh after showing success state
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+      // Force component to re-render with fresh data
+      setForceRefresh(prev => prev + 1);
+      queryClient.invalidateQueries({ queryKey: ['/api/user/financial-data'] });
     }
   });
 
@@ -155,10 +162,10 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
               <div className="bg-emerald-50 p-4 rounded-lg">
                 <h5 className="font-medium text-emerald-800 mb-2">Available to Invest</h5>
                 <div className="text-2xl font-bold text-emerald-600">
-                  £{pastSpending.totalAvailable.toFixed(2)}
+                  £{displayData.totalAvailable.toFixed(2)}
                 </div>
                 <p className="text-sm text-emerald-700 mt-1">
-                  From {pastSpending.transactions.length} recent purchases
+                  From {displayData.transactions.length} recent purchases
                 </p>
               </div>
 
@@ -166,7 +173,7 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
               <div>
                 <h5 className="text-sm font-medium text-gray-700 mb-3">Your Recent Purchases</h5>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {pastSpending.transactions.slice(0, 5).map((purchase: any, index: number) => (
+                  {displayData.transactions.slice(0, 5).map((purchase: any, index: number) => (
                     <div key={purchase.id || index} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded text-sm">
                       <div>
                         <div className="font-medium">{purchase.merchant}</div>
@@ -180,15 +187,15 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
                     </div>
                   ))}
                 </div>
-                {pastSpending.transactions.length > 5 && (
+                {displayData.transactions.length > 5 && (
                   <p className="text-xs text-gray-500 mt-2 text-center">
-                    +{pastSpending.transactions.length - 5} more purchases
+                    +{displayData.transactions.length - 5} more purchases
                   </p>
                 )}
               </div>
 
               {/* Invest Button */}
-              {pastSpending.totalAvailable > 0 && (
+              {displayData.totalAvailable > 0 && (
                 <div className="mt-6 text-center">
                   <Button
                     onClick={() => investMutation.mutate()}
@@ -212,7 +219,7 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
                     ) : (
                       <>
                         <TrendingUp className="mr-2 h-5 w-5" />
-                        Invest £{pastSpending.totalAvailable.toFixed(2)}
+                        Invest £{displayData.totalAvailable.toFixed(2)}
                       </>
                     )}
                   </Button>
