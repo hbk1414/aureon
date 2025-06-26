@@ -235,7 +235,10 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
                         tickFormatter={(value) => `£${value}`}
                       />
                       <Tooltip 
-                        formatter={(value: number, name: string) => [`£${value.toFixed(2)}`, name === 'roundUps' ? 'Available Round-Ups' : 'Invested']}
+                        formatter={(value: number, name: string) => {
+                          const label = name === 'roundUps' ? 'Available Round-Ups' : 'Invested';
+                          return [`£${value.toFixed(2)}`, label];
+                        }}
                         labelFormatter={(label) => `Month: ${label}`}
                       />
                       <Legend />
