@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { updateRoundUpSetting, addRoundUpTransaction, investRoundUps, getUserRoundUps, getRoundUpSetting } from "@/lib/firestore";
 import type { InvestingAccount, Transaction } from "@shared/schema";
+import { useState, useEffect } from "react";
 
 interface MicroInvestingProps {
   investingAccount: InvestingAccount | null;
@@ -19,14 +20,24 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  
+  // Local state for toggle with immediate UI updates
+  const [localRoundUpEnabled, setLocalRoundUpEnabled] = useState(true);
 
   // Get round-up setting from Firestore
-  const { data: roundUpEnabled = true } = useQuery({
+  const { data: firestoreRoundUpEnabled = true } = useQuery({
     queryKey: ['roundUpSetting', user?.uid],
     queryFn: () => user?.uid ? getRoundUpSetting(user.uid) : Promise.resolve(true),
     enabled: !!user?.uid,
     staleTime: 5 * 60 * 1000,
   });
+
+  // Sync local state with Firestore data when it loads
+  useEffect(() => {
+    if (firestoreRoundUpEnabled !== undefined) {
+      setLocalRoundUpEnabled(firestoreRoundUpEnabled);
+    }
+  }, [firestoreRoundUpEnabled]);
 
   // Get recent round-ups from Firestore
   const { data: recentRoundUps = [] } = useQuery({
@@ -77,7 +88,9 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
         description: `Round-ups ${enabled ? 'enabled' : 'disabled'} successfully.`,
       });
     },
-    onError: () => {
+    onError: (error, variables) => {
+      // Revert local state on error
+      setLocalRoundUpEnabled(!variables);
       toast({
         title: "Error updating settings",
         description: "Failed to update round-up settings. Please try again.",
@@ -85,6 +98,13 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
       });
     },
   });
+
+  const handleToggleRoundUp = (checked: boolean) => {
+    // Update local state immediately for responsive UI
+    setLocalRoundUpEnabled(checked);
+    // Then update Firestore
+    toggleRoundUpMutation.mutate(checked);
+  };
 
   // Invest round-ups
   const investMutation = useMutation({
@@ -125,10 +145,6 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
     },
   });
 
-  const handleToggleRoundUp = (checked: boolean) => {
-    toggleRoundUpMutation.mutate(checked);
-  };
-
   const investmentOptions = [
     {
       name: "FTSE 100 Index Fund",
@@ -165,7 +181,7 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
             </Label>
             <Switch
               id="roundup-toggle"
-              checked={roundUpEnabled}
+              checked={localRoundUpEnabled}
               onCheckedChange={handleToggleRoundUp}
               disabled={false}
             />
@@ -173,7 +189,7 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
         </div>
 
         {/* Spare Change Analysis - Only visible when round-ups are enabled */}
-        {roundUpEnabled && (
+        {localRoundUpEnabled && (
             <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border-2 border-emerald-200 rounded-lg p-6 mb-6">
             <div className="flex items-center mb-4">
               <Coins className="h-8 w-8 text-emerald-600 mr-3" />
@@ -215,7 +231,7 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
           </div>
           
           {/* Invest Button - Only visible when round-ups are enabled and there's money to invest */}
-          {roundUpEnabled && roundUpData.total > 0 && (
+          {localRoundUpEnabled && roundUpData.total > 0 && (
             <div className="mt-6 text-center">
               <Button
                 onClick={() => investMutation.mutate()}
