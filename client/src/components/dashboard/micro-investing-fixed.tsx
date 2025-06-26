@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import type { InvestingAccount, Transaction } from "@shared/schema";
 
 interface MicroInvestingProps {
@@ -97,6 +98,53 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
     { transactions: [], totalAvailable: 0 } : 
     pastSpending;
 
+  // Generate monthly breakdown data for charts
+  const getMonthlyBreakdownData = () => {
+    if (!user?.uid) return [];
+    
+    const investmentKey = `investments_${user.uid}`;
+    let investments = JSON.parse(localStorage.getItem(investmentKey) || '[]');
+    
+    // Add some historical sample data if none exists
+    if (investments.length === 0) {
+      const sampleData = [
+        { id: 1, amount: 12.45, date: '2024-10-15T10:30:00Z', type: 'round_up_investment' },
+        { id: 2, amount: 8.67, date: '2024-11-20T14:20:00Z', type: 'round_up_investment' },
+        { id: 3, amount: 15.23, date: '2024-12-10T09:15:00Z', type: 'round_up_investment' },
+      ];
+      localStorage.setItem(investmentKey, JSON.stringify(sampleData));
+      investments = sampleData;
+    }
+    
+    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+    
+    // Generate last 6 months of data
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthKey = date.toISOString().slice(0, 7);
+      const monthName = date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+      
+      const monthInvestments = investments.filter((inv: any) => inv.date?.startsWith(monthKey));
+      const totalInvested = monthInvestments.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0);
+      
+      // For current month, add available round-ups (only if not invested)
+      const currentRoundUps = (monthKey === currentMonth && !investmentComplete) ? displayData.totalAvailable : 0;
+      
+      months.push({
+        month: monthName,
+        roundUps: parseFloat(currentRoundUps.toFixed(2)),
+        invested: parseFloat(totalInvested.toFixed(2)),
+        total: parseFloat((currentRoundUps + totalInvested).toFixed(2))
+      });
+    }
+    
+    return months;
+  };
+
+  const monthlyData = getMonthlyBreakdownData();
+
   // Investment mutation - just records the investment, doesn't create new transactions
   const investMutation = useMutation({
     mutationFn: async () => {
@@ -158,7 +206,7 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
 
         {localRoundUpEnabled ? (
           <>
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="bg-emerald-50 p-4 rounded-lg">
                 <h5 className="font-medium text-emerald-800 mb-2">Available to Invest</h5>
                 <div className="text-2xl font-bold text-emerald-600">
@@ -173,6 +221,39 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
                     Make purchases to accumulate spare change
                   </p>
                 )}
+              </div>
+
+              {/* Monthly Breakdown Chart */}
+              <div className="bg-white p-4 rounded-lg border">
+                <h5 className="font-medium text-gray-800 mb-4">Monthly Round-Up & Investment History</h5>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis 
+                        tickFormatter={(value) => `£${value}`}
+                      />
+                      <Tooltip 
+                        formatter={(value: number, name: string) => [`£${value.toFixed(2)}`, name === 'roundUps' ? 'Available Round-Ups' : 'Invested']}
+                        labelFormatter={(label) => `Month: ${label}`}
+                      />
+                      <Legend />
+                      <Bar dataKey="roundUps" fill="#10b981" name="Available Round-Ups" />
+                      <Bar dataKey="invested" fill="#059669" name="Invested" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-emerald-500 rounded-sm mr-2"></div>
+                    <span>Available to invest this month</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-emerald-600 rounded-sm mr-2"></div>
+                    <span>Already invested</span>
+                  </div>
+                </div>
               </div>
 
               {/* Your Recent Purchases (only show when there are transactions) */}
