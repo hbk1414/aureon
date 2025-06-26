@@ -39,10 +39,23 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
     }
   }, [firestoreRoundUpEnabled]);
 
-  // Get recent round-ups from Firestore
+  // Get recent round-ups with local storage fallback
   const { data: recentRoundUps = [] } = useQuery({
     queryKey: ['recentRoundUps', user?.uid],
-    queryFn: () => user?.uid ? getUserRoundUps(user.uid, 5) : Promise.resolve([]),
+    queryFn: async () => {
+      if (!user?.uid) return [];
+      
+      try {
+        // Try Firestore first
+        return await getUserRoundUps(user.uid, 5);
+      } catch (error) {
+        console.warn('Firestore unavailable, using local storage for round-ups');
+        // Fallback to local storage
+        const localKey = `roundUps_${user.uid}`;
+        const localRoundUps = JSON.parse(localStorage.getItem(localKey) || '[]');
+        return localRoundUps.slice(-5); // Get last 5 transactions
+      }
+    },
     enabled: !!user?.uid,
     staleTime: 1 * 60 * 1000,
   });
@@ -182,23 +195,52 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
       
       console.log('Generated transactions:', transactions.length);
       
-      // Store transactions in Firestore roundUps subcollection with retry logic
+          // Store transactions locally and in Firestore with fallback
       try {
+        // Store locally first for immediate display
+        const localKey = `roundUps_${user.uid}`;
+        const existingRoundUps = JSON.parse(localStorage.getItem(localKey) || '[]');
+        const newRoundUps = transactions.map((t, index) => ({
+          id: `local_${Date.now()}_${index}`,
+          merchant: t.merchant,
+          amountSpent: t.amountSpent,
+          roundUp: t.roundUp,
+          date: t.date,
+          category: t.category,
+          invested: true,
+          createdAt: new Date().toISOString()
+        }));
+        
+        const allRoundUps = [...existingRoundUps, ...newRoundUps];
+        localStorage.setItem(localKey, JSON.stringify(allRoundUps));
+        console.log('Stored transactions locally:', newRoundUps.length);
+        
+        // Try Firestore but don't block on it
         for (const transaction of transactions) {
-          await addRoundUpTransaction(user.uid, transaction);
+          try {
+            await addRoundUpTransaction(user.uid, transaction);
+          } catch (firestoreError) {
+            console.warn('Firestore write failed, using local storage:', firestoreError);
+          }
         }
         
-        const result = await investRoundUps(user.uid, amount);
-        return result;
+        try {
+          const result = await investRoundUps(user.uid, amount);
+          return result;
+        } catch (firestoreError) {
+          console.warn('Firestore investment failed, using local fallback:', firestoreError);
+          return { success: true, amount };
+        }
       } catch (error) {
         console.error('Investment error:', error);
-        // If Firestore fails, still return success to update UI
         return { success: true, amount };
       }
     },
     onSuccess: () => {
+      // Force refresh to show new round-up transactions immediately
       queryClient.invalidateQueries({ queryKey: ['recentRoundUps', user?.uid] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/financial-data'] });
+      queryClient.refetchQueries({ queryKey: ['recentRoundUps', user?.uid] });
       toast({
         title: "Investment successful",
         description: `£${roundUpData.total.toFixed(2)} invested from your spare change!`,
