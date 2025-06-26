@@ -23,6 +23,7 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
   
   // Local state for toggle with immediate UI updates
   const [localRoundUpEnabled, setLocalRoundUpEnabled] = useState(true);
+  const [investmentComplete, setInvestmentComplete] = useState(false);
 
   // Get round-up setting from Firestore
   const { data: firestoreRoundUpEnabled = true } = useQuery({
@@ -252,10 +253,11 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
       }
     },
     onSuccess: () => {
-      // Force component re-render to show new round-ups
+      // Mark investment as complete and show success state
+      setInvestmentComplete(true);
       setTimeout(() => {
         window.location.reload();
-      }, 1000);
+      }, 2000);
       toast({
         title: "Investment successful",
         description: `£${roundUpData.total.toFixed(2)} invested from your spare change!`,
@@ -360,13 +362,22 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
             <div className="mt-6 text-center">
               <Button
                 onClick={() => investMutation.mutate()}
-                disabled={investMutation.isPending}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg font-medium"
+                disabled={investMutation.isPending || investmentComplete}
+                className={`px-8 py-3 text-lg font-medium ${
+                  investmentComplete 
+                    ? 'bg-green-600 hover:bg-green-700 text-white' 
+                    : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                }`}
               >
                 {investMutation.isPending ? (
                   <>
                     <TrendingUp className="mr-2 h-5 w-5 animate-pulse" />
                     Investing...
+                  </>
+                ) : investmentComplete ? (
+                  <>
+                    <Check className="mr-2 h-5 w-5" />
+                    Invested!
                   </>
                 ) : (
                   <>
