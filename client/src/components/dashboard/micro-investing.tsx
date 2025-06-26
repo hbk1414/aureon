@@ -67,9 +67,10 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
   const toggleRoundUpMutation = useMutation({
     mutationFn: async (enabled: boolean) => {
       if (!user?.uid) throw new Error('User not authenticated');
-      return updateRoundUpSetting(user.uid, enabled);
+      await updateRoundUpSetting(user.uid, enabled);
+      return enabled;
     },
-    onSuccess: (success, enabled) => {
+    onSuccess: (enabled) => {
       queryClient.invalidateQueries({ queryKey: ['roundUpSetting', user?.uid] });
       toast({
         title: "Round-up settings updated",
@@ -166,7 +167,7 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
               id="roundup-toggle"
               checked={roundUpEnabled}
               onCheckedChange={handleToggleRoundUp}
-              disabled={toggleRoundUpMutation.isPending}
+              disabled={false}
             />
           </div>
         </div>
@@ -213,8 +214,8 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
             </div>
           </div>
           
-          {/* Invest Button */}
-          {roundUpData.total > 0 && (
+          {/* Invest Button - Only visible when round-ups are enabled and there's money to invest */}
+          {roundUpEnabled && roundUpData.total > 0 && (
             <div className="mt-6 text-center">
               <Button
                 onClick={() => investMutation.mutate()}

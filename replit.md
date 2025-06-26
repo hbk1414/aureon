@@ -138,6 +138,13 @@ Changelog:
   - Implemented annual potential calculation showing projected investing amount if spending trends continue
   - Enhanced dashboard to display real-time round-up amounts available for investment with detailed breakdown
   - Added risk categorization (Low/Medium/High) with expected returns and professional investment recommendations
+- June 26, 2025. Completed round-up toggle functionality with Firestore integration
+  - Implemented working round-up toggle that saves state to Firestore with proper persistence
+  - Added Firestore subcollection storage for round-up transactions with merchant, amount, and date tracking
+  - Created invest button logic that transfers spare change amounts to investment bucket
+  - Built recent round-ups display showing transactions like "Costa Coffee - £0.77"
+  - Fixed toggle disabled state issues and proper conditional visibility for invest button
+  - Enhanced user experience with proper state management and real-time updates
 ```
 
 ## User Preferences
