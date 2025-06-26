@@ -299,9 +299,16 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
           {localRoundUpEnabled && roundUpData.total > 0 && (
             <div className="mt-6 text-center">
               <Button
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('BUTTON CLICKED!');
                   console.log('Invest button clicked, amount:', roundUpData.total);
                   console.log('User ID:', user?.uid);
+                  console.log('localRoundUpEnabled:', localRoundUpEnabled);
+                  console.log('roundUpData.total:', roundUpData.total);
+                  console.log('Button disabled?', investMutation.isPending);
+                  alert('Button clicked - check console for details');
                   investMutation.mutate();
                 }}
                 disabled={investMutation.isPending}
