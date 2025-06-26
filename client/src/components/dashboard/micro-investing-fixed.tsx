@@ -92,9 +92,9 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
   // Get fresh data on every render (includes forceRefresh dependency)
   const pastSpending = getPastSpendingData();
   
-  // After investment, show no spare change available
+  // After investment, show completely reset state
   const displayData = investmentComplete ? 
-    { transactions: pastSpending.transactions, totalAvailable: 0 } : 
+    { transactions: [], totalAvailable: 0 } : 
     pastSpending;
 
   // Investment mutation - just records the investment, doesn't create new transactions
@@ -164,35 +164,43 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
                 <div className="text-2xl font-bold text-emerald-600">
                   £{displayData.totalAvailable.toFixed(2)}
                 </div>
-                <p className="text-sm text-emerald-700 mt-1">
-                  From {displayData.transactions.length} recent purchases
-                </p>
-              </div>
-
-              {/* Your Recent Purchases (that created the spare change) */}
-              <div>
-                <h5 className="text-sm font-medium text-gray-700 mb-3">Your Recent Purchases</h5>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {displayData.transactions.slice(0, 5).map((purchase: any, index: number) => (
-                    <div key={purchase.id || index} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded text-sm">
-                      <div>
-                        <div className="font-medium">{purchase.merchant}</div>
-                        <div className="text-gray-500 text-xs">
-                          £{purchase.actualSpent.toFixed(2)} → £{purchase.roundedTo.toFixed(2)}
-                        </div>
-                      </div>
-                      <div className="text-emerald-600 font-medium">
-                        +£{purchase.roundUpAmount.toFixed(2)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {displayData.transactions.length > 5 && (
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    +{displayData.transactions.length - 5} more purchases
+                {displayData.totalAvailable > 0 ? (
+                  <p className="text-sm text-emerald-700 mt-1">
+                    From {displayData.transactions.length} recent purchases
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-500 mt-1">
+                    Make purchases to accumulate spare change
                   </p>
                 )}
               </div>
+
+              {/* Your Recent Purchases (only show when there are transactions) */}
+              {displayData.transactions.length > 0 && (
+                <div>
+                  <h5 className="text-sm font-medium text-gray-700 mb-3">Your Recent Purchases</h5>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {displayData.transactions.slice(0, 5).map((purchase: any, index: number) => (
+                      <div key={purchase.id || index} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded text-sm">
+                        <div>
+                          <div className="font-medium">{purchase.merchant}</div>
+                          <div className="text-gray-500 text-xs">
+                            £{purchase.actualSpent.toFixed(2)} → £{purchase.roundedTo.toFixed(2)}
+                          </div>
+                        </div>
+                        <div className="text-emerald-600 font-medium">
+                          +£{purchase.roundUpAmount.toFixed(2)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {displayData.transactions.length > 5 && (
+                    <p className="text-xs text-gray-500 mt-2 text-center">
+                      +{displayData.transactions.length - 5} more purchases
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Invest Button */}
               {displayData.totalAvailable > 0 && (
