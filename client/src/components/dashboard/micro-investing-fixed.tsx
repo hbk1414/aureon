@@ -235,9 +235,13 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
                         tickFormatter={(value) => `£${value}`}
                       />
                       <Tooltip 
-                        formatter={(value: number, name: string) => {
-                          const label = name === 'roundUps' ? 'Available Round-Ups' : 'Invested';
-                          return [`£${value.toFixed(2)}`, label];
+                        formatter={(value: number, name: string, props: any) => {
+                          console.log('Tooltip name:', name, 'dataKey:', props?.dataKey);
+                          if (props?.dataKey === 'roundUps' || name === 'Available Round-Ups') {
+                            return [`£${value.toFixed(2)}`, 'Available Round-Ups'];
+                          } else {
+                            return [`£${value.toFixed(2)}`, 'Invested'];
+                          }
                         }}
                         labelFormatter={(label) => `Month: ${label}`}
                       />
