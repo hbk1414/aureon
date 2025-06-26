@@ -270,9 +270,10 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
           </div>
         )}
 
-        {/* Investment Options */}
-        <div className="space-y-4">
-          <h4 className="text-lg font-semibold text-gray-800 mb-3">Investment Options</h4>
+        {/* Investment Options - Only visible when round-ups are enabled */}
+        {localRoundUpEnabled && (
+          <div className="space-y-4">
+            <h4 className="text-lg font-semibold text-gray-800 mb-3">Investment Options</h4>
           {investmentOptions.map((option, index) => (
             <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between">
@@ -292,9 +293,10 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
 
-        {roundUpData.total > 0 && (
+        {localRoundUpEnabled && roundUpData.total > 0 && (
           <div className="mt-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
             <div className="flex items-center">
               <Coins className="h-5 w-5 text-amber-600 mr-2" />
