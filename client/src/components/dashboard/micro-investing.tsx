@@ -73,6 +73,13 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
   };
 
   const roundUpData = calculateRoundUps();
+  
+  // Debug logging
+  console.log('MicroInvesting Debug:');
+  console.log('localRoundUpEnabled:', localRoundUpEnabled);
+  console.log('roundUpData:', roundUpData);
+  console.log('recentTransactions:', recentTransactions?.length || 0);
+  console.log('user:', user?.uid);
 
   // Toggle round-up setting
   const toggleRoundUpMutation = useMutation({
@@ -295,8 +302,13 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
             </div>
           </div>
           
-          {/* Invest Button - Only visible when round-ups are enabled and there's money to invest */}
-          {localRoundUpEnabled && roundUpData.total > 0 && (
+          {/* Invest Button - Debug visibility */}
+          <div className="mt-6 text-center bg-yellow-100 p-2 rounded text-sm">
+            Debug: localRoundUpEnabled={String(localRoundUpEnabled)}, total={roundUpData.total}
+          </div>
+          
+          {/* Invest Button - Always show for testing */}
+          {true && (
             <div className="mt-6 text-center">
               <Button
                 onClick={(e) => {
