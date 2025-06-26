@@ -12,7 +12,9 @@ import {
   orderBy, 
   limit,
   Timestamp,
-  serverTimestamp
+  serverTimestamp,
+  writeBatch,
+  increment
 } from "firebase/firestore";
 import { db } from "./firebase";
 import type { 
@@ -542,4 +544,129 @@ export const getUserProfile = async (userId: string) => {
   }
   return null;
 };
+
+// Round-up management functions
+export async function updateRoundUpSetting(userId: string, enabled: boolean) {
+  try {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, { 
+      roundUpEnabled: enabled,
+      updatedAt: new Date()
+    });
+    console.log(`Round-up setting updated to: ${enabled}`);
+    return true;
+  } catch (error) {
+    console.error('Error updating round-up setting:', error);
+    // Store in localStorage as fallback
+    localStorage.setItem(`roundUpEnabled_${userId}`, enabled.toString());
+    return false;
+  }
+}
+
+export async function addRoundUpTransaction(userId: string, roundUpData: {
+  merchant: string;
+  amountSpent: number;
+  roundUp: number;
+  date: string;
+  category: string;
+}) {
+  try {
+    const roundUpsRef = collection(db, 'users', userId, 'roundUps');
+    await addDoc(roundUpsRef, {
+      ...roundUpData,
+      createdAt: new Date(),
+      invested: false
+    });
+    console.log('Round-up transaction added to Firestore');
+    return true;
+  } catch (error) {
+    console.error('Error adding round-up transaction:', error);
+    // Store in localStorage as fallback
+    const existing = JSON.parse(localStorage.getItem(`roundUps_${userId}`) || '[]');
+    existing.push({
+      ...roundUpData,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      invested: false
+    });
+    localStorage.setItem(`roundUps_${userId}`, JSON.stringify(existing));
+    return false;
+  }
+}
+
+export async function investRoundUps(userId: string, totalAmount: number) {
+  try {
+    const batch = writeBatch(db);
+    
+    // Update user's total invested amount
+    const userRef = doc(db, 'users', userId);
+    batch.update(userRef, {
+      totalInvested: increment(totalAmount),
+      lastInvestmentDate: new Date()
+    });
+    
+    // Mark all uninvested round-ups as invested
+    const roundUpsRef = collection(db, 'users', userId, 'roundUps');
+    const q = query(roundUpsRef, where('invested', '==', false));
+    const querySnapshot = await getDocs(q);
+    
+    querySnapshot.forEach((doc) => {
+      batch.update(doc.ref, { invested: true, investedAt: new Date() });
+    });
+    
+    await batch.commit();
+    console.log(`Invested £${totalAmount} from round-ups`);
+    return true;
+  } catch (error) {
+    console.error('Error investing round-ups:', error);
+    // Fallback to localStorage
+    const existing = JSON.parse(localStorage.getItem(`roundUps_${userId}`) || '[]');
+    const updated = existing.map((roundUp: any) => ({
+      ...roundUp,
+      invested: true,
+      investedAt: new Date().toISOString()
+    }));
+    localStorage.setItem(`roundUps_${userId}`, JSON.stringify(updated));
+    
+    // Update total invested in localStorage
+    const currentInvested = parseFloat(localStorage.getItem(`totalInvested_${userId}`) || '0');
+    localStorage.setItem(`totalInvested_${userId}`, (currentInvested + totalAmount).toString());
+    return false;
+  }
+}
+
+export async function getUserRoundUps(userId: string, limit: number = 10) {
+  try {
+    const roundUpsRef = collection(db, 'users', userId, 'roundUps');
+    const q = query(
+      roundUpsRef, 
+      where('invested', '==', false),
+      orderBy('createdAt', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const results = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    return results.slice(0, limit);
+  } catch (error) {
+    console.error('Error getting round-ups from Firestore:', error);
+    // Fallback to localStorage
+    const existing = JSON.parse(localStorage.getItem(`roundUps_${userId}`) || '[]');
+    return existing.filter((roundUp: any) => !roundUp.invested).slice(0, limit);
+  }
+}
+
+export async function getRoundUpSetting(userId: string): Promise<boolean> {
+  try {
+    const userDoc = await getUserDocument(userId);
+    return userDoc?.roundUpEnabled ?? true; // Default to enabled
+  } catch (error) {
+    console.error('Error getting round-up setting:', error);
+    // Fallback to localStorage
+    const stored = localStorage.getItem(`roundUpEnabled_${userId}`);
+    return stored ? stored === 'true' : true;
+  }
+}
 

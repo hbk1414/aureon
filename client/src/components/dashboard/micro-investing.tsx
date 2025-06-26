@@ -1,10 +1,13 @@
-import { Coins } from "lucide-react";
+import { Coins, Check, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { updateRoundUpSetting, addRoundUpTransaction, investRoundUps, getUserRoundUps, getRoundUpSetting } from "@/lib/firestore";
 import type { InvestingAccount, Transaction } from "@shared/schema";
 
 interface MicroInvestingProps {
@@ -15,6 +18,23 @@ interface MicroInvestingProps {
 export default function MicroInvesting({ investingAccount, recentTransactions }: MicroInvestingProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  // Get round-up setting from Firestore
+  const { data: roundUpEnabled = true } = useQuery({
+    queryKey: ['roundUpSetting', user?.uid],
+    queryFn: () => user?.uid ? getRoundUpSetting(user.uid) : Promise.resolve(true),
+    enabled: !!user?.uid,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Get recent round-ups from Firestore
+  const { data: recentRoundUps = [] } = useQuery({
+    queryKey: ['recentRoundUps', user?.uid],
+    queryFn: () => user?.uid ? getUserRoundUps(user.uid, 5) : Promise.resolve([]),
+    enabled: !!user?.uid,
+    staleTime: 1 * 60 * 1000,
+  });
 
   // Calculate round-ups from recent transactions
   const calculateRoundUps = () => {
@@ -43,21 +63,62 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
 
   const roundUpData = calculateRoundUps();
 
+  // Toggle round-up setting
   const toggleRoundUpMutation = useMutation({
     mutationFn: async (enabled: boolean) => {
-      return apiRequest("PATCH", "/api/investing/1/toggle-roundup", { enabled });
+      if (!user?.uid) throw new Error('User not authenticated');
+      return updateRoundUpSetting(user.uid, enabled);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/1"] });
+    onSuccess: (success, enabled) => {
+      queryClient.invalidateQueries({ queryKey: ['roundUpSetting', user?.uid] });
       toast({
-        title: "Success",
-        description: "Round-up investing settings updated",
+        title: "Round-up settings updated",
+        description: `Round-ups ${enabled ? 'enabled' : 'disabled'} successfully.`,
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to update round-up settings",
+        title: "Error updating settings",
+        description: "Failed to update round-up settings. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Invest round-ups
+  const investMutation = useMutation({
+    mutationFn: async () => {
+      if (!user?.uid) throw new Error('User not authenticated');
+      const amount = roundUpData.total;
+      if (amount <= 0) throw new Error('No round-ups available to invest');
+      
+      // Store round-up transactions if they don't exist in Firestore yet
+      for (const transaction of recentTransactions) {
+        if (transaction.roundUp && parseFloat(transaction.roundUp) > 0) {
+          await addRoundUpTransaction(user.uid, {
+            merchant: transaction.merchant || 'Unknown',
+            amountSpent: parseFloat(transaction.amount) || 0,
+            roundUp: parseFloat(transaction.roundUp),
+            date: new Date(transaction.date).toISOString().split('T')[0],
+            category: transaction.category || 'Other'
+          });
+        }
+      }
+      
+      return investRoundUps(user.uid, amount);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recentRoundUps', user?.uid] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/financial-data'] });
+      toast({
+        title: "Investment successful",
+        description: `£${roundUpData.total.toFixed(2)} invested from your spare change!`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Investment failed",
+        description: error.message || "Failed to invest round-ups. Please try again.",
         variant: "destructive",
       });
     },
@@ -103,22 +164,23 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
             </Label>
             <Switch
               id="roundup-toggle"
-              checked={investingAccount?.roundUpEnabled || false}
+              checked={roundUpEnabled}
               onCheckedChange={handleToggleRoundUp}
               disabled={toggleRoundUpMutation.isPending}
             />
           </div>
         </div>
 
-        {/* Spare Change Analysis - Always visible */}
-        <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border-2 border-emerald-200 rounded-lg p-6 mb-6">
-          <div className="flex items-center mb-4">
-            <Coins className="h-8 w-8 text-emerald-600 mr-3" />
-            <div>
-              <h4 className="text-xl font-bold text-gray-800">Your Spare Change</h4>
-              <p className="text-sm text-gray-600">Ready to invest from recent purchases</p>
+        {/* Spare Change Analysis - Only visible when round-ups are enabled */}
+        {roundUpEnabled && (
+            <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border-2 border-emerald-200 rounded-lg p-6 mb-6">
+            <div className="flex items-center mb-4">
+              <Coins className="h-8 w-8 text-emerald-600 mr-3" />
+              <div>
+                <h4 className="text-xl font-bold text-gray-800">Your Spare Change</h4>
+                <p className="text-sm text-gray-600">Ready to invest from recent purchases</p>
+              </div>
             </div>
-          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="text-center bg-white rounded-xl p-6 shadow-sm border border-emerald-100">
@@ -150,7 +212,46 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
               </div>
             </div>
           </div>
-        </div>
+          
+          {/* Invest Button */}
+          {roundUpData.total > 0 && (
+            <div className="mt-6 text-center">
+              <Button
+                onClick={() => investMutation.mutate()}
+                disabled={investMutation.isPending}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg font-medium"
+              >
+                {investMutation.isPending ? (
+                  <>
+                    <TrendingUp className="mr-2 h-5 w-5 animate-pulse" />
+                    Investing...
+                  </>
+                ) : (
+                  <>
+                    <TrendingUp className="mr-2 h-5 w-5" />
+                    Invest £{roundUpData.total.toFixed(2)}
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+          
+          {/* Recent Round-ups List */}
+          {recentRoundUps.length > 0 && (
+            <div className="mt-6">
+              <h5 className="text-sm font-medium text-gray-700 mb-3">Recent Round-ups</h5>
+              <div className="space-y-2">
+                {recentRoundUps.slice(0, 5).map((roundUp: any, index: number) => (
+                  <div key={index} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded text-sm">
+                    <span className="text-gray-700">{roundUp.merchant || 'Unknown Merchant'}</span>
+                    <span className="font-medium text-emerald-600">£{roundUp.roundUp?.toFixed(2) || '0.00'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          </div>
+        )}
 
         {/* Investment Options */}
         <div className="space-y-4">
