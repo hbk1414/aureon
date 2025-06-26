@@ -109,9 +109,22 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
   // Invest round-ups
   const investMutation = useMutation({
     mutationFn: async () => {
-      if (!user?.uid) throw new Error('User not authenticated');
+      console.log('Starting invest mutation...');
+      
+      if (!user?.uid) {
+        console.error('User not authenticated');
+        throw new Error('User not authenticated');
+      }
+      
       const amount = roundUpData.total;
-      if (amount <= 0) throw new Error('No round-ups available to invest');
+      console.log('Investment amount:', amount);
+      
+      if (amount <= 0) {
+        console.error('No round-ups available to invest');
+        throw new Error('No round-ups available to invest');
+      }
+      
+      console.log('Generating transactions...');
       
       // Generate authentic UK merchant transactions for the subcollection
       const ukMerchants = [
@@ -167,12 +180,18 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
         });
       }
       
+      console.log('Generated transactions:', transactions.length);
+      
       // Store transactions in Firestore roundUps subcollection
       for (const transaction of transactions) {
+        console.log('Adding transaction:', transaction.merchant, transaction.roundUp);
         await addRoundUpTransaction(user.uid, transaction);
       }
       
-      return investRoundUps(user.uid, amount);
+      console.log('Calling investRoundUps...');
+      const result = await investRoundUps(user.uid, amount);
+      console.log('Investment result:', result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recentRoundUps', user?.uid] });
@@ -280,7 +299,11 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
           {localRoundUpEnabled && roundUpData.total > 0 && (
             <div className="mt-6 text-center">
               <Button
-                onClick={() => investMutation.mutate()}
+                onClick={() => {
+                  console.log('Invest button clicked, amount:', roundUpData.total);
+                  console.log('User ID:', user?.uid);
+                  investMutation.mutate();
+                }}
                 disabled={investMutation.isPending}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg font-medium"
               >
