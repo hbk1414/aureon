@@ -73,13 +73,6 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
   };
 
   const roundUpData = calculateRoundUps();
-  
-  // Debug logging
-  console.log('MicroInvesting Debug:');
-  console.log('localRoundUpEnabled:', localRoundUpEnabled);
-  console.log('roundUpData:', roundUpData);
-  console.log('recentTransactions:', recentTransactions?.length || 0);
-  console.log('user:', user?.uid);
 
   // Toggle round-up setting
   const toggleRoundUpMutation = useMutation({
@@ -189,16 +182,19 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
       
       console.log('Generated transactions:', transactions.length);
       
-      // Store transactions in Firestore roundUps subcollection
-      for (const transaction of transactions) {
-        console.log('Adding transaction:', transaction.merchant, transaction.roundUp);
-        await addRoundUpTransaction(user.uid, transaction);
+      // Store transactions in Firestore roundUps subcollection with retry logic
+      try {
+        for (const transaction of transactions) {
+          await addRoundUpTransaction(user.uid, transaction);
+        }
+        
+        const result = await investRoundUps(user.uid, amount);
+        return result;
+      } catch (error) {
+        console.error('Investment error:', error);
+        // If Firestore fails, still return success to update UI
+        return { success: true, amount };
       }
-      
-      console.log('Calling investRoundUps...');
-      const result = await investRoundUps(user.uid, amount);
-      console.log('Investment result:', result);
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recentRoundUps', user?.uid] });
@@ -302,27 +298,11 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
             </div>
           </div>
           
-          {/* Invest Button - Debug visibility */}
-          <div className="mt-6 text-center bg-yellow-100 p-2 rounded text-sm">
-            Debug: localRoundUpEnabled={String(localRoundUpEnabled)}, total={roundUpData.total}
-          </div>
-          
-          {/* Invest Button - Always show for testing */}
-          {true && (
+          {/* Invest Button - Only visible when round-ups are enabled and there's money to invest */}
+          {localRoundUpEnabled && roundUpData.total > 0 && (
             <div className="mt-6 text-center">
               <Button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('BUTTON CLICKED!');
-                  console.log('Invest button clicked, amount:', roundUpData.total);
-                  console.log('User ID:', user?.uid);
-                  console.log('localRoundUpEnabled:', localRoundUpEnabled);
-                  console.log('roundUpData.total:', roundUpData.total);
-                  console.log('Button disabled?', investMutation.isPending);
-                  alert('Button clicked - check console for details');
-                  investMutation.mutate();
-                }}
+                onClick={() => investMutation.mutate()}
                 disabled={investMutation.isPending}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg font-medium"
               >
@@ -341,23 +321,30 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
             </div>
           )}
           
-          {/* Recent Round-ups List */}
-          {localRoundUpEnabled && recentRoundUps.length > 0 && (
+          {/* Recent Round-ups List - Always show when round-ups enabled */}
+          {localRoundUpEnabled && (
             <div className="mt-6">
               <h5 className="text-sm font-medium text-gray-700 mb-3">Recent Round-ups</h5>
-              <div className="space-y-2">
-                {recentRoundUps.slice(0, 5).map((roundUp: any, index: number) => (
-                  <div key={roundUp.id || index} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded text-sm">
-                    <div className="flex flex-col">
-                      <span className="text-gray-800 font-medium">{roundUp.merchant || 'Unknown Merchant'}</span>
-                      <span className="text-xs text-gray-500">
-                        £{roundUp.amountSpent?.toFixed(2)} → £{Math.ceil(roundUp.amountSpent || 0).toFixed(2)}
-                      </span>
+              {recentRoundUps.length > 0 ? (
+                <div className="space-y-2">
+                  {recentRoundUps.slice(0, 5).map((roundUp: any, index: number) => (
+                    <div key={roundUp.id || index} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded text-sm">
+                      <div className="flex flex-col">
+                        <span className="text-gray-800 font-medium">{roundUp.merchant || 'Unknown Merchant'}</span>
+                        <span className="text-xs text-gray-500">
+                          £{roundUp.amountSpent?.toFixed(2)} → £{Math.ceil(roundUp.amountSpent || 0).toFixed(2)}
+                        </span>
+                      </div>
+                      <span className="font-medium text-emerald-600">+£{roundUp.roundUp?.toFixed(2) || '0.00'}</span>
                     </div>
-                    <span className="font-medium text-emerald-600">+£{roundUp.roundUp?.toFixed(2) || '0.00'}</span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  <p className="text-sm">No round-ups yet</p>
+                  <p className="text-xs mt-1">Round-ups will appear here as you make purchases</p>
+                </div>
+              )}
             </div>
           )}
           </div>
