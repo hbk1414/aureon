@@ -6,6 +6,111 @@ import { insertConnectedAccountSchema, insertAiTaskSchema, insertFinancialGoalSc
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Brandfetch API proxy endpoint
+  app.get("/api/merchant-logo/:merchantName", async (req, res) => {
+    try {
+      const { merchantName } = req.params;
+      
+      if (!process.env.BRANDFETCH_API_KEY) {
+        return res.status(500).json({ error: "Brandfetch API key not configured" });
+      }
+
+      // Convert merchant name to likely domain
+      const domain = merchantNameToDomain(merchantName);
+      
+      const response = await fetch(`https://api.brandfetch.io/v2/brands/${domain}`, {
+        headers: {
+          'Authorization': `Bearer ${process.env.BRANDFETCH_API_KEY}`,
+          'Accept': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        return res.status(response.status).json({ error: "Failed to fetch logo" });
+      }
+
+      const data = await response.json();
+      
+      // Find the best logo
+      const bestLogo = findBestLogo(data.logos);
+      
+      res.json({ logoUrl: bestLogo });
+    } catch (error) {
+      console.error('Error fetching merchant logo:', error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  function merchantNameToDomain(merchantName: string): string {
+    const domainMap: Record<string, string> = {
+      'Costa Coffee': 'costa.co.uk',
+      'Tesco': 'tesco.com',
+      'Sainsbury\'s': 'sainsburys.co.uk',
+      'ASDA': 'asda.com',
+      'Morrisons': 'morrisons.com',
+      'M&S': 'marksandspencer.com',
+      'Waitrose': 'waitrose.com',
+      'TfL': 'tfl.gov.uk',
+      'McDonald\'s': 'mcdonalds.com',
+      'Subway': 'subway.com',
+      'Greggs': 'greggs.co.uk',
+      'Starbucks': 'starbucks.com',
+      'Pret A Manger': 'pret.com',
+      'John Lewis': 'johnlewis.com',
+      'Argos': 'argos.co.uk',
+      'Currys': 'currys.co.uk',
+      'Amazon': 'amazon.co.uk',
+      'eBay': 'ebay.co.uk',
+      'PayPal': 'paypal.com',
+      'Netflix': 'netflix.com',
+      'Spotify': 'spotify.com',
+      'Apple': 'apple.com',
+      'Google': 'google.com',
+      'Microsoft': 'microsoft.com',
+      'Shell': 'shell.com',
+      'BP': 'bp.com',
+      'Esso': 'esso.co.uk'
+    };
+
+    const domain = domainMap[merchantName];
+    if (domain) {
+      return domain;
+    }
+
+    return merchantName
+      .toLowerCase()
+      .replace(/[^\w\s]/g, '')
+      .replace(/\s+/g, '')
+      .concat('.com');
+  }
+
+  function findBestLogo(logos: any[]): string | null {
+    if (!logos || logos.length === 0) return null;
+
+    const preferredTypes = ['icon', 'symbol', 'mark'];
+    
+    for (const type of preferredTypes) {
+      const logoOfType = logos.find(logo => logo.type === type);
+      if (logoOfType && logoOfType.formats.length > 0) {
+        const preferredFormats = ['png', 'svg'];
+        
+        for (const format of preferredFormats) {
+          const logoFormat = logoOfType.formats.find(f => f.format === format);
+          if (logoFormat) {
+            return logoFormat.src;
+          }
+        }
+        
+        return logoOfType.formats[0].src;
+      }
+    }
+
+    if (logos[0] && logos[0].formats.length > 0) {
+      return logos[0].formats[0].src;
+    }
+
+    return null;
+  }
   // Dashboard data endpoint
   app.get("/api/dashboard/:userId", async (req, res) => {
     try {

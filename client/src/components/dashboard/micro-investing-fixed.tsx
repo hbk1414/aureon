@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { useMerchantLogos } from "@/hooks/use-merchant-logos";
 import type { InvestingAccount, Transaction } from "@shared/schema";
 
 interface MicroInvestingProps {
@@ -144,6 +145,10 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
   };
 
   const monthlyData = getMonthlyBreakdownData();
+
+  // Get list of merchants for logo fetching
+  const merchants = displayData.transactions.map((t: any) => t.merchant);
+  const merchantLogos = useMerchantLogos(merchants);
 
   // Investment mutation - just records the investment, doesn't create new transactions
   const investMutation = useMutation({
@@ -299,19 +304,42 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
                 <div>
                   <h5 className="text-sm font-medium text-gray-700 mb-3">Your Recent Purchases</h5>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {displayData.transactions.slice(0, 5).map((purchase: any, index: number) => (
-                      <div key={purchase.id || index} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded text-sm">
-                        <div>
-                          <div className="font-medium">{purchase.merchant}</div>
-                          <div className="text-gray-500 text-xs">
-                            £{purchase.actualSpent.toFixed(2)} → £{purchase.roundedTo.toFixed(2)}
+                    {displayData.transactions.slice(0, 5).map((purchase: any, index: number) => {
+                      const merchantLogo = merchantLogos[purchase.merchant];
+                      return (
+                        <div key={purchase.id || index} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded text-sm">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center overflow-hidden">
+                              {merchantLogo?.logoUrl ? (
+                                <img 
+                                  src={merchantLogo.logoUrl} 
+                                  alt={purchase.merchant}
+                                  className="w-6 h-6 object-contain"
+                                  onError={() => {
+                                    // Fallback handled by next condition
+                                  }}
+                                />
+                              ) : merchantLogo?.loading ? (
+                                <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                              ) : (
+                                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-xs font-bold text-white">
+                                  {purchase.merchant.charAt(0)}
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-medium">{purchase.merchant}</div>
+                              <div className="text-gray-500 text-xs">
+                                £{purchase.actualSpent.toFixed(2)} → £{purchase.roundedTo.toFixed(2)}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-emerald-600 font-medium">
+                            +£{purchase.roundUpAmount.toFixed(2)}
                           </div>
                         </div>
-                        <div className="text-emerald-600 font-medium">
-                          +£{purchase.roundUpAmount.toFixed(2)}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   {displayData.transactions.length > 5 && (
                     <p className="text-xs text-gray-500 mt-2 text-center">
