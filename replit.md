@@ -159,6 +159,13 @@ Changelog:
   - Positioned invest button above chart for improved user flow and visual hierarchy
   - Chart updates in real-time showing investment progress over time with historical sample data
   - Complete reset functionality removes all references to past transactions after investment
+- June 27, 2025. Integrated authentic merchant branding with Brandfetch API
+  - Implemented secure server-side proxy for Brandfetch API to protect API keys
+  - Added comprehensive domain mapping for major UK brands (TfL, Marks & Spencer, Tesco, Costa Coffee, etc.)
+  - Enhanced transaction display with authentic merchant logos and colorful gradient fallbacks
+  - Implemented intelligent logo selection prioritizing icon format for optimal display
+  - Added proper caching and error handling for logo fetching requests
+  - Transaction history now displays professional merchant branding improving visual engagement
 ```
 
 ## User Preferences

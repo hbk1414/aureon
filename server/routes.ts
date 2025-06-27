@@ -45,12 +45,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const domainMap: Record<string, string> = {
       'Costa Coffee': 'costa.co.uk',
       'Tesco': 'tesco.com',
+      'Tesco Express': 'tesco.com',
       'Sainsbury\'s': 'sainsburys.co.uk',
       'ASDA': 'asda.com',
       'Morrisons': 'morrisons.com',
       'M&S': 'marksandspencer.com',
+      'Marks & Spencer': 'marksandspencer.com',
       'Waitrose': 'waitrose.com',
       'TfL': 'tfl.gov.uk',
+      'TfL Oyster': 'tfl.gov.uk',
+      'Transport for London': 'tfl.gov.uk',
       'McDonald\'s': 'mcdonalds.com',
       'Subway': 'subway.com',
       'Greggs': 'greggs.co.uk',
@@ -87,25 +91,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   function findBestLogo(logos: any[]): string | null {
     if (!logos || logos.length === 0) return null;
 
-    const preferredTypes = ['icon', 'symbol', 'mark'];
+    // Prefer icon type first, then logo type
+    const preferredTypes = ['icon', 'logo', 'symbol', 'mark'];
     
     for (const type of preferredTypes) {
-      const logoOfType = logos.find(logo => logo.type === type);
-      if (logoOfType && logoOfType.formats.length > 0) {
-        const preferredFormats = ['png', 'svg'];
+      const logoOfType = logos.find((logo: any) => logo.type === type);
+      if (logoOfType && logoOfType.formats && logoOfType.formats.length > 0) {
+        // Prefer PNG format for better compatibility, then SVG
+        const preferredFormats = ['png', 'svg', 'jpeg'];
         
         for (const format of preferredFormats) {
-          const logoFormat = logoOfType.formats.find(f => f.format === format);
-          if (logoFormat) {
+          const logoFormat = logoOfType.formats.find((f: any) => f.format === format);
+          if (logoFormat && logoFormat.src) {
             return logoFormat.src;
           }
         }
         
-        return logoOfType.formats[0].src;
+        // If no preferred format found, use the first available
+        if (logoOfType.formats[0] && logoOfType.formats[0].src) {
+          return logoOfType.formats[0].src;
+        }
       }
     }
 
-    if (logos[0] && logos[0].formats.length > 0) {
+    // Fallback to first logo's first format
+    if (logos[0] && logos[0].formats && logos[0].formats.length > 0 && logos[0].formats[0].src) {
       return logos[0].formats[0].src;
     }
 
