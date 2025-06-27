@@ -267,6 +267,51 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
                 </div>
               </div>
 
+              {/* Investment Options */}
+              {displayData.totalAvailable > 0 && (
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h5 className="font-medium text-blue-800 mb-3">Choose Your Investment</h5>
+                  <div className="space-y-3">
+                    <div className="bg-white p-3 rounded border border-blue-200">
+                      <div className="flex justify-between items-start mb-2">
+                        <h6 className="font-medium text-sm">FTSE 100 Index Fund</h6>
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Low Risk</span>
+                      </div>
+                      <p className="text-xs text-gray-600 mb-2">
+                        Tracks the UK's largest 100 companies. Expected annual return: 6-8%
+                      </p>
+                      <div className="text-xs text-blue-600 font-medium">Annual fee: 0.05%</div>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded border border-blue-200">
+                      <div className="flex justify-between items-start mb-2">
+                        <h6 className="font-medium text-sm">Global Diversified ETF</h6>
+                        <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">Medium Risk</span>
+                      </div>
+                      <p className="text-xs text-gray-600 mb-2">
+                        Worldwide stock exposure across developed markets. Expected annual return: 7-10%
+                      </p>
+                      <div className="text-xs text-blue-600 font-medium">Annual fee: 0.15%</div>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded border border-blue-200">
+                      <div className="flex justify-between items-start mb-2">
+                        <h6 className="font-medium text-sm">Technology Growth Fund</h6>
+                        <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">High Risk</span>
+                      </div>
+                      <p className="text-xs text-gray-600 mb-2">
+                        Growth-focused tech companies globally. Expected annual return: 10-15%
+                      </p>
+                      <div className="text-xs text-blue-600 font-medium">Annual fee: 0.25%</div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 p-3 bg-blue-100 rounded text-xs text-blue-800">
+                    <strong>Annual Potential:</strong> If you continue this spending pattern, you could invest approximately £{(displayData.totalAvailable * 12).toFixed(0)} per year in spare change.
+                  </div>
+                </div>
+              )}
+
               {/* Invest Button */}
               {displayData.totalAvailable > 0 && (
                 <div className="mt-4 text-center">
