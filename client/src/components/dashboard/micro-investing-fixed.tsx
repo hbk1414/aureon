@@ -472,53 +472,53 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
       
       {/* Investment Selection Modal */}
       <Dialog open={showInvestmentModal} onOpenChange={setShowInvestmentModal}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Choose Investment Fund</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-gray-600 mb-4">
+          <div className="py-4 space-y-4">
+            <p className="text-sm text-gray-600">
               Select which fund to invest your £{displayData.totalAvailable.toFixed(2)} spare change into:
             </p>
             
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-[400px] overflow-y-auto">
               {INVESTMENT_FUNDS.map((fund) => (
-                <Button
+                <div
                   key={fund.id}
-                  variant="outline"
-                  className="w-full p-4 h-auto text-left justify-start"
+                  className="border rounded-lg p-4 hover:border-blue-300 cursor-pointer transition-colors"
                   onClick={() => investMutation.mutate(fund.id)}
-                  disabled={investMutation.isPending}
                 >
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start mb-1">
-                      <h6 className="font-medium text-sm">{fund.name}</h6>
-                      <span className={`text-xs px-2 py-1 rounded ml-2 ${
-                        fund.riskColor === 'green' ? 'bg-green-100 text-green-700' :
-                        fund.riskColor === 'yellow' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
-                        {fund.riskLevel}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-600 mb-1">{fund.description}</p>
-                    <div className="text-xs text-blue-600 font-medium">Annual fee: {fund.fee}</div>
-                    <div className="text-xs text-emerald-600 font-medium mt-1">
-                      Currently invested: £{fundInvestments[fund.id as keyof typeof fundInvestments].toFixed(2)}
-                    </div>
+                  <div className="flex justify-between items-start mb-2">
+                    <h6 className="font-medium text-sm pr-2">{fund.name}</h6>
+                    <span className={`text-xs px-2 py-1 rounded flex-shrink-0 ${
+                      fund.riskColor === 'green' ? 'bg-green-100 text-green-700' :
+                      fund.riskColor === 'yellow' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                      {fund.riskLevel}
+                    </span>
                   </div>
-                </Button>
+                  <p className="text-xs text-gray-600 mb-2 leading-relaxed">{fund.description}</p>
+                  <div className="text-xs text-blue-600 font-medium mb-1">Annual fee: {fund.fee}</div>
+                  <div className="text-xs text-emerald-600 font-medium">
+                    Currently invested: £{(fundInvestments[fund.id as keyof typeof fundInvestments] as number || 0).toFixed(2)}
+                  </div>
+                  
+                  {investMutation.isPending ? (
+                    <div className="mt-2 text-center">
+                      <div className="inline-flex items-center text-xs text-blue-600">
+                        <TrendingUp className="mr-1 h-3 w-3 animate-pulse" />
+                        Processing...
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-2 text-center">
+                      <span className="text-xs text-blue-600 font-medium">Click to invest</span>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
-            
-            {investMutation.isPending && (
-              <div className="mt-4 text-center">
-                <div className="inline-flex items-center text-sm text-blue-600">
-                  <TrendingUp className="mr-2 h-4 w-4 animate-pulse" />
-                  Processing investment...
-                </div>
-              </div>
-            )}
           </div>
         </DialogContent>
       </Dialog>
