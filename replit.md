@@ -166,6 +166,13 @@ Changelog:
   - Implemented intelligent logo selection prioritizing icon format for optimal display
   - Added proper caching and error handling for logo fetching requests
   - Transaction history now displays professional merchant branding improving visual engagement
+- June 27, 2025. Enhanced investment experience with fund selection modal and portfolio tracking
+  - Added investment fund selection modal when clicking "Invest" button
+  - Implemented individual fund tracking across FTSE 100, Global Diversified ETF, and Technology Growth Fund
+  - Created progress bars showing investment amounts in each fund with visual indicators
+  - Added portfolio overview displaying total investment value and fund distribution
+  - Integrated persistent storage for fund investments using localStorage with user-specific keys
+  - Enhanced investment flow with detailed fund information and current holdings display
 ```
 
 ## User Preferences

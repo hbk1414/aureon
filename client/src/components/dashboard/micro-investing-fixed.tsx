@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,6 +11,34 @@ import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useMerchantLogos } from "@/hooks/use-merchant-logos";
 import type { InvestingAccount, Transaction } from "@shared/schema";
+
+// Investment fund options
+const INVESTMENT_FUNDS = [
+  {
+    id: 'ftse100',
+    name: 'FTSE 100 Index Fund',
+    riskLevel: 'Low Risk',
+    description: 'Tracks the UK\'s largest 100 companies. Expected annual return: 6-8%',
+    fee: '0.05%',
+    riskColor: 'green'
+  },
+  {
+    id: 'global',
+    name: 'Global Diversified ETF',
+    riskLevel: 'Medium Risk',
+    description: 'Worldwide stock exposure across developed markets. Expected annual return: 7-10%',
+    fee: '0.15%',
+    riskColor: 'yellow'
+  },
+  {
+    id: 'tech',
+    name: 'Technology Growth Fund',
+    riskLevel: 'High Risk',
+    description: 'Growth-focused tech companies globally. Expected annual return: 10-15%',
+    fee: '0.25%',
+    riskColor: 'red'
+  }
+];
 
 interface MicroInvestingProps {
   investingAccount: InvestingAccount | null;
@@ -24,6 +53,17 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
   const [localRoundUpEnabled, setLocalRoundUpEnabled] = useState(true);
   const [investmentComplete, setInvestmentComplete] = useState(false);
   const [forceRefresh, setForceRefresh] = useState(0);
+  const [showInvestmentModal, setShowInvestmentModal] = useState(false);
+  const [fundInvestments, setFundInvestments] = useState(() => {
+    if (user?.uid) {
+      const fundKey = `fundInvestments_${user.uid}`;
+      const saved = localStorage.getItem(fundKey);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    }
+    return { ftse100: 15.43, global: 22.17, tech: 8.92 };
+  });
 
   // Generate realistic past spending that created your spare change
   const generatePastSpendingTransactions = () => {
@@ -152,10 +192,10 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
 
   // Investment mutation - just records the investment, doesn't create new transactions
   const investMutation = useMutation({
-    mutationFn: async () => {
-      console.log('Investing spare change:', displayData.totalAvailable);
+    mutationFn: async (fundId: string) => {
+      console.log('Investing spare change in fund:', fundId, displayData.totalAvailable);
       
-      // Record the investment
+      // Record the investment with fund details
       const investmentKey = `investments_${user?.uid}`;
       const investments = JSON.parse(localStorage.getItem(investmentKey) || '[]');
       
@@ -163,10 +203,17 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
         id: Date.now(),
         amount: displayData.totalAvailable,
         date: new Date().toISOString(),
+        fundId: fundId,
         type: 'round_up_investment'
       });
       
       localStorage.setItem(investmentKey, JSON.stringify(investments));
+      
+      // Update fund totals
+      const fundKey = `fundInvestments_${user?.uid}`;
+      const existingFunds = JSON.parse(localStorage.getItem(fundKey) || '{"ftse100": 15.43, "global": 22.17, "tech": 8.92}');
+      existingFunds[fundId] = (existingFunds[fundId] || 0) + displayData.totalAvailable;
+      localStorage.setItem(fundKey, JSON.stringify(existingFunds));
       
       // Clear the available spare change (it's now invested)
       if (user?.uid) {
@@ -174,18 +221,35 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
         localStorage.removeItem(spendingKey);
       }
       
-      return { success: true };
+      return { success: true, fundId };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      const fundName = INVESTMENT_FUNDS.find(f => f.id === data.fundId)?.name || 'your chosen fund';
       setInvestmentComplete(true);
+      
+      // Update local fund state
+      setFundInvestments((prev: any) => ({
+        ...prev,
+        [data.fundId]: (prev[data.fundId as keyof typeof prev] || 0) + displayData.totalAvailable
+      }));
+      
       toast({
-        title: "Spare change invested!",
-        description: `£${displayData.totalAvailable.toFixed(2)} from your recent purchases has been invested.`,
+        title: "Investment Complete!",
+        description: `£${displayData.totalAvailable.toFixed(2)} invested in ${fundName}.`,
       });
+      
+      setShowInvestmentModal(false);
       
       // Force component to re-render with fresh data
       setForceRefresh(prev => prev + 1);
       queryClient.invalidateQueries({ queryKey: ['/api/user/financial-data'] });
+    },
+    onError: () => {
+      toast({
+        title: "Investment failed",
+        description: "There was an error investing your spare change. Please try again.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -267,69 +331,71 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
                 </div>
               </div>
 
-              {/* Investment Options */}
-              {displayData.totalAvailable > 0 && (
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-blue-800 mb-3">Choose Your Investment</h5>
-                  <div className="space-y-3">
-                    <div className="bg-white p-3 rounded border border-blue-200">
-                      <div className="flex justify-between items-start mb-2">
-                        <h6 className="font-medium text-sm">FTSE 100 Index Fund</h6>
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Low Risk</span>
-                      </div>
-                      <p className="text-xs text-gray-600 mb-2">
-                        Tracks the UK's largest 100 companies. Expected annual return: 6-8%
-                      </p>
-                      <div className="text-xs text-blue-600 font-medium">Annual fee: 0.05%</div>
-                    </div>
+              {/* Investment Options with Progress Bars */}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h5 className="font-medium text-blue-800 mb-3">Your Investment Portfolio</h5>
+                <div className="space-y-3">
+                  {INVESTMENT_FUNDS.map((fund) => {
+                    const invested = (fundInvestments[fund.id as keyof typeof fundInvestments] as number) || 0;
+                    const maxInvestment = Math.max(...Object.values(fundInvestments).map(v => Number(v) || 0));
+                    const progressWidth = maxInvestment > 0 ? (invested / maxInvestment) * 100 : 0;
                     
-                    <div className="bg-white p-3 rounded border border-blue-200">
-                      <div className="flex justify-between items-start mb-2">
-                        <h6 className="font-medium text-sm">Global Diversified ETF</h6>
-                        <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">Medium Risk</span>
+                    return (
+                      <div key={fund.id} className="bg-white p-3 rounded border border-blue-200">
+                        <div className="flex justify-between items-start mb-2">
+                          <h6 className="font-medium text-sm">{fund.name}</h6>
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            fund.riskColor === 'green' ? 'bg-green-100 text-green-700' :
+                            fund.riskColor === 'yellow' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            {fund.riskLevel}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 mb-2">{fund.description}</p>
+                        <div className="text-xs text-blue-600 font-medium mb-2">Annual fee: {fund.fee}</div>
+                        
+                        {/* Investment Progress Bar */}
+                        <div className="mt-2">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs text-gray-500">Invested</span>
+                            <span className="text-xs font-medium text-emerald-600">£{invested.toFixed(2)}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${progressWidth}%` }}
+                            ></div>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-600 mb-2">
-                        Worldwide stock exposure across developed markets. Expected annual return: 7-10%
-                      </p>
-                      <div className="text-xs text-blue-600 font-medium">Annual fee: 0.15%</div>
-                    </div>
-                    
-                    <div className="bg-white p-3 rounded border border-blue-200">
-                      <div className="flex justify-between items-start mb-2">
-                        <h6 className="font-medium text-sm">Technology Growth Fund</h6>
-                        <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">High Risk</span>
-                      </div>
-                      <p className="text-xs text-gray-600 mb-2">
-                        Growth-focused tech companies globally. Expected annual return: 10-15%
-                      </p>
-                      <div className="text-xs text-blue-600 font-medium">Annual fee: 0.25%</div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 p-3 bg-blue-100 rounded text-xs text-blue-800">
-                    <strong>Annual Potential:</strong> If you continue this spending pattern, you could invest approximately £{(displayData.totalAvailable * 12).toFixed(0)} per year in spare change.
+                    );
+                  })}
+                </div>
+                
+                <div className="mt-4 p-3 bg-blue-100 rounded text-xs text-blue-800">
+                  <div className="flex justify-between items-center">
+                    <span><strong>Total Portfolio Value:</strong> £{Object.values(fundInvestments).reduce((a: any, b: any) => (Number(a) || 0) + (Number(b) || 0), 0).toFixed(2)}</span>
+                    {displayData.totalAvailable > 0 && (
+                      <span><strong>Available to Invest:</strong> £{displayData.totalAvailable.toFixed(2)}</span>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Invest Button */}
               {displayData.totalAvailable > 0 && (
                 <div className="mt-4 text-center">
                   <Button
-                    onClick={() => investMutation.mutate()}
-                    disabled={investMutation.isPending || investmentComplete}
+                    onClick={() => setShowInvestmentModal(true)}
+                    disabled={investmentComplete}
                     className={`w-full px-8 py-3 text-lg font-medium ${
                       investmentComplete 
                         ? 'bg-green-600 hover:bg-green-700 text-white' 
                         : 'bg-emerald-600 hover:bg-emerald-700 text-white'
                     }`}
                   >
-                    {investMutation.isPending ? (
-                      <>
-                        <TrendingUp className="mr-2 h-5 w-5 animate-pulse" />
-                        Investing...
-                      </>
-                    ) : investmentComplete ? (
+                    {investmentComplete ? (
                       <>
                         <Check className="mr-2 h-5 w-5" />
                         Invested!
@@ -403,6 +469,59 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
           </div>
         )}
       </CardContent>
+      
+      {/* Investment Selection Modal */}
+      <Dialog open={showInvestmentModal} onOpenChange={setShowInvestmentModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Choose Investment Fund</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-gray-600 mb-4">
+              Select which fund to invest your £{displayData.totalAvailable.toFixed(2)} spare change into:
+            </p>
+            
+            <div className="space-y-3">
+              {INVESTMENT_FUNDS.map((fund) => (
+                <Button
+                  key={fund.id}
+                  variant="outline"
+                  className="w-full p-4 h-auto text-left justify-start"
+                  onClick={() => investMutation.mutate(fund.id)}
+                  disabled={investMutation.isPending}
+                >
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start mb-1">
+                      <h6 className="font-medium text-sm">{fund.name}</h6>
+                      <span className={`text-xs px-2 py-1 rounded ml-2 ${
+                        fund.riskColor === 'green' ? 'bg-green-100 text-green-700' :
+                        fund.riskColor === 'yellow' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {fund.riskLevel}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-1">{fund.description}</p>
+                    <div className="text-xs text-blue-600 font-medium">Annual fee: {fund.fee}</div>
+                    <div className="text-xs text-emerald-600 font-medium mt-1">
+                      Currently invested: £{fundInvestments[fund.id as keyof typeof fundInvestments].toFixed(2)}
+                    </div>
+                  </div>
+                </Button>
+              ))}
+            </div>
+            
+            {investMutation.isPending && (
+              <div className="mt-4 text-center">
+                <div className="inline-flex items-center text-sm text-blue-600">
+                  <TrendingUp className="mr-2 h-4 w-4 animate-pulse" />
+                  Processing investment...
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
