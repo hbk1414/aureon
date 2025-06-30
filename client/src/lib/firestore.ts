@@ -224,14 +224,20 @@ export const getRoundUpTransactions = async (userId: string) => {
 };
 
 export const markRoundUpsAsInvested = async (userId: string, roundUpIds: string[]) => {
-  const batch = writeBatch(db);
-  
-  roundUpIds.forEach(id => {
-    const roundUpRef = doc(db, "users", userId, "roundUps", id);
-    batch.update(roundUpRef, { invested: true });
-  });
-  
-  await batch.commit();
+  try {
+    const batch = writeBatch(db);
+    
+    for (const id of roundUpIds) {
+      const roundUpRef = doc(db, "users", userId, "roundUps", id);
+      // Use set with merge to ensure document exists
+      batch.set(roundUpRef, { invested: true }, { merge: true });
+    }
+    
+    await batch.commit();
+  } catch (error) {
+    console.error('Error marking round-ups as invested:', error);
+    throw error;
+  }
 };
 
 // Fund investments
@@ -253,10 +259,27 @@ export const updateFundInvestments = async (userId: string, fundInvestments: Rec
 };
 
 export const addToFundInvestment = async (userId: string, fundId: string, amount: number) => {
-  const docRef = doc(db, "users", userId, "settings", "fundInvestments");
-  await updateDoc(docRef, {
-    [fundId]: increment(amount)
-  });
+  try {
+    const docRef = doc(db, "users", userId, "settings", "fundInvestments");
+    
+    // First try to get the document to see if it exists
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      // Document exists, use increment
+      await updateDoc(docRef, {
+        [fundId]: increment(amount)
+      });
+    } else {
+      // Document doesn't exist, create it with initial value
+      await setDoc(docRef, {
+        [fundId]: amount
+      }, { merge: true });
+    }
+  } catch (error) {
+    console.error('Error adding to fund investment:', error);
+    throw error;
+  }
 };
 
 // Round-up settings

@@ -130,43 +130,49 @@ export function MicroInvesting() {
       
       console.log('Investing spare change in fund:', fundId, displayData.totalAvailable);
       
-      // Get uninvested round-ups
-      const uninvestedTransactions = roundUpTransactions?.filter((tx: any) => !tx.invested) || [];
-      
-      if (uninvestedTransactions.length > 0) {
-        // Mark round-ups as invested
-        await markRoundUpsAsInvested(user.uid, uninvestedTransactions.map((tx: any) => tx.id));
+      try {
+        // Get uninvested round-ups
+        const uninvestedTransactions = roundUpTransactions?.filter((tx: any) => !tx.invested) || [];
         
-        // Update fund investment totals
-        await addToFundInvestment(user.uid, fundId, displayData.totalAvailable);
-      } else {
-        // Generate some new round-up transactions if none exist
-        const merchants = [
-          { name: "Costa Coffee", amount: 4.23, category: "Dining" },
-          { name: "Tesco Express", amount: 8.47, category: "Groceries" },
-          { name: "Shell", amount: 45.83, category: "Transport" },
-          { name: "Marks & Spencer", amount: 12.67, category: "Shopping" },
-          { name: "TfL Oyster", amount: 15.20, category: "Transport" },
-        ];
-        
-        for (const merchant of merchants) {
-          const roundUp = Math.ceil(merchant.amount) - merchant.amount;
-          await createRoundUpTransaction(user.uid, {
-            merchant: merchant.name,
-            amountSpent: merchant.amount,
-            roundUp: roundUp,
-            category: merchant.category,
-            date: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000)
-          });
+        if (uninvestedTransactions.length > 0) {
+          // Mark round-ups as invested
+          await markRoundUpsAsInvested(user.uid, uninvestedTransactions.map((tx: any) => tx.id));
+          
+          // Update fund investment totals
+          await addToFundInvestment(user.uid, fundId, displayData.totalAvailable);
+        } else {
+          // Generate some new round-up transactions if none exist
+          const merchants = [
+            { name: "Costa Coffee", amount: 4.23, category: "Dining" },
+            { name: "Tesco Express", amount: 8.47, category: "Groceries" },
+            { name: "Shell", amount: 45.83, category: "Transport" },
+            { name: "Marks & Spencer", amount: 12.67, category: "Shopping" },
+            { name: "TfL Oyster", amount: 15.20, category: "Transport" },
+          ];
+          
+          const transactionIds = [];
+          for (const merchant of merchants) {
+            const roundUp = Math.ceil(merchant.amount) - merchant.amount;
+            const id = await createRoundUpTransaction(user.uid, {
+              merchant: merchant.name,
+              amountSpent: merchant.amount,
+              roundUp: roundUp,
+              category: merchant.category,
+              date: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000)
+            });
+            transactionIds.push(id);
+          }
+          
+          // Mark them as invested immediately
+          await markRoundUpsAsInvested(user.uid, transactionIds);
+          await addToFundInvestment(user.uid, fundId, displayData.totalAvailable || 7.88);
         }
         
-        // Mark them as invested immediately
-        const newTransactions = await getRoundUpTransactions(user.uid);
-        await markRoundUpsAsInvested(user.uid, newTransactions.map((tx: any) => tx.id));
-        await addToFundInvestment(user.uid, fundId, displayData.totalAvailable || 7.88);
+        return { success: true, fundId };
+      } catch (error) {
+        console.error('Investment error:', error);
+        throw new Error(`Investment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
-      
-      return { success: true, fundId };
     },
     onSuccess: (data) => {
       const fundName = INVESTMENT_FUNDS.find(f => f.id === data.fundId)?.name || 'your chosen fund';
@@ -182,10 +188,11 @@ export function MicroInvesting() {
         description: `Successfully invested £${displayData.totalAvailable.toFixed(2)} in ${fundName}`,
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Investment mutation error:', error);
       toast({
         title: "Investment failed",
-        description: "There was an error investing your spare change. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error investing your spare change. Please try again.",
         variant: "destructive",
       });
     }
