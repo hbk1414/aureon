@@ -179,6 +179,16 @@ export default function Onboarding() {
         createdAt: new Date().toISOString()
       };
 
+      console.log('Starting onboarding completion for user:', user.uid);
+      
+      // Set local storage flag FIRST to indicate onboarding completion
+      localStorage.setItem(`onboarding_${user.uid}`, 'true');
+      console.log('Set localStorage onboarding flag to true');
+      
+      // Store onboarding data locally for dashboard use
+      localStorage.setItem(`onboarding_data_${user.uid}`, JSON.stringify(userDocument));
+      console.log('Stored onboarding data in localStorage');
+      
       try {
         await createUserDocument(user.uid, userDocument);
         console.log('User document created successfully');
@@ -188,19 +198,15 @@ export default function Onboarding() {
         // The app can handle missing user documents with fallback data
       }
       
-      // Set local storage flag to indicate onboarding completion
-      localStorage.setItem(`onboarding_${user.uid}`, 'true');
-      
-      // Store onboarding data locally for dashboard use
-      localStorage.setItem(`onboarding_data_${user.uid}`, JSON.stringify(userDocument));
-      
       toast({
         title: "Welcome to AUREON!",
         description: "Your profile has been created successfully"
       });
       
-      // Always navigate to dashboard after onboarding completion
-      setLocation("/dashboard");
+      console.log('About to navigate to dashboard...');
+      
+      // Force immediate navigation
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error("Error creating user profile:", error);
       toast({

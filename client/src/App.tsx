@@ -33,15 +33,23 @@ function ProtectedRoute({ component: Component, requiresOnboarding = true }: {
           // Check local storage first for onboarding completion
           const localOnboardingComplete = localStorage.getItem(`onboarding_${user.uid}`);
           if (localOnboardingComplete === 'true') {
+            console.log('Found local onboarding completion flag');
             setUserDoc({ onboardingCompleted: true });
             setCheckingOnboarding(false);
             return;
           }
 
+          console.log('Checking Firestore for user document');
           const doc = await getUserDocument(user.uid);
+          if (doc && doc.onboardingCompleted) {
+            console.log('Found completed onboarding in Firestore');
+            // Set local storage for faster future checks
+            localStorage.setItem(`onboarding_${user.uid}`, 'true');
+          }
           setUserDoc(doc);
         } catch (error) {
           console.log("No user document found, needs onboarding");
+          setUserDoc(null);
         }
       }
       setCheckingOnboarding(false);
