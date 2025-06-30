@@ -7,7 +7,7 @@ import SpendingOverview from "@/components/dashboard/spending-overview";
 import DebtPayoffStrategy from "@/components/dashboard/debt-payoff-strategy";
 import { MicroInvesting } from "@/components/dashboard/micro-investing-firestore";
 import AiTasks from "@/components/dashboard/ai-tasks";
-import EmergencyFund from "@/components/dashboard/emergency-fund";
+import { EmergencyFund } from "@/components/dashboard/emergency-fund-firestore";
 import Couples from "@/components/dashboard/couples";
 import QuickStats from "@/components/dashboard/quick-stats";
 import QuickActions from "@/components/dashboard/quick-actions";
@@ -80,9 +80,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <MicroInvesting />
 
-              <EmergencyFund 
-                emergencyFund={dashboardData.emergencyFund}
-              />
+              <EmergencyFund />
             </div>
 
             {/* Couples Section */}
