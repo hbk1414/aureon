@@ -329,22 +329,35 @@ export function MicroInvesting() {
 
               {/* Monthly Breakdown Chart */}
               <div className="space-y-3">
-                <h5 className="font-medium text-gray-700">6-Month Investment History</h5>
+                <h5 className="font-medium text-gray-700">6-Month Round-Up & Investment History</h5>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={monthlyData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
-                      <YAxis />
+                      <YAxis tickFormatter={(value) => `£${value}`} />
                       <Tooltip 
-                        formatter={(value: any, name: string) => [`£${Number(value).toFixed(2)}`, name === 'available' ? 'Available' : 'Invested']}
-                        labelFormatter={(label) => `Month: ${label}`}
+                        formatter={(value: any, name: string) => [
+                          `£${Number(value).toFixed(2)}`, 
+                          name === 'available' ? 'Rounded up this month' : 'Invested this month'
+                        ]}
+                        labelFormatter={(label) => `${label}`}
                       />
                       <Legend />
-                      <Bar dataKey="available" fill="#3B82F6" name="Available" />
-                      <Bar dataKey="invested" fill="#10B981" name="Invested" />
+                      <Bar dataKey="available" fill="#3B82F6" name="Rounded up this month" />
+                      <Bar dataKey="invested" fill="#10B981" name="Invested this month" />
                     </BarChart>
                   </ResponsiveContainer>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm mt-3">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-blue-500 rounded-sm mr-2"></div>
+                    <span>Round-ups collected</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-emerald-500 rounded-sm mr-2"></div>
+                    <span>Amount invested</span>
+                  </div>
                 </div>
               </div>
             </div>
