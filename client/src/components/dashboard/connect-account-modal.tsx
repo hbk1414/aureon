@@ -76,8 +76,8 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
     
     if (!user?.uid) {
       toast({
-        title: "Error",
-        description: "Please sign in to connect an account",
+        title: "Authentication Required",
+        description: "Please sign in to connect your bank account securely",
         variant: "destructive",
       });
       return;
@@ -85,8 +85,8 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
 
     if (!bankName || !accountType || !balance) {
       toast({
-        title: "Error",
-        description: "Please fill in all fields",
+        title: "Missing Information",
+        description: "Please select your bank, account type, and enter your balance",
         variant: "destructive",
       });
       return;
@@ -95,8 +95,8 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
     const balanceNum = parseFloat(balance);
     if (isNaN(balanceNum) || balanceNum < 0) {
       toast({
-        title: "Error",
-        description: "Please enter a valid balance amount",
+        title: "Invalid Balance",
+        description: "Please enter a valid balance amount (£0 or higher)",
         variant: "destructive",
       });
       return;
@@ -126,8 +126,8 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
       
       // Show success message immediately
       toast({
-        title: "Success",
-        description: `${bankName} ${accountType} connected successfully`,
+        title: "Account Connected",
+        description: `Your ${bankName} ${accountType} has been securely linked to your profile`,
       });
       
       // Trigger optimistic update immediately

@@ -55,11 +55,17 @@ export default function Header({ user }: HeaderProps) {
             <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800 p-2">
               <Bell className="h-5 w-5" />
             </Button>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-medium">{initials}</span>
               </div>
-              <span className="text-sm font-medium text-gray-700">{displayName}</span>
+              <div className="hidden sm:block">
+                <div className="text-sm font-medium text-gray-700">{displayName}</div>
+                <div className="text-xs text-gray-500 flex items-center space-x-1">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  <span>Securely authenticated</span>
+                </div>
+              </div>
             </div>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" />
