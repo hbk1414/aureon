@@ -78,10 +78,7 @@ export default function Dashboard() {
             />
             
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <MicroInvesting 
-                investingAccount={dashboardData.investingAccount}
-                recentTransactions={dashboardData.recentTransactions}
-              />
+              <MicroInvesting />
 
               <EmergencyFund 
                 emergencyFund={dashboardData.emergencyFund}
