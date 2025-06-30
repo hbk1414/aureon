@@ -339,7 +339,7 @@ export function MicroInvesting() {
                       <Tooltip 
                         formatter={(value: any, name: string) => [
                           `£${Number(value).toFixed(2)}`, 
-                          name === 'available' ? 'Rounded up this month' : 'Invested this month'
+                          name
                         ]}
                         labelFormatter={(label) => `${label}`}
                       />

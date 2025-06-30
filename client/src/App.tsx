@@ -19,6 +19,7 @@ function ProtectedRoute({ component: Component, requiresOnboarding = true }: {
   const [, setLocation] = useLocation();
   const [userDoc, setUserDoc] = useState<any>(null);
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+  const [shouldRedirectToOnboarding, setShouldRedirectToOnboarding] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -47,9 +48,17 @@ function ProtectedRoute({ component: Component, requiresOnboarding = true }: {
             localStorage.setItem(`onboarding_${user.uid}`, 'true');
           }
           setUserDoc(doc);
+          
+          // Check if we need to redirect to onboarding
+          if (requiresOnboarding && (!doc || !doc?.onboardingCompleted)) {
+            setShouldRedirectToOnboarding(true);
+          }
         } catch (error) {
           console.log("No user document found, needs onboarding");
           setUserDoc(null);
+          if (requiresOnboarding) {
+            setShouldRedirectToOnboarding(true);
+          }
         }
       }
       setCheckingOnboarding(false);
@@ -61,6 +70,14 @@ function ProtectedRoute({ component: Component, requiresOnboarding = true }: {
       setCheckingOnboarding(false);
     }
   }, [user, requiresOnboarding]);
+
+  // Handle onboarding redirect in a separate effect
+  useEffect(() => {
+    if (shouldRedirectToOnboarding && !checkingOnboarding) {
+      setLocation("/onboarding");
+      setShouldRedirectToOnboarding(false);
+    }
+  }, [shouldRedirectToOnboarding, checkingOnboarding, setLocation]);
 
   if (loading || checkingOnboarding) {
     return (
@@ -79,8 +96,7 @@ function ProtectedRoute({ component: Component, requiresOnboarding = true }: {
 
   // If user needs onboarding and hasn't completed it
   if (requiresOnboarding && (!userDoc || !userDoc?.onboardingCompleted)) {
-    setLocation("/onboarding");
-    return null;
+    return <Onboarding />;
   }
 
   return <Component />;
