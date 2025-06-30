@@ -193,6 +193,89 @@ export const updateInvestingAccount = async (accountId: string, updates: Partial
   await updateDoc(doc(db, "investingAccounts", accountId), updates);
 };
 
+// Round-up transactions
+export const createRoundUpTransaction = async (userId: string, roundUpData: {
+  merchant: string;
+  amountSpent: number;
+  roundUp: number;
+  category: string;
+  date: Date;
+}) => {
+  const docRef = await addDoc(collection(db, "users", userId, "roundUps"), {
+    ...roundUpData,
+    invested: false,
+    createdAt: Timestamp.now(),
+  });
+  return docRef.id;
+};
+
+export const getRoundUpTransactions = async (userId: string) => {
+  const q = query(
+    collection(db, "users", userId, "roundUps"),
+    orderBy("date", "desc")
+  );
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+    date: doc.data().date?.toDate() || new Date(),
+    createdAt: doc.data().createdAt?.toDate() || new Date(),
+  }));
+};
+
+export const markRoundUpsAsInvested = async (userId: string, roundUpIds: string[]) => {
+  const batch = writeBatch(db);
+  
+  roundUpIds.forEach(id => {
+    const roundUpRef = doc(db, "users", userId, "roundUps", id);
+    batch.update(roundUpRef, { invested: true });
+  });
+  
+  await batch.commit();
+};
+
+// Fund investments
+export const getFundInvestments = async (userId: string) => {
+  const docRef = doc(db, "users", userId, "settings", "fundInvestments");
+  const docSnap = await getDoc(docRef);
+  
+  if (docSnap.exists()) {
+    return docSnap.data();
+  } else {
+    // Return default fund investments
+    return { ftse100: 15.43, global: 22.17, tech: 8.92 };
+  }
+};
+
+export const updateFundInvestments = async (userId: string, fundInvestments: Record<string, number>) => {
+  const docRef = doc(db, "users", userId, "settings", "fundInvestments");
+  await setDoc(docRef, fundInvestments, { merge: true });
+};
+
+export const addToFundInvestment = async (userId: string, fundId: string, amount: number) => {
+  const docRef = doc(db, "users", userId, "settings", "fundInvestments");
+  await updateDoc(docRef, {
+    [fundId]: increment(amount)
+  });
+};
+
+// Round-up settings
+export const getRoundUpSettings = async (userId: string) => {
+  const docRef = doc(db, "users", userId, "settings", "roundUp");
+  const docSnap = await getDoc(docRef);
+  
+  if (docSnap.exists()) {
+    return docSnap.data();
+  } else {
+    return { enabled: true };
+  }
+};
+
+export const updateRoundUpSettings = async (userId: string, settings: { enabled: boolean }) => {
+  const docRef = doc(db, "users", userId, "settings", "roundUp");
+  await setDoc(docRef, settings, { merge: true });
+};
+
 // Default user data structure
 const createDefaultUserData = (email: string) => ({
   email,

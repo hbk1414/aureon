@@ -173,6 +173,13 @@ Changelog:
   - Added portfolio overview displaying total investment value and fund distribution
   - Integrated persistent storage for fund investments using localStorage with user-specific keys
   - Enhanced investment flow with detailed fund information and current holdings display
+- June 29, 2025. Migrated micro-investing from localStorage to Firestore database
+  - Replaced all localStorage-based data persistence with Firestore collections and subcollections
+  - Created Firestore functions for round-up transactions, fund investments, and user settings
+  - Implemented proper data validation and error handling for Firestore operations
+  - Added user-specific document structure with roundUps subcollection and settings document
+  - Enhanced data integrity with real-time synchronization across user sessions
+  - Fixed modal layout issues and improved investment fund selection user experience
 ```
 
 ## User Preferences

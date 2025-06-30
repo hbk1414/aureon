@@ -4,13 +4,23 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useMerchantLogos } from "@/hooks/use-merchant-logos";
 import type { InvestingAccount, Transaction } from "@shared/schema";
+import { 
+  getRoundUpTransactions, 
+  createRoundUpTransaction, 
+  markRoundUpsAsInvested,
+  getFundInvestments,
+  updateFundInvestments,
+  addToFundInvestment,
+  getRoundUpSettings,
+  updateRoundUpSettings
+} from "@/lib/firestore";
 
 // Investment fund options
 const INVESTMENT_FUNDS = [
@@ -50,19 +60,26 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
   const queryClient = useQueryClient();
   const { user } = useAuth();
   
-  const [localRoundUpEnabled, setLocalRoundUpEnabled] = useState(true);
   const [investmentComplete, setInvestmentComplete] = useState(false);
-  const [forceRefresh, setForceRefresh] = useState(0);
   const [showInvestmentModal, setShowInvestmentModal] = useState(false);
-  const [fundInvestments, setFundInvestments] = useState(() => {
-    if (user?.uid) {
-      const fundKey = `fundInvestments_${user.uid}`;
-      const saved = localStorage.getItem(fundKey);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    }
-    return { ftse100: 15.43, global: 22.17, tech: 8.92 };
+  
+  // Firestore queries
+  const { data: roundUpSettings } = useQuery({
+    queryKey: ['roundUpSettings', user?.uid],
+    queryFn: () => user?.uid ? getRoundUpSettings(user.uid) : Promise.resolve({ enabled: true }),
+    enabled: !!user?.uid,
+  });
+
+  const { data: fundInvestments } = useQuery({
+    queryKey: ['fundInvestments', user?.uid],
+    queryFn: () => user?.uid ? getFundInvestments(user.uid) : Promise.resolve({ ftse100: 15.43, global: 22.17, tech: 8.92 }),
+    enabled: !!user?.uid,
+  });
+
+  const { data: roundUpTransactions } = useQuery({
+    queryKey: ['roundUpTransactions', user?.uid],
+    queryFn: () => user?.uid ? getRoundUpTransactions(user.uid) : Promise.resolve([]),
+    enabled: !!user?.uid,
   });
 
   // Generate realistic past spending that created your spare change
@@ -190,35 +207,59 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
   const merchants = displayData.transactions.map((t: any) => t.merchant);
   const merchantLogos = useMerchantLogos(merchants);
 
-  // Investment mutation - just records the investment, doesn't create new transactions
+  // Round-up toggle mutation
+  const toggleRoundUpMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!user?.uid) throw new Error('User not authenticated');
+      await updateRoundUpSettings(user.uid, { enabled });
+      return enabled;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['roundUpSettings', user?.uid] });
+    },
+  });
+
+  // Investment mutation using Firestore
   const investMutation = useMutation({
     mutationFn: async (fundId: string) => {
+      if (!user?.uid) throw new Error('User not authenticated');
+      
       console.log('Investing spare change in fund:', fundId, displayData.totalAvailable);
       
-      // Record the investment with fund details
-      const investmentKey = `investments_${user?.uid}`;
-      const investments = JSON.parse(localStorage.getItem(investmentKey) || '[]');
+      // Get uninvested round-ups
+      const uninvestedTransactions = roundUpTransactions?.filter((tx: any) => !tx.invested) || [];
       
-      investments.push({
-        id: Date.now(),
-        amount: displayData.totalAvailable,
-        date: new Date().toISOString(),
-        fundId: fundId,
-        type: 'round_up_investment'
-      });
-      
-      localStorage.setItem(investmentKey, JSON.stringify(investments));
-      
-      // Update fund totals
-      const fundKey = `fundInvestments_${user?.uid}`;
-      const existingFunds = JSON.parse(localStorage.getItem(fundKey) || '{"ftse100": 15.43, "global": 22.17, "tech": 8.92}');
-      existingFunds[fundId] = (existingFunds[fundId] || 0) + displayData.totalAvailable;
-      localStorage.setItem(fundKey, JSON.stringify(existingFunds));
-      
-      // Clear the available spare change (it's now invested)
-      if (user?.uid) {
-        const spendingKey = `yourPastSpending_${user.uid}`;
-        localStorage.removeItem(spendingKey);
+      if (uninvestedTransactions.length > 0) {
+        // Mark round-ups as invested
+        await markRoundUpsAsInvested(user.uid, uninvestedTransactions.map((tx: any) => tx.id));
+        
+        // Update fund investment totals
+        await addToFundInvestment(user.uid, fundId, displayData.totalAvailable);
+      } else {
+        // Generate some new round-up transactions if none exist
+        const merchants = [
+          { name: "Costa Coffee", amount: 4.23, category: "Dining" },
+          { name: "Tesco Express", amount: 8.47, category: "Groceries" },
+          { name: "Shell", amount: 45.83, category: "Transport" },
+          { name: "Marks & Spencer", amount: 12.67, category: "Shopping" },
+          { name: "TfL Oyster", amount: 15.20, category: "Transport" },
+        ];
+        
+        for (const merchant of merchants) {
+          const roundUp = Math.ceil(merchant.amount) - merchant.amount;
+          await createRoundUpTransaction(user.uid, {
+            merchant: merchant.name,
+            amountSpent: merchant.amount,
+            roundUp: roundUp,
+            category: merchant.category,
+            date: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000)
+          });
+        }
+        
+        // Mark them as invested immediately
+        const newTransactions = await getRoundUpTransactions(user.uid);
+        await markRoundUpsAsInvested(user.uid, newTransactions.map((tx: any) => tx.id));
+        await addToFundInvestment(user.uid, fundId, displayData.totalAvailable || 7.88);
       }
       
       return { success: true, fundId };
@@ -264,8 +305,8 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
           <div className="flex items-center space-x-2">
             <Switch
               id="round-up-toggle"
-              checked={localRoundUpEnabled}
-              onCheckedChange={setLocalRoundUpEnabled}
+              checked={roundUpSettings?.enabled ?? true}
+              onCheckedChange={(checked) => toggleRoundUpMutation.mutate(checked)}
             />
             <Label htmlFor="round-up-toggle" className="text-sm font-medium">
               Round up purchases
@@ -273,7 +314,7 @@ export default function MicroInvesting({ investingAccount, recentTransactions }:
           </div>
         </div>
 
-        {localRoundUpEnabled ? (
+        {(roundUpSettings?.enabled ?? true) ? (
           <>
             <div className="space-y-6">
               <div className="bg-emerald-50 p-4 rounded-lg">

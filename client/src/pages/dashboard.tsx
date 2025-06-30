@@ -5,7 +5,7 @@ import WelcomeBanner from "@/components/dashboard/welcome-banner";
 import AccountConnections from "@/components/dashboard/account-connections";
 import SpendingOverview from "@/components/dashboard/spending-overview";
 import DebtPayoffStrategy from "@/components/dashboard/debt-payoff-strategy";
-import MicroInvesting from "@/components/dashboard/micro-investing-fixed";
+import { MicroInvesting } from "@/components/dashboard/micro-investing-firestore";
 import AiTasks from "@/components/dashboard/ai-tasks";
 import EmergencyFund from "@/components/dashboard/emergency-fund";
 import Couples from "@/components/dashboard/couples";
