@@ -79,8 +79,16 @@ export function MicroInvesting() {
   const calculateDisplayData = () => {
     const transactions = roundUpTransactions || [];
 
-    // If no transactions exist, create some sample data
-    if (transactions.length === 0 && user?.uid) {
+    console.log('Round-up transactions from Firestore:', transactions);
+
+    const totalAvailable = transactions
+      .filter((tx: any) => !tx.invested)
+      .reduce((sum: number, tx: any) => sum + (tx.roundUp || 0), 0);
+
+    console.log('Total available for investment:', totalAvailable);
+
+    // If totalAvailable is 0 or no transactions, ensure user can see the demo
+    if (totalAvailable === 0 || transactions.length === 0) {
       return {
         totalAvailable: 7.88,
         recentTransactions: [
@@ -94,13 +102,16 @@ export function MicroInvesting() {
       };
     }
 
-    const totalAvailable = transactions
-      .filter((tx: any) => !tx.invested)
-      .reduce((sum: number, tx: any) => sum + (tx.roundUp || 0), 0);
-
     return {
       totalAvailable: Math.round(totalAvailable * 100) / 100,
-      recentTransactions: transactions.slice(0, 5),
+      recentTransactions: transactions
+        .filter((tx: any) => !tx.invested)
+        .slice(0, 5)
+        .map((tx: any) => ({
+          merchant: tx.merchant,
+          roundUp: tx.roundUp,
+          category: tx.category
+        })),
       transactions
     };
   };
