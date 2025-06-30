@@ -77,6 +77,7 @@ export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(1);
   const [data, setData] = useState<OnboardingData>(initialData);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -133,6 +134,8 @@ export default function Onboarding() {
     if (!user) return;
     
     setIsSubmitting(true);
+    setIsCompleting(true);
+    
     try {
       // Create comprehensive user document
       const userDocument = {
@@ -189,24 +192,24 @@ export default function Onboarding() {
       localStorage.setItem(`onboarding_data_${user.uid}`, JSON.stringify(userDocument));
       console.log('Stored onboarding data in localStorage');
       
-      try {
-        await createUserDocument(user.uid, userDocument);
-        console.log('User document created successfully');
-      } catch (docError) {
-        console.error('Error creating user document:', docError);
-        // Still proceed to dashboard even if document creation fails temporarily
-        // The app can handle missing user documents with fallback data
-      }
+      // Navigate immediately for better UX
+      console.log('Navigating to dashboard...');
+      setLocation("/dashboard");
       
-      toast({
-        title: "Welcome to AUREON!",
-        description: "Your profile has been created successfully"
-      });
-      
-      console.log('About to navigate to dashboard...');
-      
-      // Force immediate navigation
-      window.location.href = '/dashboard';
+      // Create user document in background
+      createUserDocument(user.uid, userDocument)
+        .then(() => {
+          console.log('User document created successfully');
+          toast({
+            title: "Welcome to AUREON!",
+            description: "Your profile has been created successfully"
+          });
+        })
+        .catch((docError) => {
+          console.error('Error creating user document:', docError);
+          // App can handle missing user documents with fallback data
+        });
+        
     } catch (error) {
       console.error("Error creating user profile:", error);
       toast({
@@ -214,8 +217,8 @@ export default function Onboarding() {
         description: "Failed to create your profile. Please try again.",
         variant: "destructive"
       });
-    } finally {
       setIsSubmitting(false);
+      setIsCompleting(false);
     }
   };
 
@@ -646,12 +649,12 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full relative">
-        {isSubmitting && (
+        {isCompleting && (
           <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
             <div className="text-center">
               <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-              <p className="text-lg font-medium text-gray-900">Creating Your Profile</p>
-              <p className="text-sm text-gray-600 mt-2">Setting up your personalized dashboard...</p>
+              <p className="text-lg font-medium text-gray-900">Welcome to AUREON!</p>
+              <p className="text-sm text-gray-600 mt-2">Taking you to your dashboard...</p>
             </div>
           </div>
         )}

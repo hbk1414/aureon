@@ -79,7 +79,8 @@ function ProtectedRoute({ component: Component, requiresOnboarding = true }: {
 
   // If user needs onboarding and hasn't completed it
   if (requiresOnboarding && (!userDoc || !userDoc?.onboardingCompleted)) {
-    return <Onboarding />;
+    setLocation("/onboarding");
+    return null;
   }
 
   return <Component />;
