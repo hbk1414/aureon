@@ -10,6 +10,13 @@ interface WelcomeBannerProps {
 }
 
 export default function WelcomeBanner({ user, portfolio }: WelcomeBannerProps) {
+  // Determine greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
   return (
     <div className="bg-primary rounded-xl p-6 text-white shadow-lg">
       <div className="flex items-center justify-between">
@@ -19,7 +26,7 @@ export default function WelcomeBanner({ user, portfolio }: WelcomeBannerProps) {
           </div>
           <div>
             <h2 className="text-2xl font-bold mb-2 flex items-center">
-              Good morning, {user.firstName}!
+              {getGreeting()}, {user.firstName}!
               <Sparkles className="h-5 w-5 ml-2 text-yellow-300 animate-bounce" />
             </h2>
             <p className="text-white/90 mb-1">

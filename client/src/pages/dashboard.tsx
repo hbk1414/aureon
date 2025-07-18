@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import Header from "@/components/layout/header";
 import WelcomeBanner from "@/components/dashboard/welcome-banner";
 import AccountConnections from "@/components/dashboard/account-connections";
@@ -11,6 +11,7 @@ import { EmergencyFund } from "@/components/dashboard/emergency-fund-firestore";
 import Couples from "@/components/dashboard/couples";
 import QuickStats from "@/components/dashboard/quick-stats";
 import QuickActions from "@/components/dashboard/quick-actions";
+import SmartInsights from "@/components/dashboard/smart-insights";
 import DashboardSkeleton from "@/components/dashboard/dashboard-skeleton";
 import { useFinancialData } from "@/hooks/use-financial-data";
 
@@ -51,11 +52,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #e0e0e0, #f4f4f4)' }} className="min-h-screen bg-gray-50">
       <Header user={dashboardData.user} />
       
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+         <div className="grid grid-cols-1 lg:grid-cols-4 gap-x-6 gap-y-20">
           {/* Main Dashboard Area */}
           <div className="lg:col-span-3 space-y-6">
             <WelcomeBanner 
@@ -64,25 +65,20 @@ export default function Dashboard() {
             />
 
             <QuickActions />
-            
+            {/* SmartInsights moved below for full-width separation */}
             <AccountConnections 
               accounts={dashboardData.connectedAccounts}
             />
-            
             <SpendingOverview 
               spending={dashboardData.spending}
             />
-            
             <DebtPayoffStrategy 
               debtAccounts={dashboardData.debtAccounts}
             />
-            
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <MicroInvesting />
-
               <EmergencyFund />
             </div>
-
             {/* Couples Section */}
             <Couples 
               partner={dashboardData.partner}
@@ -92,12 +88,16 @@ export default function Dashboard() {
             />
           </div>
 
+          {/* SmartInsights as its own row, full width */}
+          <div className="lg:col-span-4 mt-16">
+            <SmartInsights />
+          </div>
+
           {/* Sidebar - Hidden on mobile, shows as bottom section */}
           <div className="lg:col-span-1 space-y-6 order-first lg:order-last">
             <AiTasks 
               tasks={dashboardData.aiTasks}
             />
-            
             <QuickStats 
               stats={dashboardData.stats}
             />

@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { financialAI } from "./services/financial-ai";
 import { insertConnectedAccountSchema, insertAiTaskSchema, insertFinancialGoalSchema } from "@shared/schema";
 import { z } from "zod";
+import { getUpcomingRiskAlert, getGoalBlockingExpense, getRecurringWaste, getStreakWin, getLifeEventRadar, mockTransactions } from './services/financial-ai';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Brandfetch API proxy endpoint
@@ -249,6 +250,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Dashboard error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
+  });
+
+  // Smart Insights API endpoint
+  app.get('/api/insights', async (req, res) => {
+    // In production, fetch user transactions from Firestore or DB
+    // For now, use mockTransactions
+    const insights = [
+      getUpcomingRiskAlert(),
+      getGoalBlockingExpense(),
+      getRecurringWaste(),
+      getStreakWin(),
+      getLifeEventRadar(),
+    ].filter(Boolean);
+    res.json({ insights });
   });
 
   // Connect new account

@@ -4,6 +4,11 @@ import { Progress } from "@/components/ui/progress";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { addEmergencyFundContribution, getEmergencyFundContributions } from "@/lib/firestore";
+import { useQuery } from "@tanstack/react-query";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { useEffect } from "react";
 
 interface EmergencyFundProps {
   emergencyFund: {
@@ -22,13 +27,43 @@ interface EmergencyFundProps {
 export default function EmergencyFund({ emergencyFund }: EmergencyFundProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  // Fetch contributions
+  const { data: contributions = [], refetch } = useQuery({
+    queryKey: ["emergencyFundContributions", user?.uid],
+    queryFn: () => user?.uid ? getEmergencyFundContributions(user.uid) : Promise.resolve([]),
+    enabled: !!user?.uid,
+  });
+
+  // Calculate monthly data for the bar graph
+  let monthlyData: { month: string; total: number }[] = [];
+  let totalInvested = 0;
+  if (contributions.length > 0) {
+    // Group by month
+    const grouped: Record<string, number> = {};
+    contributions.forEach((c: any) => {
+      const d = new Date(c.date);
+      const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+      grouped[key] = (grouped[key] || 0) + c.amount;
+      totalInvested += c.amount;
+    });
+    // Sort months
+    monthlyData = Object.entries(grouped).map(([month, total]) => ({ month, total }));
+    monthlyData.sort((a, b) => a.month.localeCompare(b.month));
+  }
 
   const addToFundMutation = useMutation({
     mutationFn: async (amount: number) => {
-      return apiRequest("POST", "/api/emergency-fund/1/add", { amount });
+      await apiRequest("POST", "/api/emergency-fund/1/add", { amount });
+      if (user?.uid) {
+        await addEmergencyFundContribution(user.uid, amount);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/1"] });
+      queryClient.invalidateQueries({ queryKey: ["emergencyFundContributions", user?.uid] });
+      refetch();
       toast({
         title: "Success",
         description: "Emergency fund updated successfully!",
@@ -62,8 +97,6 @@ export default function EmergencyFund({ emergencyFund }: EmergencyFundProps) {
     );
   }
 
-
-
   // Create safe defaults for all emergency fund properties
   const current = emergencyFund?.current ?? emergencyFund?.currentAmount ?? 0;
   const goal = emergencyFund?.goal ?? emergencyFund?.targetAmount ?? 15000;
@@ -89,6 +122,21 @@ export default function EmergencyFund({ emergencyFund }: EmergencyFundProps) {
             Goal: {targetMonths} months
           </div>
           <Progress value={percentage} className="h-3" />
+        </div>
+
+        {/* Bar Graph for Contributions */}
+        <div className="my-6">
+          <h4 className="text-md font-semibold mb-2">Monthly Contributions</h4>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={monthlyData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip formatter={(value: any) => `£${value}`} />
+              <Bar dataKey="total" fill="#22c55e" />
+            </BarChart>
+          </ResponsiveContainer>
+          <div className="text-xs text-gray-500 mt-2">Total Invested: <span className="font-semibold text-primary">£{totalInvested.toLocaleString()}</span></div>
         </div>
 
         <div className="space-y-3">

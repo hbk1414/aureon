@@ -299,6 +299,28 @@ export const updateRoundUpSettings = async (userId: string, settings: { enabled:
   await setDoc(docRef, settings, { merge: true });
 };
 
+// Emergency Fund Contributions
+export const addEmergencyFundContribution = async (userId: string, amount: number) => {
+  const docRef = await addDoc(collection(db, "users", userId, "emergencyFundContributions"), {
+    amount,
+    date: Timestamp.now(),
+  });
+  return docRef.id;
+};
+
+export const getEmergencyFundContributions = async (userId: string) => {
+  const q = query(
+    collection(db, "users", userId, "emergencyFundContributions"),
+    orderBy("date", "asc")
+  );
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+    date: doc.data().date?.toDate() || new Date(),
+  }));
+};
+
 // Default user data structure
 const createDefaultUserData = (email: string) => ({
   email,
@@ -774,5 +796,127 @@ export async function getRoundUpSetting(userId: string): Promise<boolean> {
     const stored = localStorage.getItem(`roundUpEnabled_${userId}`);
     return stored ? stored === 'true' : true;
   }
+}
+
+// Couples Firestore utilities
+export async function linkPartnerByEmail(userId, userEmail, partnerEmail) {
+  // Create a pending couple doc
+  const couplesRef = collection(db, 'couples');
+  const docRef = await addDoc(couplesRef, {
+    members: [userEmail],
+    invitedEmail: partnerEmail,
+    status: 'pending',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+  return docRef.id;
+}
+
+export async function acceptPartnerInvite(userId, userEmail, coupleId) {
+  // Add user to members, set status to active, clear invitedEmail
+  const coupleRef = doc(db, 'couples', coupleId);
+  const coupleSnap = await getDoc(coupleRef);
+  if (!coupleSnap.exists()) throw new Error('Couple not found');
+  const data = coupleSnap.data();
+  const members = Array.from(new Set([...(data.members || []), userEmail]));
+  await updateDoc(coupleRef, {
+    members,
+    status: 'active',
+    invitedEmail: '',
+    updatedAt: new Date(),
+  });
+}
+
+export async function addSharedGoal(coupleId, goalData) {
+  const goalsRef = collection(db, 'couples', coupleId, 'sharedGoals');
+  const docRef = await addDoc(goalsRef, {
+    ...goalData,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isCompleted: false,
+    currentAmount: 0,
+  });
+  return docRef.id;
+}
+
+export async function editSharedGoal(coupleId, goalId, updates) {
+  const goalRef = doc(db, 'couples', coupleId, 'sharedGoals', goalId);
+  await updateDoc(goalRef, {
+    ...updates,
+    updatedAt: new Date(),
+  });
+}
+
+export async function deleteSharedGoal(coupleId, goalId) {
+  const goalRef = doc(db, 'couples', coupleId, 'sharedGoals', goalId);
+  await deleteDoc(goalRef);
+}
+
+// Add a contribution to a goal (with user info)
+export async function contributeToGoal(coupleId, goalId, amount, userEmail) {
+  const goalRef = doc(db, 'couples', coupleId, 'sharedGoals', goalId);
+  // Add to contributions subcollection
+  const contribRef = collection(db, 'couples', coupleId, 'sharedGoals', goalId, 'contributions');
+  await addDoc(contribRef, {
+    userEmail,
+    amount,
+    createdAt: new Date(),
+  });
+  // Update currentAmount for fast reads
+  await updateDoc(goalRef, {
+    currentAmount: increment(amount),
+    updatedAt: new Date(),
+  });
+}
+
+// Fetch all contributions for a goal
+export async function getGoalContributions(coupleId, goalId) {
+  const contribRef = collection(db, 'couples', coupleId, 'sharedGoals', goalId, 'contributions');
+  const snap = await getDocs(contribRef);
+  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+export async function getCoupleDataByUserEmail(userEmail) {
+  // Find couple where invitedEmail == userEmail or members array contains userEmail
+  const couplesRef = collection(db, 'couples');
+  const q1 = query(couplesRef, where('invitedEmail', '==', userEmail));
+  const q2 = query(couplesRef, where('members', 'array-contains', userEmail));
+  const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+  const results = [];
+  snap1.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
+  snap2.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
+  // Remove duplicates
+  const unique = results.filter((v,i,a)=>a.findIndex(t=>(t.id===v.id))===i);
+  return unique;
+}
+
+export async function getSharedGoals(coupleId) {
+  const goalsRef = collection(db, 'couples', coupleId, 'sharedGoals');
+  const snap = await getDocs(goalsRef);
+  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+// DEV ONLY: Create a dummy couple and shared goal for testing
+export async function createDummyCoupleWithGoal(userEmail) {
+  const couplesRef = collection(db, 'couples');
+  const coupleDoc = await addDoc(couplesRef, {
+    members: [userEmail],
+    invitedEmail: '',
+    status: 'active',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+  const goalsRef = collection(db, 'couples', coupleDoc.id, 'sharedGoals');
+  await addDoc(goalsRef, {
+    title: 'Test Goal',
+    targetAmount: 1000,
+    currentAmount: 200,
+    category: 'vacation',
+    deadline: '2024-12-31',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isCompleted: false,
+  });
+  return coupleDoc.id;
 }
 
