@@ -108,13 +108,13 @@ export default function AiTasks({ tasks }: AiTasksProps) {
   };
 
   return (
-    <Card>
+    <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-gray-50">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-800">AI Tasks</h3>
+          <h3 className="text-xl font-bold text-gray-800">AI Tasks</h3>
           <div className="flex items-center gap-2">
             {tasks.length > 0 && (
-              <Badge variant="secondary" className="bg-accent text-white">
+              <Badge variant="secondary" className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 rounded-xl px-3 py-1 shadow-md text-sm uppercase tracking-wide font-medium">
                 {tasks.length} New
               </Badge>
             )}
@@ -123,6 +123,7 @@ export default function AiTasks({ tasks }: AiTasksProps) {
               disabled={generateTasksMutation.isPending}
               size="sm"
               variant="outline"
+              className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 hover:from-indigo-600 hover:to-purple-700 text-sm uppercase tracking-wide font-medium"
             >
               Generate
             </Button>
@@ -131,11 +132,11 @@ export default function AiTasks({ tasks }: AiTasksProps) {
 
         {tasks.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-600 mb-4">No active tasks. Generate new AI recommendations!</p>
+            <p className="text-md text-gray-600 mb-4">No active tasks. Generate new AI recommendations!</p>
             <Button 
               onClick={handleGenerateTasks}
               disabled={generateTasksMutation.isPending}
-              className="bg-accent text-white hover:bg-purple-700"
+              className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 hover:from-indigo-600 hover:to-purple-700 text-sm uppercase tracking-wide font-medium"
             >
               {generateTasksMutation.isPending ? "Generating..." : "Generate AI Tasks"}
             </Button>
@@ -145,19 +146,19 @@ export default function AiTasks({ tasks }: AiTasksProps) {
             {tasks.slice(0, 3).map((task) => (
               <div 
                 key={task.id}
-                className={`border-l-4 ${getTaskBorderColor(task.category)} ${getTaskBgColor(task.category)} rounded-r-lg p-4 hover:shadow-md hover:bg-opacity-80 transition-all duration-200`}
+                className={`border-l-4 ${getTaskBorderColor(task.category)} ${getTaskBgColor(task.category)} rounded-xl p-4 hover:shadow-lg hover:bg-opacity-90 transition-all duration-300 hover:scale-[1.02]`}
               >
                 <div className="flex items-start justify-between mb-2">
-                  <span className="font-medium text-gray-800 text-sm">{task.title}</span>
-                  <span className="text-xs text-gray-500 capitalize">{task.taskType}</span>
+                  <span className="text-md font-bold text-gray-800">{task.title}</span>
+                  <span className="text-sm uppercase tracking-wide text-gray-600 font-medium">{task.taskType}</span>
                 </div>
-                <p className="text-xs text-gray-600 mb-3">{task.description}</p>
+                <p className="text-sm text-gray-600 mb-3">{task.description}</p>
                 <div className="flex space-x-2">
                   <Button
                     onClick={() => handleCompleteTask(task.id)}
                     disabled={completeTaskMutation.isPending}
                     size="sm"
-                    className={`text-white text-xs ${getTaskButtonColor(task.category)}`}
+                    className={`text-white text-sm uppercase tracking-wide font-medium rounded-xl shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 ${getTaskButtonColor(task.category)}`}
                   >
                     {task.category === 'debt' ? 'Review' : 
                      task.category === 'savings' ? 'Transfer' : 
@@ -166,7 +167,7 @@ export default function AiTasks({ tasks }: AiTasksProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-gray-600 text-xs hover:text-gray-800"
+                    className="text-gray-600 text-sm uppercase tracking-wide font-medium hover:text-gray-800 rounded-xl hover:bg-gray-100 transition-all duration-300"
                   >
                     Learn More
                   </Button>

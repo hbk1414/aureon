@@ -1,59 +1,60 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowUpDown, Target, TrendingUp, CreditCard } from "lucide-react";
+import { Info } from "lucide-react";
+import { motion } from "framer-motion";
+
+const ACTIONS = [
+  {
+    emoji: "💸",
+    label: "Transfer Funds",
+    description: "Move money between accounts",
+    color: "bg-blue-100 text-blue-600",
+    tooltip: "Send or move money between your connected accounts.",
+  },
+  {
+    emoji: "🎯",
+    label: "Create Savings Goal",
+    description: "Set up a new savings target",
+    color: "bg-emerald-100 text-emerald-600",
+    tooltip: "Start a new goal to save for something important.",
+  },
+  {
+    emoji: "📊",
+    label: "Analyse Spending",
+    description: "View detailed spending insights",
+    color: "bg-purple-100 text-purple-600",
+    tooltip: "See where your money goes each month.",
+  },
+  {
+    emoji: "🧾",
+    label: "Pay Bills",
+    description: "Schedule or make payments",
+    color: "bg-orange-100 text-orange-600",
+    tooltip: "Pay your regular bills and subscriptions.",
+  },
+];
 
 export default function QuickActions() {
-  const actions = [
-    {
-      icon: ArrowUpDown,
-      label: "Transfer Funds",
-      description: "Move money between accounts",
-      color: "bg-blue-500 hover:bg-blue-600",
-    },
-    {
-      icon: Target,
-      label: "Create Savings Goal",
-      description: "Set up a new savings target",
-      color: "bg-green-500 hover:bg-green-600",
-    },
-    {
-      icon: TrendingUp,
-      label: "Analyse Spending",
-      description: "View detailed spending insights",
-      color: "bg-purple-500 hover:bg-purple-600",
-    },
-    {
-      icon: CreditCard,
-      label: "Pay Bills",
-      description: "Schedule or make payments",
-      color: "bg-orange-500 hover:bg-orange-600",
-    },
-  ];
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Quick Actions</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {actions.map((action, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              className="h-auto p-4 flex flex-col items-center space-y-2 hover:shadow-md transition-all duration-200 hover:scale-105"
-            >
-              <div className={`p-3 rounded-full text-white ${action.color} transition-colors`}>
-                <action.icon className="h-5 w-5" />
-              </div>
-              <div className="text-center">
-                <div className="font-medium text-sm">{action.label}</div>
-                <div className="text-xs text-gray-500 mt-1">{action.description}</div>
-              </div>
-            </Button>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full">
+      {ACTIONS.map((action, idx) => (
+        <motion.div
+          key={action.label}
+          className="group bg-white rounded-xl shadow-md border border-gray-100 p-5 flex flex-col items-start md:items-center transition hover:shadow-lg cursor-pointer min-h-[140px]"
+          whileHover={{ y: -2, scale: 1.03 }}
+          tabIndex={0}
+          role="button"
+        >
+          <div className="flex items-center mb-2 w-full">
+            <span className={`text-2xl mr-2 rounded-lg p-2 ${action.color}`}>{action.emoji}</span>
+            <span className="text-base font-semibold text-gray-800 mr-1">{action.label}</span>
+            <span title={action.tooltip} className="ml-1">
+              <Info className="w-4 h-4 text-gray-400" />
+            </span>
+          </div>
+          <span className="text-sm text-gray-500 mb-1 w-full text-left md:text-center">{action.description}</span>
+        </motion.div>
+      ))}
+    </div>
   );
 }

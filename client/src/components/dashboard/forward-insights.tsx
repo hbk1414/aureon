@@ -39,16 +39,18 @@ export function ForwardInsights() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+    <div className="grid grid-cols-12 gap-6 mb-8">
       {insights.map((insight, idx) => (
-        <Card key={idx} className={`shadow group border ${severityStyles[insight.severity] || 'bg-gray-50 border-gray-200 text-gray-900'}`}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-bold">
-              <Info className="w-4 h-4" /> Smart Insight
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="font-medium">{insight.message}</CardContent>
-        </Card>
+        <div key={idx} className="col-span-12 md:col-span-6 xl:col-span-4">
+          <Card className={`shadow group border ${severityStyles[insight.severity] || 'bg-gray-50 border-gray-200 text-gray-900'}`}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-bold">
+                <Info className="w-4 h-4" /> Smart Insight
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="font-medium">{insight.message}</CardContent>
+          </Card>
+        </div>
       ))}
     </div>
   );

@@ -3,6 +3,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { DebtAccount } from "@shared/schema";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { Plus } from "lucide-react";
+import { createDebtAccount } from "@/lib/firestore";
+import { useAuth } from "@/hooks/use-auth";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 interface DebtPayoffStrategyProps {
   debtAccounts: DebtAccount[];
@@ -33,11 +41,80 @@ export default function DebtPayoffStrategy({ debtAccounts }: DebtPayoffStrategyP
     );
   };
 
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ name: '', balance: '', apr: '', minimumPayment: '' });
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleAddDebt = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.uid) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to add a debt.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      await createDebtAccount(user.uid, {
+        name: form.name,
+        balance: String(form.balance),
+        apr: String(form.apr),
+        minimumPayment: String(form.minimumPayment),
+        priority: debtAccounts.length + 1,
+        suggestedPayment: null,
+        userId: Number(user.uid),
+      });
+      setOpen(false);
+      setForm({ name: '', balance: '', apr: '', minimumPayment: '' });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard', user.uid] });
+      toast({
+        title: "Debt Added!",
+        description: `Successfully added debt: ${form.name}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add debt. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (debtAccounts.length === 0) {
     return (
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">Debt Payoff Strategy</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-gray-800">Debt Payoff Strategy</h3>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button size="icon" variant="outline" className="ml-2" aria-label="Add Debt">
+                  <Plus className="w-5 h-5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Debt</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleAddDebt} className="space-y-4">
+                  <Input name="name" placeholder="Debt Name" value={form.name} onChange={handleChange} required />
+                  <Input name="balance" placeholder="Balance (£)" type="number" value={form.balance} onChange={handleChange} required />
+                  <Input name="apr" placeholder="APR (%)" type="number" step="0.01" value={form.apr} onChange={handleChange} required />
+                  <Input name="minimumPayment" placeholder="Minimum Payment (£/month)" type="number" value={form.minimumPayment} onChange={handleChange} required />
+                  <DialogFooter>
+                    <Button type="submit">Add Debt</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
           <p className="text-gray-600">No debt accounts found. Great job staying debt-free!</p>
         </CardContent>
       </Card>
@@ -45,11 +122,88 @@ export default function DebtPayoffStrategy({ debtAccounts }: DebtPayoffStrategyP
   }
 
   return (
-    <Card>
+    <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-gray-50">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold text-gray-800">AI Debt Payoff Strategy</h3>
-          <Badge variant="secondary" className="bg-accent text-white">
+          <div className="flex items-center gap-3">
+            <h3 className="text-xl font-bold text-gray-800">AI Debt Payoff Strategy</h3>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  size="icon" 
+                  variant="outline" 
+                  className="ml-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 hover:from-indigo-600 hover:to-purple-700" 
+                  aria-label="Add Debt"
+                >
+                  <Plus className="w-5 h-5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="rounded-xl border-0 shadow-xl">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold text-gray-800">Add New Debt</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleAddDebt} className="space-y-4">
+                  <div>
+                    <label className="text-sm uppercase tracking-wide text-gray-600 font-medium mb-2 block">Debt Name</label>
+                    <Input 
+                      name="name" 
+                      placeholder="Enter debt name" 
+                      value={form.name} 
+                      onChange={handleChange} 
+                      required 
+                      className="rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm uppercase tracking-wide text-gray-600 font-medium mb-2 block">Balance</label>
+                    <Input 
+                      name="balance" 
+                      placeholder="Enter balance in £" 
+                      type="number" 
+                      value={form.balance} 
+                      onChange={handleChange} 
+                      required 
+                      className="rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm uppercase tracking-wide text-gray-600 font-medium mb-2 block">APR</label>
+                    <Input 
+                      name="apr" 
+                      placeholder="Enter APR percentage" 
+                      type="number" 
+                      step="0.01" 
+                      value={form.apr} 
+                      onChange={handleChange} 
+                      required 
+                      className="rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm uppercase tracking-wide text-gray-600 font-medium mb-2 block">Minimum Payment</label>
+                    <Input 
+                      name="minimumPayment" 
+                      placeholder="Enter monthly minimum payment" 
+                      type="number" 
+                      value={form.minimumPayment} 
+                      onChange={handleChange} 
+                      required 
+                      className="rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button 
+                      type="submit" 
+                      className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 hover:from-indigo-600 hover:to-purple-700"
+                    >
+                      Add Debt
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <Badge variant="secondary" className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 rounded-xl px-3 py-1 shadow-md text-sm uppercase tracking-wide font-medium">
             AI Optimized
           </Badge>
         </div>

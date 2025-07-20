@@ -12,6 +12,16 @@ import { ChevronLeft, ChevronRight, User, Target, PiggyBank, CreditCard, Home, T
 import { useAuth } from "@/hooks/use-auth";
 import { createUserDocument } from "@/lib/firestore";
 import { useToast } from "@/hooks/use-toast";
+import {
+  dummyUser,
+  dummyGoals,
+  dummyBudgets,
+  dummyDebts,
+  dummyStats,
+  dummyEmergencyFund,
+  dummyAITasks,
+  dummyNotifications
+} from "@/lib/dummyData";
 
 interface OnboardingData {
   // Personal Info

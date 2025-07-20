@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,6 +17,25 @@ export default function Header({ user }: HeaderProps) {
   const { signOut, user: authUser } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [show, setShow] = useState(true);
+  const [lastScroll, setLastScroll] = useState(0);
+
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const curr = window.scrollY;
+          setShow(curr < 10 || curr < lastScroll);
+          setLastScroll(curr);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScroll]);
 
   const handleSignOut = async () => {
     try {
@@ -38,7 +58,7 @@ export default function Header({ user }: HeaderProps) {
   const initials = user?.initials || displayName.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <header className={`bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50 transition-transform duration-300 ${show ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-36">
           <div className="flex items-center">

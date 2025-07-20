@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./use-auth";
 import { getUserDocument } from "@/lib/firestore";
+import { getDebtAccounts, getFinancialGoals } from "@/lib/firestore";
 
 // Local storage fallback helpers
 const getLocalAccountsFallback = (uid?: string): any[] => {
@@ -124,7 +125,7 @@ const getFallbackData = (user: any) => ({
   user: {
     name: user.displayName || user.email?.split('@')[0] || 'User',
     firstName: user.displayName?.split(' ')[0] || user.email?.split('@')[0] || 'User',
-    initials: (user.displayName || user.email?.split('@')[0] || 'User').split(' ').map(n => n[0]).join('').toUpperCase()
+    initials: (user.displayName || user.email?.split('@')[0] || 'User').split(' ').map((n: any) => n[0]).join('').toUpperCase()
   },
   portfolio: {
     totalBalance: 0
@@ -190,6 +191,10 @@ export function useFinancialData() {
     queryFn: async () => {
       if (!user?.uid) throw new Error('User not authenticated');
 
+      // Fetch debts and savings goals from Firestore
+      const debtAccounts = await getDebtAccounts(user.uid);
+      const financialGoals = await getFinancialGoals(user.uid);
+
       try {
         // Check for locally stored onboarding data first
         console.log('Checking for onboarding data for user:', user.uid);
@@ -247,62 +252,42 @@ export function useFinancialData() {
           setTimeout(() => reject(new Error('Timeout')), 3000)
         );
         
-        const userData = await Promise.race([
-          getUserDocument(user.uid),
-          timeoutPromise
-        ]);
-
-        // Use onboarding data if available, otherwise use Firestore data
-        const dataToUse = onboardingData || userData;
-
-        if (dataToUse) {
-          console.log('Using data from onboarding/Firestore:', dataToUse);
-          const fallbackData = getFallbackData(user);
-          // Use onboarding/Firestore data if available
-          return {
-            ...fallbackData,
-            stats: {
-              totalSaved: dataToUse?.emergencyFund?.currentAmount || 0,
-              monthlyIncome: dataToUse?.monthlyIncome || 3500,
-              savingsRate: dataToUse?.savingsRate || 15,
-              creditScore: dataToUse?.creditScore || 720
-            },
-            spending: {
-              total: dataToUse?.totalSpent || 0,
-              budget: dataToUse?.monthlyBudget || 3000,
-              remaining: Math.max((dataToUse?.monthlyBudget || 3000) - (dataToUse?.totalSpent || 0), 0),
-              totalThisMonth: dataToUse?.totalSpent || 0,
-              categories: (dataToUse as any)?.totalSpent > 0 ? [
-                { name: 'Shopping', amount: Math.round((dataToUse as any).totalSpent * 0.35), percentage: 35 },
-                { name: 'Dining', amount: Math.round((dataToUse as any).totalSpent * 0.28), percentage: 28 },
-                { name: 'Transport', amount: Math.round((dataToUse as any).totalSpent * 0.17), percentage: 17 },
-                { name: 'Entertainment', amount: Math.round((dataToUse as any).totalSpent * 0.12), percentage: 12 },
-                { name: 'Utilities', amount: Math.round((dataToUse as any).totalSpent * 0.08), percentage: 8 }
-              ] : []
-            },
-            emergencyFund: {
-              current: dataToUse?.emergencyFund?.currentAmount || 0,
-              target: dataToUse?.emergencyFund?.targetAmount || 15000,
-              progress: Math.round(((dataToUse?.emergencyFund?.currentAmount || 0) / (dataToUse?.emergencyFund?.targetAmount || 15000)) * 100),
-              currentAmount: dataToUse?.emergencyFund?.currentAmount || 0,
-              targetAmount: dataToUse?.emergencyFund?.targetAmount || 15000,
-              monthsOfExpenses: Math.round((dataToUse?.emergencyFund?.currentAmount || 0) / (dataToUse?.monthlyBudget || 3000)),
-              targetMonths: dataToUse?.emergencyFundTarget || 6,
-              monthlyContribution: 500
-            },
-            aiTasks: dataToUse?.aiTasks || getFallbackData(user).aiTasks,
-            connectedAccounts: getLocalAccountsFallback(user?.uid).length > 0 
-              ? getLocalAccountsFallback(user?.uid) 
-              : userData?.accounts || [],
-            portfolio: {
-              totalBalance: (() => {
-                const localAccounts = getLocalAccountsFallback(user?.uid);
-                const accounts = localAccounts.length > 0 ? localAccounts : (userData?.accounts || []);
-                return accounts.reduce((sum: number, account: any) => sum + (account.balance || 0), 0);
-              })()
-            }
-          };
+        let userData = null;
+        try {
+          userData = await Promise.race([
+            getUserDocument(user.uid),
+            timeoutPromise
+          ]);
+        } catch (error) {
+          // fallback logic
         }
+        // Use onboarding/local data for everything else, but use Firestore debts and goals
+        const fallbackData = getFallbackData(user);
+        const safeUserData = userData || {};
+        const safeAccounts = Array.isArray((safeUserData as any).accounts) ? (safeUserData as any).accounts : [];
+        const safeEmergencyFund = (safeUserData as any).emergencyFund || {};
+        // Calculate total portfolio
+        const connectedTotal = safeAccounts.reduce((sum: number, account: any) => sum + (Number(account.balance) || 0), 0);
+        const emergencyFundTotal = Number(safeEmergencyFund.currentAmount) || 0;
+        const savingsGoalsTotal = Array.isArray(financialGoals)
+          ? financialGoals.reduce((sum, goal) => sum + (Number(goal.currentAmount) || 0), 0)
+          : 0;
+        const totalBalance = connectedTotal + emergencyFundTotal + savingsGoalsTotal;
+        return {
+          ...fallbackData,
+          ...safeUserData,
+          connectedAccounts: safeAccounts,
+          emergencyFund: {
+            current: safeEmergencyFund?.currentAmount ?? 0,
+            target: safeEmergencyFund?.targetAmount ?? 0,
+            ...safeEmergencyFund
+          },
+          financialGoals,
+          debtAccounts, // always use Firestore debts
+          portfolio: {
+            totalBalance
+          }
+        };
       } catch (error) {
         console.log('Using fallback data due to Firestore issue:', error);
       }
@@ -388,7 +373,8 @@ export function useFinancialData() {
           totalReturns: "0.00",
           roundUpEnabled: false,
           monthlyRoundUps: "0.00"
-        }
+        },
+        debtAccounts: debtAccounts // always use Firestore debts
       };
     },
     enabled: !!user?.uid,

@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
+import { motion } from "framer-motion";
 import Header from "@/components/layout/header";
 import WelcomeBanner from "@/components/dashboard/welcome-banner";
 import AccountConnections from "@/components/dashboard/account-connections";
@@ -13,97 +13,276 @@ import QuickStats from "@/components/dashboard/quick-stats";
 import QuickActions from "@/components/dashboard/quick-actions";
 import SmartInsights from "@/components/dashboard/smart-insights";
 import DashboardSkeleton from "@/components/dashboard/dashboard-skeleton";
-import { useFinancialData } from "@/hooks/use-financial-data";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  dummyUser,
+  dummyAccounts,
+  dummyTransactions,
+  dummyGoals,
+  dummyStats,
+  dummyAITasks,
+  dummyEmergencyFund,
+  dummyDebts,
+  dummyCouple,
+  dummyPortfolio,
+  dummyBudgets,
+  dummyRecurringPayments,
+  dummySpareChangeInvestments,
+  dummyNotifications
+} from "@/lib/dummyData";
+import BudgetCard from "@/components/dashboard/budget-card";
 
 export default function Dashboard() {
-  const dashboardQuery = useFinancialData();
+  const { user } = useAuth();
 
-  if (dashboardQuery.isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header user={{ name: "Loading...", initials: "L" }} />
-        <DashboardSkeleton />
-      </div>
-    );
-  }
-
-  if (dashboardQuery.error) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header user={{ name: "Error", initials: "" }} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center text-danger">Failed to load dashboard data</div>
-        </div>
-      </div>
-    );
-  }
-
-  const dashboardData = dashboardQuery.data;
+  // Use dummy data directly
+  const dashboardData = {
+    user: { ...dummyUser, name: dummyUser.displayName || dummyUser.firstName || "User" },
+    portfolio: dummyPortfolio,
+    connectedAccounts: dummyAccounts.map(acc => ({
+      ...acc,
+      bankName: acc.name,
+      last4: "1234"
+    })),
+    recentTransactions: dummyTransactions,
+    financialGoals: dummyGoals,
+    stats: dummyStats,
+    aiTasks: dummyAITasks,
+    emergencyFund: dummyEmergencyFund,
+    debtAccounts: dummyDebts.map(d => ({
+      ...d,
+      userId: 1,
+      priority: null,
+      balance: String(d.balance),
+      apr: String(d.apr),
+      minimumPayment: String(d.minimumPayment),
+      suggestedPayment: null
+    })),
+    couple: dummyCouple,
+    budgets: dummyBudgets,
+    recurringPayments: dummyRecurringPayments,
+    spareChangeInvestments: dummySpareChangeInvestments,
+    notifications: dummyNotifications,
+    spending: {
+      total: 1200,
+      budget: 2000,
+      remaining: 800,
+      totalThisMonth: 1200,
+      categories: []
+    }
+  };
   
   if (!dashboardData) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header user={{ name: "No Data", initials: "" }} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">No dashboard data available</div>
         </div>
       </div>
     );
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        delayChildren: 0.1
+      }
+    }
+  };
+
+  const sectionVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut"
+      }
+    }
+  };
+
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #e0e0e0, #f4f4f4)' }} className="min-h-screen bg-gray-50">
+    <motion.div 
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <Header user={dashboardData.user} />
       
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
-         <div className="grid grid-cols-1 lg:grid-cols-4 gap-x-6 gap-y-20">
-          {/* Main Dashboard Area */}
-          <div className="lg:col-span-3 space-y-6">
-            <WelcomeBanner 
-              user={dashboardData.user} 
-              portfolio={dashboardData.portfolio}
-            />
-
-            <QuickActions />
-            {/* SmartInsights moved below for full-width separation */}
-            <AccountConnections 
-              accounts={dashboardData.connectedAccounts}
-            />
-            <SpendingOverview 
-              spending={dashboardData.spending}
-            />
-            <DebtPayoffStrategy 
-              debtAccounts={dashboardData.debtAccounts}
-            />
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <MicroInvesting />
-              <EmergencyFund />
+      {/* Welcome Section - Full Width */}
+      <motion.section 
+        className="bg-gradient-to-br from-white to-gray-50 py-6 mb-6 shadow-sm"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-12">
+              <WelcomeBanner 
+                user={dashboardData.user} 
+                portfolio={dashboardData.portfolio}
+              />
             </div>
-            {/* Couples Section */}
-            <Couples 
-              partner={dashboardData.partner}
-              sharedGoals={dashboardData.sharedGoals || []}
-              totalSaved={dashboardData.couplesSavings?.totalSaved || 0}
-              monthlyContribution={dashboardData.couplesSavings?.monthlyContribution || 0}
-            />
-          </div>
-
-          {/* SmartInsights as its own row, full width */}
-          <div className="lg:col-span-4 mt-16">
-            <SmartInsights />
-          </div>
-
-          {/* Sidebar - Hidden on mobile, shows as bottom section */}
-          <div className="lg:col-span-1 space-y-6 order-first lg:order-last">
-            <AiTasks 
-              tasks={dashboardData.aiTasks}
-            />
-            <QuickStats 
-              stats={dashboardData.stats}
-            />
           </div>
         </div>
+      </motion.section>
+
+      {/* Quick Actions Section - Full Width */}
+      <motion.section 
+        className="bg-gradient-to-br from-gray-50 to-gray-100 py-6 mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-12">
+              <QuickActions />
+            </div>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* Main Dashboard Content */}
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div 
+          className="grid grid-cols-12 gap-6"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          
+          {/* Main Content Area - 9 columns on large screens */}
+          <motion.div 
+            className="col-span-12 lg:col-span-9 space-y-6"
+            variants={sectionVariants}
+          >
+            {/* Budget Card */}
+            <BudgetCard userId={user?.uid || ''} transactions={dashboardData.recentTransactions || []} />
+            {/* Account Overview Section */}
+            <motion.section 
+              className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 py-6 px-6 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
+              variants={sectionVariants}
+              whileHover={{ y: -4, scale: 1.01 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Account Overview</h2>
+              <AccountConnections 
+                accounts={dashboardData.connectedAccounts}
+              />
+            </motion.section>
+
+            {/* Financial Management Section */}
+            <motion.section 
+              className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 py-6 px-6 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
+              variants={sectionVariants}
+              whileHover={{ y: -4, scale: 1.01 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Financial Management</h2>
+              <div className="space-y-6">
+                <SpendingOverview 
+                  spending={dashboardData.spending}
+                />
+                <DebtPayoffStrategy 
+                  debtAccounts={dashboardData.debtAccounts}
+                />
+              </div>
+            </motion.section>
+
+            {/* Savings & Investments Section */}
+            <motion.section 
+              className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 py-6 px-6 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
+              variants={sectionVariants}
+              whileHover={{ y: -4, scale: 1.01 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Savings & Investments</h2>
+              <div className="grid grid-cols-12 gap-6">
+                <div className="col-span-12 xl:col-span-6">
+                  <MicroInvesting />
+                </div>
+                <div className="col-span-12 xl:col-span-6">
+                  <EmergencyFund />
+                </div>
+              </div>
+            </motion.section>
+
+          </motion.div>
+
+          {/* Sidebar - 3 columns on large screens */}
+          <motion.div 
+            className="col-span-12 lg:col-span-3 space-y-6"
+            variants={sectionVariants}
+          >
+            <motion.section 
+              className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 py-6 px-6 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
+              variants={sectionVariants}
+              whileHover={{ y: -4, scale: 1.01 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h2 className="text-xl font-bold text-gray-900 mb-4">AI Assistant</h2>
+              <AiTasks 
+                tasks={[]}
+              />
+            </motion.section>
+            
+            <motion.section 
+              className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 py-6 px-6 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
+              variants={sectionVariants}
+              whileHover={{ y: -4, scale: 1.01 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Stats</h2>
+              <QuickStats 
+                stats={{
+                  creditScore: dashboardData.stats?.creditScore || 750,
+                  savingsRate: dashboardData.stats?.savingsRate || 15,
+                  debtFreeDays: 0
+                }}
+              />
+            </motion.section>
+          </motion.div>
+
+        </motion.div>
       </div>
-    </div>
+
+      {/* Shared Goals Section - Full Width */}
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        <motion.section 
+          className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 py-6 px-6 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
+          variants={sectionVariants}
+          whileHover={{ y: -4, scale: 1.01 }}
+          transition={{ duration: 0.3 }}
+        >
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Shared Goals</h2>
+          <Couples />
+        </motion.section>
+      </div>
+
+      {/* Insights & Analytics Section - Full Width */}
+      <motion.section 
+        className="bg-gradient-to-br from-gray-50 to-gray-100 py-6 mt-6"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.8 }}
+      >
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-12">
+              <SmartInsights />
+            </div>
+          </div>
+        </div>
+      </motion.section>
+
+    </motion.div>
   );
 }
