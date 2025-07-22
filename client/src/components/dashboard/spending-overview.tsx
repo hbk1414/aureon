@@ -1,5 +1,6 @@
 import { ShoppingCart, Car, Film } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useState } from "react";
 
 interface SpendingCategory {
   name: string;
@@ -57,10 +58,15 @@ const getProgressColor = (categoryName: string) => {
 };
 
 export default function SpendingOverview({ spending }: SpendingOverviewProps) {
+  const [editing, setEditing] = useState(false);
+  const [budget, setBudget] = useState(spending.budget || 0);
+
   return (
     <Card>
       <CardContent className="p-6">
-        <h3 className="text-xl font-semibold text-gray-800 mb-6">Spending This Month</h3>
+        <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center justify-between">
+          Spending This Month
+        </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className="text-center">
@@ -69,9 +75,27 @@ export default function SpendingOverview({ spending }: SpendingOverviewProps) {
             </div>
             <div className="text-sm text-gray-600">Total Spent</div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-success">
-              £{(spending.budget || 0).toLocaleString()}
+          <div className="text-center relative">
+            <div className="text-2xl font-bold text-success flex items-center justify-center gap-2">
+              £{editing ? (
+                <input
+                  type="number"
+                  className="border rounded px-2 py-1 w-24 text-center text-success font-bold text-2xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary"
+                  value={budget}
+                  onChange={e => setBudget(Number(e.target.value))}
+                  onBlur={() => setEditing(false)}
+                  autoFocus
+                />
+              ) : (
+                (spending.budget || 0).toLocaleString()
+              )}
+              <button
+                className="ml-2 px-2 py-1 text-xs rounded bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-600 font-semibold transition"
+                onClick={() => setEditing(true)}
+                aria-label="Edit Monthly Budget"
+              >
+                Edit
+              </button>
             </div>
             <div className="text-sm text-gray-600">Monthly Budget</div>
           </div>

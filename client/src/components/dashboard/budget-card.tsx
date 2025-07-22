@@ -3,6 +3,7 @@ import BudgetSummaryCard from "@/components/dashboard/budget-summary-card";
 import { dummyTransactions, dummyStats, dummyAccounts } from "@/lib/dummyData";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, Sector } from "recharts";
 import { ArrowUpRight, ArrowDownLeft, AlertCircle, TrendingUp, PiggyBank } from "lucide-react";
+// import financeAnimation from "@/assets/finance-lottie.json"; // Placeholder, not included
 
 const COLORS = ["#6366f1", "#06b6d4", "#f59e42", "#f43f5e", "#10b981", "#a78bfa", "#fbbf24", "#f472b6", "#818cf8", "#f87171"];
 const TIME_RANGES = [
@@ -237,6 +238,29 @@ export default function BudgetCard() {
   const keyTakeaways = getKeyTakeaways(spendingData);
   const nlInsights = getNaturalLanguageInsights(spendingData, monthOnMonth);
 
+  // Financial summary values
+  const { income, spent, saved, available } = useMemo(() => {
+    // Use the same logic as BudgetSummaryCard
+    const now = new Date();
+    const month = now.getMonth();
+    const year = now.getFullYear();
+    let income = 0, spent = 0;
+    filteredTxs.forEach(tx => {
+      const txDate = new Date(tx.date);
+      if (txDate.getMonth() === month && txDate.getFullYear() === year) {
+        const amt = Number(tx.amount);
+        if (amt > 0 && ["income", "salary"].includes((tx.category || "").toLowerCase())) {
+          income += amt;
+        } else if (amt < 0) {
+          spent += Math.abs(amt);
+        }
+      }
+    });
+    const saved = Math.max(0, income - spent);
+    const available = income - spent - saved;
+    return { income, spent, saved, available };
+  }, [filteredTxs]);
+
   // Unique accounts and categories for filters
   const accountOptions = [{ label: "All Accounts", value: "all" }, ...dummyAccounts.map(a => ({ label: a.name, value: a.id }))];
   const categoryOptions = [{ label: "All Categories", value: "all" }, ...Array.from(new Set(dummyTransactions.map(tx => tx.category || "Other"))).map(c => ({ label: c, value: c }))];
@@ -271,118 +295,102 @@ export default function BudgetCard() {
   ].filter(Boolean) as string[];
 
   return (
-    <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 p-6 flex flex-col items-start">
-      <BudgetSummaryCard transactions={filteredTxs} monthlyBudget={dummyStats.monthlyIncome} />
-      {/* Filter Strip + Spend Tab Switcher */}
-      <div className="w-full mb-4 flex flex-wrap gap-2 items-center justify-between">
-        <div className="flex gap-2">
-          {TIME_RANGES.map(opt => (
-            <button
-              key={opt.value}
-              className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${timeRange === opt.value ? 'bg-purple-100 text-purple-700 border-purple-300' : 'bg-gray-50 text-gray-500 border-gray-200'}`}
-              onClick={() => setTimeRange(opt.value)}
-            >
-              {opt.label}
-            </button>
-          ))}
+    <section className="w-full bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 px-8 pt-8 pb-12 mb-10 relative font-[Inter,sans-serif]">
+      {/* Lottie Animation Placeholder */}
+      <div className="absolute top-6 right-8 w-20 h-20 opacity-80 pointer-events-none select-none">
+        {/* <Lottie animationData={financeAnimation} loop autoplay /> */}
+        <div className="w-full h-full bg-gray-100 rounded-full flex items-center justify-center text-2xl text-gray-400">💸</div>
+      </div>
+      {/* Financial Summary */}
+      <div className="flex flex-wrap gap-8 mb-10 justify-between items-center">
+        <div className="flex flex-col items-start gap-1 min-w-[140px]">
+          <span className="text-xs font-semibold text-gray-500 tracking-wide uppercase">Total Income</span>
+          <span className="text-2xl font-extrabold text-[#2CB67D]">£{income.toLocaleString()}</span>
         </div>
-        <div className="flex gap-2 items-center">
-          <div className="flex bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
-            <button
-              className={`px-3 py-1 text-xs font-semibold transition ${spendTab === 'monthly' ? 'bg-purple-100 text-purple-700' : 'text-gray-500'}`}
-              onClick={() => setSpendTab('monthly')}
-            >Monthly</button>
-            <button
-              className={`px-3 py-1 text-xs font-semibold transition ${spendTab === 'weekly' ? 'bg-purple-100 text-purple-700' : 'text-gray-500'}`}
-              onClick={() => setSpendTab('weekly')}
-            >Weekly</button>
-          </div>
-          <select className="rounded-md border px-2 py-1 text-xs" value={account} onChange={e => setAccount(e.target.value)}>
-            {accountOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-          </select>
-          <select className="rounded-md border px-2 py-1 text-xs" value={category} onChange={e => setCategory(e.target.value)}>
-            {categoryOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-          </select>
+        <div className="flex flex-col items-start gap-1 min-w-[140px]">
+          <span className="text-xs font-semibold text-gray-500 tracking-wide uppercase">Total Spent</span>
+          <span className="text-2xl font-extrabold text-[#F25F4C]">£{spent.toLocaleString()}</span>
+        </div>
+        <div className="flex flex-col items-start gap-1 min-w-[140px]">
+          <span className="text-xs font-semibold text-gray-500 tracking-wide uppercase">Total Saved</span>
+          <span className="text-2xl font-extrabold text-[#00A6FB]">£{saved.toLocaleString()}</span>
+        </div>
+        <div className="flex flex-col items-start gap-1 min-w-[140px]">
+          <span className="text-xs font-semibold text-gray-500 tracking-wide uppercase">Available to Spend</span>
+          <span className={`text-2xl font-extrabold ${available < 0 ? 'text-[#F25F4C]' : 'text-[#7F5AF0]'}`}>{available < 0 ? '-' : ''}£{Math.abs(available).toLocaleString()}</span>
         </div>
       </div>
-      {/* Centered Pie Chart */}
-      <div className="w-full mb-10">
-        <div className="bg-white rounded-2xl shadow p-6 w-full min-w-0">
-          {/* Pie Chart only, no toggle */}
-          {spendingData.length > 0 ? (
-            <div className="w-full h-[500px] px-12">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={spendingData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={100}
-                    outerRadius={170}
-                    isAnimationActive={true}
-                    animationDuration={900}
-                    label={renderCustomLabel}
-                    labelLine={true}
-                    minAngle={18}
-                    activeIndex={activeIndex}
-                    activeShape={renderActiveShape}
-                    onMouseEnter={(_, idx) => setActiveIndex(idx)}
-                    onMouseLeave={() => setActiveIndex(undefined)}
-                  >
-                    {spendingData.map((entry, idx) => (
-                      <Cell key={`cell-${idx}`} fill={FINTECH_COLORS[idx % FINTECH_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const d = payload[0].payload;
-                        return (
-                          <div className="bg-white rounded-lg shadow px-4 py-3 text-base text-gray-900 border border-gray-100">
-                            <div className="font-bold text-lg mb-1">{d.icon} {d.name}</div>
-                            <div className="mb-1">Amount: <span className="font-semibold">£{d.value.toLocaleString()}</span></div>
-                            <div>Percent: <span className="font-semibold">{d.percent}%</span></div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  {/* Central label for total spent and subtitle */}
-                  <g>
-                    <text
-                      x="50%"
-                      y="50%"
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      fontSize={24}
-                      fontWeight={700}
-                      fill="#18181b"
-                      className="select-none"
-                    >
-                      £{totalSpent.toLocaleString()} spent
-                    </text>
-                    <text
-                      x="50%"
-                      y="56%"
-                      textAnchor="middle"
-                      dominantBaseline="hanging"
-                      fontSize={14}
-                      fontWeight={500}
-                      fill="#7F5AF0"
-                      className="select-none"
-                    >
-                      Total Monthly Spend
-                    </text>
-                  </g>
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="text-gray-400 text-sm py-8 text-center w-full">No transactions recorded yet. Start spending to see insights.</div>
-          )}
+      {/* Donut Chart Section */}
+      <div className="w-full flex flex-col items-center justify-center">
+        <div className="w-full h-[420px] px-8 flex items-center justify-center">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={spendingData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                innerRadius={90}
+                outerRadius={140}
+                isAnimationActive={true}
+                animationDuration={900}
+                label={renderCustomLabel}
+                labelLine={true}
+                minAngle={18}
+                activeIndex={activeIndex}
+                activeShape={renderActiveShape}
+                onMouseEnter={(_, idx) => setActiveIndex(idx)}
+                onMouseLeave={() => setActiveIndex(undefined)}
+              >
+                {spendingData.map((entry, idx) => (
+                  <Cell key={`cell-${idx}`} fill={FINTECH_COLORS[idx % FINTECH_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const d = payload[0].payload;
+                    return (
+                      <div className="bg-white rounded-lg shadow px-4 py-3 text-base text-gray-900 border border-gray-100">
+                        <div className="font-bold text-lg mb-1">{d.icon} {d.name}</div>
+                        <div className="mb-1">Amount: <span className="font-semibold">£{d.value.toLocaleString()}</span></div>
+                        <div>Percent: <span className="font-semibold">{d.percent}%</span></div>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              {/* Central label for total spent and subtitle */}
+              <g>
+                <text
+                  x="50%"
+                  y="50%"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize={22}
+                  fontWeight={700}
+                  fill="#18181b"
+                  className="select-none"
+                >
+                  £{totalSpent.toLocaleString()} spent
+                </text>
+                <text
+                  x="50%"
+                  y="56%"
+                  textAnchor="middle"
+                  dominantBaseline="hanging"
+                  fontSize={13}
+                  fontWeight={500}
+                  fill="#7F5AF0"
+                  className="select-none"
+                >
+                  Total Monthly Spend
+                </text>
+              </g>
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
       {/* Full-width Bar Chart below */}
@@ -433,6 +441,6 @@ export default function BudgetCard() {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 } 

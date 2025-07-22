@@ -164,8 +164,8 @@ export default function Dashboard() {
             className="col-span-12 lg:col-span-9 space-y-6"
             variants={sectionVariants}
           >
-            {/* Budget Card */}
-            <BudgetCard userId={user?.uid || ''} transactions={dashboardData.recentTransactions || []} />
+            {/* Budget Card - premium summary and chart */}
+            <BudgetCard />
             {/* Account Overview Section */}
             <motion.section 
               className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 py-6 px-6 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
