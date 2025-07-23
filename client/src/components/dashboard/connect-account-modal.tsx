@@ -60,6 +60,24 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // TrueLayer redirect handler
+  const handleTrueLayerConnect = () => {
+    const clientId = import.meta.env.VITE_TRUELAYER_CLIENT_ID;
+    if (!clientId) {
+      toast({
+        title: "Configuration Error",
+        description: "TrueLayer client ID not configured. Please contact support.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const authUrl = `https://auth.truelayer.com/?response_type=code&client_id=${clientId}&scope=info%20accounts%20balance%20transactions&redirect_uri=http://localhost:5000/callback&providers=mock&enable_mock=true`;
+    
+    // Open in new tab
+    window.open(authUrl, '_blank');
+  };
+
   // Debug logging
   console.log("ConnectAccountModal rendered:", { open, user: !!user });
 
@@ -215,6 +233,26 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
               step="0.01"
             />
           </div>
+        </div>
+
+        {/* TrueLayer Mock Bank Connection */}
+        <div className="border-t pt-4">
+          <div className="mb-3">
+            <Label className="text-sm font-medium">Or connect using TrueLayer (Demo)</Label>
+            <p className="text-xs text-gray-500 mt-1">
+              Connect to a mock bank account using TrueLayer's test environment
+            </p>
+          </div>
+          <Button 
+            onClick={handleTrueLayerConnect}
+            variant="outline"
+            className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 transition-all duration-200 text-blue-700 hover:text-blue-800"
+          >
+            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            Connect with TrueLayer Mock Bank
+          </Button>
         </div>
         
         <DialogFooter>

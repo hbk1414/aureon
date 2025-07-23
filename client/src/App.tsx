@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "@/pages/dashboard";
 import Auth from "@/pages/auth";
 import Onboarding from "@/pages/onboarding";
+import CallbackPage from "@/pages/callback";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/use-auth";
 import { getUserDocument } from "@/lib/firestore";
@@ -109,6 +110,7 @@ function Router() {
       <Route path="/onboarding">
         <ProtectedRoute component={Onboarding} requiresOnboarding={false} />
       </Route>
+      <Route path="/callback" component={CallbackPage} />
       <Route path="/dashboard">
         <ProtectedRoute component={Dashboard} />
       </Route>
