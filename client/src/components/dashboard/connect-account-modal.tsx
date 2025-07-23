@@ -80,6 +80,7 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
 
   // Debug logging
   console.log("ConnectAccountModal rendered:", { open, user: !!user });
+  console.log("TrueLayer Client ID:", import.meta.env.VITE_TRUELAYER_CLIENT_ID);
 
   if (!open) {
     return null;
