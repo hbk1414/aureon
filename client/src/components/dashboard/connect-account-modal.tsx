@@ -75,7 +75,7 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
       return;
     }
 
-    const authUrl = `https://auth.truelayer.com/?response_type=code&client_id=${clientId}&scope=info%20accounts%20balance%20transactions&redirect_uri=http://localhost:5000/callback&providers=mock&enable_mock=true`;
+    const authUrl = `https://auth.truelayer-sandbox.com/?response_type=code&client_id=${clientId}&scope=info%20accounts%20balance%20transactions%20direct_debits%20standing_orders%20identity&redirect_uri=http://localhost:5000/callback&providers=mock&state=12345&nonce=123`;
     
     console.log("Opening TrueLayer auth URL:", authUrl);
     
