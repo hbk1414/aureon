@@ -258,7 +258,7 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
               Connect to a mock bank account using TrueLayer's test environment
             </p>
           </div>
-          <Button 
+          <button 
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -266,14 +266,13 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
               handleTrueLayerConnect();
             }}
             type="button"
-            variant="outline"
-            className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 transition-all duration-200 text-blue-700 hover:text-blue-800"
+            className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 transition-all duration-200 text-blue-700 hover:text-blue-800 rounded-md px-4 py-2 text-sm font-medium flex items-center justify-center"
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
             </svg>
             Connect with TrueLayer Mock Bank
-          </Button>
+          </button>
         </div>
         
         <DialogFooter>
