@@ -54,6 +54,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      console.log("🔁 Exchanging code for token with:");
+      console.log("Client ID:", process.env.TRUELAYER_CLIENT_ID);
+      console.log("Redirect URI:", redirectUri);
+      console.log("Code:", req.query.code);
+
       const response = await axios.post(
         "https://auth.truelayer-sandbox.com/connect/token",
         qs.stringify({
@@ -61,7 +66,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           client_id: process.env.TRUELAYER_CLIENT_ID,
           client_secret: process.env.TRUELAYER_CLIENT_SECRET,
           redirect_uri: redirectUri,
-          code: code,
+          code: req.query.code,
         }),
         {
           headers: {
