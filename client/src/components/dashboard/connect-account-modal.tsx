@@ -62,6 +62,7 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
 
   // TrueLayer redirect handler
   const handleTrueLayerConnect = () => {
+    console.log("=== TrueLayer Connect Function Called ===");
     const clientId = import.meta.env.VITE_TRUELAYER_CLIENT_ID || "sandbox-aureon-52c96f";
     console.log("TrueLayer connect clicked, using client ID:", clientId);
     
@@ -258,7 +259,13 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
             </p>
           </div>
           <Button 
-            onClick={handleTrueLayerConnect}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log("=== TrueLayer Button Clicked ===");
+              handleTrueLayerConnect();
+            }}
+            type="button"
             variant="outline"
             className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 transition-all duration-200 text-blue-700 hover:text-blue-800"
           >
