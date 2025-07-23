@@ -78,6 +78,9 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
     
     console.log("Opening TrueLayer auth URL:", authUrl);
     
+    // Close the modal immediately since we're redirecting
+    onOpenChange(false);
+    
     // Show success message
     toast({
       title: "Redirecting to TrueLayer",
