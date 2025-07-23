@@ -7,6 +7,8 @@ import { z } from "zod";
 import { getUpcomingRiskAlert, getGoalBlockingExpense, getRecurringWaste, getStreakWin, getLifeEventRadar, mockTransactions } from './services/financial-ai';
 import fetch from 'node-fetch';
 import * as dotenv from 'dotenv';
+import axios from 'axios';
+import qs from 'qs';
 
 // Load environment variables
 dotenv.config();
@@ -70,31 +72,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Exchanging authorization code for access token...');
 
-      // Exchange authorization code for access token (using sandbox endpoint)
+      // Exchange authorization code for access token (using sandbox endpoint with axios)
       const redirectUri = 'https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/callback';
       
-      const tokenResponse = await fetch('https://auth.truelayer-sandbox.com/connect/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json',
-        },
-        body: new URLSearchParams({
-          grant_type: 'authorization_code',
+      console.log('Token exchange parameters:', {
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        code: code.substring(0, 10) + '...' // Log partial code for debugging
+      });
+      
+      const response = await axios.post(
+        "https://auth.truelayer-sandbox.com/connect/token",
+        qs.stringify({
+          grant_type: "authorization_code",
           client_id: clientId,
           client_secret: clientSecret,
           redirect_uri: redirectUri,
           code: code,
         }),
-      });
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
 
-      const tokenData = await tokenResponse.json() as TrueLayerTokenResponse | TrueLayerError;
-
-      if (!tokenResponse.ok || 'error' in tokenData) {
-        console.error('❌ Token exchange failed:', tokenData);
-        const errorMsg = 'error' in tokenData ? tokenData.error : 'token_exchange_failed';
-        return res.send(`❌ Token exchange failed: ${errorMsg}`);
-      }
+      const tokenData = response.data;
 
       console.log('✅ Successfully connected to Mock Bank. Access token received.');
       console.log('🔑 Access Token:', tokenData.access_token);
@@ -104,6 +107,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error('❌ Callback handler error:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('❌ Token exchange failed:', error.response.data);
+        return res.send(`❌ Token exchange failed: ${JSON.stringify(error.response.data)}`);
+      }
       res.send("❌ Token exchange failed");
     }
   });
