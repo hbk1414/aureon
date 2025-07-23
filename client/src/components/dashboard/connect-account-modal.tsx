@@ -62,8 +62,10 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
 
   // TrueLayer redirect handler
   const handleTrueLayerConnect = () => {
-    const clientId = import.meta.env.VITE_TRUELAYER_CLIENT_ID;
-    if (!clientId) {
+    const clientId = import.meta.env.VITE_TRUELAYER_CLIENT_ID || "sandbox-aureon-52c96f";
+    console.log("TrueLayer connect clicked, using client ID:", clientId);
+    
+    if (!clientId || clientId === "your_client_id_here") {
       toast({
         title: "Configuration Error",
         description: "TrueLayer client ID not configured. Please contact support.",
@@ -73,6 +75,14 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
     }
 
     const authUrl = `https://auth.truelayer.com/?response_type=code&client_id=${clientId}&scope=info%20accounts%20balance%20transactions&redirect_uri=http://localhost:5000/callback&providers=mock&enable_mock=true`;
+    
+    console.log("Opening TrueLayer auth URL:", authUrl);
+    
+    // Show success message
+    toast({
+      title: "Redirecting to TrueLayer",
+      description: "Opening TrueLayer mock bank authentication in a new tab...",
+    });
     
     // Open in new tab
     window.open(authUrl, '_blank');
