@@ -5,8 +5,91 @@ import { financialAI } from "./services/financial-ai";
 import { insertConnectedAccountSchema, insertAiTaskSchema, insertFinancialGoalSchema } from "@shared/schema";
 import { z } from "zod";
 import { getUpcomingRiskAlert, getGoalBlockingExpense, getRecurringWaste, getStreakWin, getLifeEventRadar, mockTransactions } from './services/financial-ai';
+import fetch from 'node-fetch';
+import * as dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
+
+// TrueLayer OAuth callback interface
+interface TrueLayerTokenResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  refresh_token?: string;
+  scope: string;
+}
+
+interface TrueLayerError {
+  error: string;
+  error_description?: string;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // TrueLayer OAuth callback route
+  app.get("/callback", async (req, res) => {
+    try {
+      const { code, error, error_description } = req.query;
+
+      // Handle OAuth errors
+      if (error) {
+        console.error('TrueLayer OAuth error:', error, error_description);
+        return res.redirect(`http://localhost:5000/dashboard?error=${encodeURIComponent(String(error))}`);
+      }
+
+      // Validate authorization code
+      if (!code || typeof code !== 'string') {
+        console.error('No authorization code received');
+        return res.redirect('http://localhost:5000/dashboard?error=no_code');
+      }
+
+      // Validate environment variables
+      const clientId = process.env.TRUELAYER_CLIENT_ID;
+      const clientSecret = process.env.TRUELAYER_CLIENT_SECRET;
+
+      if (!clientId || !clientSecret) {
+        console.error('TrueLayer credentials not configured');
+        return res.redirect('http://localhost:5000/dashboard?error=config_error');
+      }
+
+      console.log('Exchanging authorization code for access token...');
+
+      // Exchange authorization code for access token
+      const tokenResponse = await fetch('https://auth.truelayer.com/connect/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: 'http://localhost:5000/callback',
+          code: code,
+        }),
+      });
+
+      const tokenData = await tokenResponse.json() as TrueLayerTokenResponse | TrueLayerError;
+
+      if (!tokenResponse.ok || 'error' in tokenData) {
+        console.error('TrueLayer token exchange failed:', tokenData);
+        const errorMsg = 'error' in tokenData ? tokenData.error : 'token_exchange_failed';
+        return res.redirect(`http://localhost:5000/dashboard?error=${encodeURIComponent(errorMsg)}`);
+      }
+
+      console.log('Token exchange successful, redirecting with access token');
+
+      // Redirect back to dashboard with access token
+      const redirectUrl = `http://localhost:5000/dashboard?token=${encodeURIComponent(tokenData.access_token)}`;
+      res.redirect(redirectUrl);
+
+    } catch (error) {
+      console.error('Callback handler error:', error);
+      res.redirect('http://localhost:5000/dashboard?error=server_error');
+    }
+  });
+
   // Brandfetch API proxy endpoint
   app.get("/api/merchant-logo/:merchantName", async (req, res) => {
     try {
@@ -30,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(response.status).json({ error: "Failed to fetch logo" });
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       // Find the best logo
       const bestLogo = findBestLogo(data.logos);
