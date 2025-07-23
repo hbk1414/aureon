@@ -1,5 +1,7 @@
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { fetchAccountsWithTransactions } from "@/services/truelayer";
+import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/layout/header";
 import WelcomeBanner from "@/components/dashboard/welcome-banner";
 import AccountConnections from "@/components/dashboard/account-connections";
@@ -34,6 +36,54 @@ import BudgetCard from "@/components/dashboard/budget-card";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [trueLayerData, setTrueLayerData] = useState<any>(null);
+  const [isLoadingTrueLayer, setIsLoadingTrueLayer] = useState(false);
+
+  // Check for TrueLayer token in URL and fetch data
+  useEffect(() => {
+    const handleTrueLayerToken = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      
+      if (token) {
+        console.log('🔗 TrueLayer token detected in dashboard URL:', token);
+        setIsLoadingTrueLayer(true);
+        
+        try {
+          console.log('📊 Starting TrueLayer data fetch...');
+          
+          // Fetch all account and transaction data
+          const accountsWithTransactions = await fetchAccountsWithTransactions(token);
+          
+          console.log('✅ TrueLayer data fetched successfully:', accountsWithTransactions);
+          setTrueLayerData(accountsWithTransactions);
+          
+          // Show success notification
+          toast({
+            title: "Bank Data Loaded!",
+            description: `Successfully loaded ${accountsWithTransactions.length} account(s) from TrueLayer`,
+          });
+          
+          // Clean up URL by removing token parameter
+          const newUrl = window.location.pathname;
+          window.history.replaceState(null, '', newUrl);
+          
+        } catch (error) {
+          console.error('❌ Error fetching TrueLayer data:', error);
+          toast({
+            title: "Data Fetch Error",
+            description: "Failed to load bank data from TrueLayer",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoadingTrueLayer(false);
+        }
+      }
+    };
+
+    handleTrueLayerToken();
+  }, [toast]);
 
   // Use dummy data directly
   const dashboardData = {
@@ -123,6 +173,54 @@ export default function Dashboard() {
         transition={{ duration: 0.6 }}
       >
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          {/* TrueLayer Loading Indicator */}
+          {isLoadingTrueLayer && (
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span className="text-blue-700 font-medium">Loading TrueLayer bank data...</span>
+              </div>
+            </div>
+          )}
+          
+          {/* TrueLayer Data Display */}
+          {trueLayerData && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <h3 className="text-green-800 font-medium mb-3">🏦 TrueLayer Bank Data Loaded Successfully</h3>
+              <div className="space-y-2">
+                {trueLayerData.map((account: any, index: number) => (
+                  <div key={account.account_id} className="bg-white p-3 rounded border">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="font-medium text-gray-900">{account.display_name}</span>
+                        <span className="text-sm text-gray-500 ml-2">({account.account_type})</span>
+                        {account.provider && (
+                          <span className="text-sm text-blue-600 ml-2">{account.provider.display_name}</span>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        {account.transactions && (
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                            {account.transactions.length} transactions
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {account.account_number && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {account.account_number.sort_code && `Sort: ${account.account_number.sort_code}`}
+                        {account.account_number.number && ` | Account: ${account.account_number.number}`}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-green-600 mt-3">
+                ✅ Check browser console for detailed account and transaction data
+              </p>
+            </div>
+          )}
+          
           <div className="grid grid-cols-12 gap-6">
             <div className="col-span-12">
               <WelcomeBanner 
