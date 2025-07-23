@@ -34,13 +34,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle OAuth errors
       if (error) {
         console.error('TrueLayer OAuth error:', error, error_description);
-        return res.redirect(`${req.get('origin')}/dashboard?error=${encodeURIComponent(String(error))}`);
+        return res.redirect(`https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/dashboard?error=${encodeURIComponent(String(error))}`);
       }
 
       // Validate authorization code
       if (!code || typeof code !== 'string') {
         console.error('No authorization code received');
-        return res.redirect(`${req.get('origin')}/dashboard?error=no_code`);
+        return res.redirect('https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/dashboard?error=no_code');
       }
 
       // Validate environment variables
@@ -49,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!clientId || !clientSecret) {
         console.error('TrueLayer credentials not configured');
-        return res.redirect(`${req.get('origin')}/dashboard?error=config_error`);
+        return res.redirect('https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/dashboard?error=config_error');
       }
 
       console.log('Exchanging authorization code for access token...');
@@ -65,7 +65,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           grant_type: 'authorization_code',
           client_id: clientId,
           client_secret: clientSecret,
-          redirect_uri: req.get('origin') + '/callback', // Dynamic redirect URI
+          redirect_uri: 'https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/callback', // Specific Replit URI
           code: code,
         }),
       });
@@ -75,18 +75,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!tokenResponse.ok || 'error' in tokenData) {
         console.error('TrueLayer token exchange failed:', tokenData);
         const errorMsg = 'error' in tokenData ? tokenData.error : 'token_exchange_failed';
-        return res.redirect(`${req.get('origin')}/dashboard?error=${encodeURIComponent(errorMsg)}`);
+        return res.redirect(`https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/dashboard?error=${encodeURIComponent(errorMsg)}`);
       }
 
       console.log('Token exchange successful, redirecting with access token');
 
       // Redirect back to dashboard with access token
-      const redirectUrl = `${req.get('origin')}/dashboard?token=${encodeURIComponent(tokenData.access_token)}`;
+      const redirectUrl = `https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/dashboard?token=${encodeURIComponent(tokenData.access_token)}`;
       res.redirect(redirectUrl);
 
     } catch (error) {
       console.error('Callback handler error:', error);
-      res.redirect(`${req.get('origin')}/dashboard?error=server_error`);
+      res.redirect('https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/dashboard?error=server_error');
     }
   });
 

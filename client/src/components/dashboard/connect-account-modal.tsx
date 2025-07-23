@@ -75,8 +75,8 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
       return;
     }
 
-    // Use dynamic redirect URI based on current origin (works for both localhost and Replit deployment)
-    const redirectUri = window.location.origin + '/callback';
+    // Use specific Replit redirect URI
+    const redirectUri = "https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/callback";
     const state = "abc123"; // Random string for CSRF protection
     const nonce = "xyz456"; // Random string for OpenID Connect
 
