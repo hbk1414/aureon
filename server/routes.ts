@@ -26,6 +26,22 @@ interface TrueLayerError {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // TrueLayer authorization URL test route
+  app.get("/auth", (req, res) => {
+    const redirectUri = "https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/callback";
+    
+    const authUrl = `https://auth.truelayer-sandbox.com/?response_type=code` +
+      `&client_id=${process.env.TRUELAYER_CLIENT_ID}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&scope=info%20accounts%20balance%20transactions%20identity` +
+      `&providers=mock` +
+      `&state=abc123` +
+      `&nonce=xyz456`;
+
+    console.log("🔗 TrueLayer Auth URL:", authUrl);
+    res.redirect(authUrl);
+  });
+
   // TrueLayer OAuth callback route
   app.get("/callback", async (req, res) => {
     try {
@@ -54,8 +70,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Exchanging authorization code for access token...');
 
-      // Exchange authorization code for access token
-      const tokenResponse = await fetch('https://auth.truelayer.com/connect/token', {
+      // Exchange authorization code for access token (using sandbox endpoint)
+      const redirectUri = 'https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/callback';
+      
+      const tokenResponse = await fetch('https://auth.truelayer-sandbox.com/connect/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -65,7 +83,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           grant_type: 'authorization_code',
           client_id: clientId,
           client_secret: clientSecret,
-          redirect_uri: 'https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/callback', // Specific Replit URI
+          redirect_uri: redirectUri,
           code: code,
         }),
       });
@@ -73,20 +91,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tokenData = await tokenResponse.json() as TrueLayerTokenResponse | TrueLayerError;
 
       if (!tokenResponse.ok || 'error' in tokenData) {
-        console.error('TrueLayer token exchange failed:', tokenData);
+        console.error('❌ Token exchange failed:', tokenData);
         const errorMsg = 'error' in tokenData ? tokenData.error : 'token_exchange_failed';
-        return res.redirect(`https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/dashboard?error=${encodeURIComponent(errorMsg)}`);
+        return res.send(`❌ Token exchange failed: ${errorMsg}`);
       }
 
-      console.log('Token exchange successful, redirecting with access token');
+      console.log('✅ Successfully connected to Mock Bank. Access token received.');
+      console.log('🔑 Access Token:', tokenData.access_token);
 
-      // Redirect back to dashboard with access token
-      const redirectUrl = `https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/dashboard?token=${encodeURIComponent(tokenData.access_token)}`;
-      res.redirect(redirectUrl);
+      // For now, just show success message and log the token
+      res.send("✅ Successfully connected to Mock Bank. Access token received. Check server logs for token details.");
 
     } catch (error) {
-      console.error('Callback handler error:', error);
-      res.redirect('https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/dashboard?error=server_error');
+      console.error('❌ Callback handler error:', error);
+      res.send("❌ Token exchange failed");
     }
   });
 
