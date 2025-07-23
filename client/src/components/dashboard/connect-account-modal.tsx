@@ -75,9 +75,21 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
       return;
     }
 
-    const authUrl = `https://auth.truelayer-sandbox.com/?response_type=code&client_id=${clientId}&scope=info%20accounts%20balance%20transactions%20direct_debits%20standing_orders%20identity&redirect_uri=http://localhost:5000/callback&providers=mock&state=12345&nonce=123`;
+    // Use dynamic redirect URI based on current origin (works for both localhost and Replit deployment)
+    const redirectUri = window.location.origin + '/callback';
+    const state = "abc123"; // Random string for CSRF protection
+    const nonce = "xyz456"; // Random string for OpenID Connect
+
+    const authUrl = `https://auth.truelayer-sandbox.com/?response_type=code` +
+      `&client_id=${clientId}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&scope=info accounts balance transactions identity` +
+      `&providers=mock` +
+      `&state=${state}` +
+      `&nonce=${nonce}`;
     
-    console.log("Opening TrueLayer auth URL:", authUrl);
+    console.log("🔗 TrueLayer auth URL:", authUrl);
+    console.log("🔄 Redirect URI:", redirectUri);
     
     // Close the modal immediately since we're redirecting
     onOpenChange(false);
