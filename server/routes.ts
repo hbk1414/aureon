@@ -46,47 +46,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // TrueLayer OAuth callback route
   app.get("/callback", async (req, res) => {
+    const code = req.query.code;
+    const redirectUri = "https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/callback";
+
+    if (!code) {
+      return res.send("❌ No authorization code returned.");
+    }
+
     try {
-      const { code, error, error_description } = req.query;
-
-      // Handle OAuth errors
-      if (error) {
-        console.error('TrueLayer OAuth error:', error, error_description);
-        return res.redirect(`https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/dashboard?error=${encodeURIComponent(String(error))}`);
-      }
-
-      // Validate authorization code
-      if (!code || typeof code !== 'string') {
-        console.error('No authorization code received');
-        return res.redirect('https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/dashboard?error=no_code');
-      }
-
-      // Validate environment variables
-      const clientId = process.env.TRUELAYER_CLIENT_ID;
-      const clientSecret = process.env.TRUELAYER_CLIENT_SECRET;
-
-      if (!clientId || !clientSecret) {
-        console.error('TrueLayer credentials not configured');
-        return res.redirect('https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/dashboard?error=config_error');
-      }
-
-      console.log('Exchanging authorization code for access token...');
-
-      // Exchange authorization code for access token (using sandbox endpoint with axios)
-      const redirectUri = 'https://ba6e2412-c2ea-4146-ad2a-b5577f22ae31-00-1b7wnubdw8c3h.riker.replit.dev:5000/callback';
-      
-      console.log('Token exchange parameters:', {
-        client_id: clientId,
-        redirect_uri: redirectUri,
-        code: code.substring(0, 10) + '...' // Log partial code for debugging
-      });
-      
       const response = await axios.post(
         "https://auth.truelayer-sandbox.com/connect/token",
         qs.stringify({
           grant_type: "authorization_code",
-          client_id: clientId,
-          client_secret: clientSecret,
+          client_id: process.env.TRUELAYER_CLIENT_ID,
+          client_secret: process.env.TRUELAYER_CLIENT_SECRET,
           redirect_uri: redirectUri,
           code: code,
         }),
@@ -97,21 +70,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       );
 
-      const tokenData = response.data;
+      const accessToken = response.data.access_token;
+      const refreshToken = response.data.refresh_token;
 
-      console.log('✅ Successfully connected to Mock Bank. Access token received.');
-      console.log('🔑 Access Token:', tokenData.access_token);
+      console.log("✅ Access Token:", accessToken);
+      console.log("🔄 Refresh Token:", refreshToken);
 
-      // For now, just show success message and log the token
-      res.send("✅ Successfully connected to Mock Bank. Access token received. Check server logs for token details.");
-
+      // You can now fetch data using the access token (accounts, balances, etc)
+      res.send("✅ Successfully connected to Mock Bank and received access token!");
     } catch (error) {
-      console.error('❌ Callback handler error:', error);
-      if (axios.isAxiosError(error) && error.response) {
-        console.error('❌ Token exchange failed:', error.response.data);
-        return res.send(`❌ Token exchange failed: ${JSON.stringify(error.response.data)}`);
-      }
-      res.send("❌ Token exchange failed");
+      console.error("❌ Token exchange failed:", error.response?.data || error.message);
+      res.send("❌ Token exchange failed: " + (error.response?.data?.error_description || error.message));
     }
   });
 
