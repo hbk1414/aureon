@@ -83,7 +83,7 @@ export default function ConnectAccountModal({ open, onOpenChange, onAccountAdded
     const authUrl = `https://auth.truelayer-sandbox.com/?response_type=code` +
       `&client_id=${clientId}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&scope=info accounts balance transactions identity` +
+      `&scope=info accounts` +
       `&providers=mock` +
       `&state=${state}` +
       `&nonce=${nonce}`;

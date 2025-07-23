@@ -33,7 +33,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const authUrl = `https://auth.truelayer-sandbox.com/?response_type=code` +
       `&client_id=${process.env.TRUELAYER_CLIENT_ID}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&scope=info%20accounts%20balance%20transactions%20identity` +
+      `&scope=info%20accounts` +
       `&providers=mock` +
       `&state=abc123` +
       `&nonce=xyz456`;
