@@ -213,6 +213,13 @@ Changelog:
   - Successfully tested TrueLayer redirect flow - button opens authentication page in new tab
   - Added comprehensive error handling and user feedback with toast notifications
   - TrueLayer integration now works as intended, redirecting to sandbox authentication without form validation errors
+- July 23, 2025. Completed TrueLayer OAuth callback flow and API integration
+  - Created Express callback route at /callback to handle OAuth authorization code exchange
+  - Implemented secure token exchange with TrueLayer using client credentials from environment variables
+  - Added TypeScript service functions fetchAccounts() and fetchTransactions() for TrueLayer API calls
+  - Enhanced callback page to fetch and display real account data using bearer token authentication
+  - Added comprehensive error handling and logging for OAuth flow and API requests
+  - Full TrueLayer integration now functional from authentication through data fetching
 ```
 
 ## User Preferences
