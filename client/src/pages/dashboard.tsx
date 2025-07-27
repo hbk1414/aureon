@@ -15,6 +15,7 @@ import QuickStats from "@/components/dashboard/quick-stats";
 import QuickActions from "@/components/dashboard/quick-actions";
 import SmartInsights from "@/components/dashboard/smart-insights";
 import DashboardSkeleton from "@/components/dashboard/dashboard-skeleton";
+import TrueLayerAccounts from "@/components/dashboard/truelayer-accounts";
 import { useAuth } from "@/hooks/use-auth";
 import {
   dummyUser,
@@ -264,6 +265,16 @@ export default function Dashboard() {
           >
             {/* Budget Card - premium summary and chart */}
             <BudgetCard />
+            {/* TrueLayer Connected Accounts */}
+            <motion.section 
+              className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
+              variants={sectionVariants}
+              whileHover={{ y: -4, scale: 1.01 }}
+              transition={{ duration: 0.3 }}
+            >
+              <TrueLayerAccounts />
+            </motion.section>
+
             {/* Account Overview Section */}
             <motion.section 
               className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 py-6 px-6 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"

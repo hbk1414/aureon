@@ -113,6 +113,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /accounts/:accountId/balance — fetch account balance
+  app.get("/accounts/:accountId/balance", async (req, res) => {
+    const { accountId } = req.params;
+    
+    if (!accessToken) {
+      return res.status(401).send("Access token not available.");
+    }
+
+    try {
+      const response = await axios.get(`https://api.truelayer-sandbox.com/data/v1/accounts/${accountId}/balance`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      res.json(response.data);
+    } catch (error: any) {
+      console.error("❌ Balance fetch failed:", error.response?.data || error.message);
+      res.status(500).send("❌ Balance fetch failed: " + (error.response?.data?.message || error.message));
+    }
+  });
+
+  // GET /accounts/:accountId/transactions — fetch account transactions
+  app.get("/accounts/:accountId/transactions", async (req, res) => {
+    const { accountId } = req.params;
+    
+    if (!accessToken) {
+      return res.status(401).send("Access token not available.");
+    }
+
+    try {
+      const response = await axios.get(`https://api.truelayer-sandbox.com/data/v1/accounts/${accountId}/transactions`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      res.json(response.data);
+    } catch (error: any) {
+      console.error("❌ Transactions fetch failed:", error.response?.data || error.message);
+      res.status(500).send("❌ Transactions fetch failed: " + (error.response?.data?.message || error.message));
+    }
+  });
+
   // Brandfetch API proxy endpoint
   app.get("/api/merchant-logo/:merchantName", async (req, res) => {
     try {
