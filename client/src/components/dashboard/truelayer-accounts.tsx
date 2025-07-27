@@ -191,58 +191,40 @@ export default function TrueLayerAccounts({ className }: TrueLayerAccountsProps)
 
   if (loading) {
     return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            TrueLayer Accounts
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <div className={className}>
+        <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="space-y-2">
+            <div key={i} className="border rounded-lg p-4 space-y-2">
               <Skeleton className="h-6 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
               <Skeleton className="h-4 w-1/4" />
             </div>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (accounts.length === 0) {
     return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            TrueLayer Accounts
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">No bank accounts connected.</p>
+      <div className={className}>
+        <div className="text-center py-8 border rounded-lg border-dashed border-gray-300">
+          <Building2 className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+          <p className="text-muted-foreground mb-4">No bank accounts connected through TrueLayer.</p>
           <Button 
             onClick={() => window.open('/auth', '_blank')} 
-            className="mt-4"
+            variant="outline"
           >
             Connect Bank Account
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Building2 className="h-5 w-5" />
-          TrueLayer Accounts
-          <Badge variant="secondary">{accounts.length}</Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className={className}>
+      <div className="space-y-4">
         {accounts.map((account) => (
           <motion.div
             key={account.account_id}
@@ -357,7 +339,7 @@ export default function TrueLayerAccounts({ className }: TrueLayerAccountsProps)
             </AnimatePresence>
           </motion.div>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

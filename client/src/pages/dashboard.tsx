@@ -265,29 +265,6 @@ export default function Dashboard() {
           >
             {/* Budget Card - premium summary and chart */}
             <BudgetCard />
-            {/* TrueLayer Connected Accounts */}
-            <motion.section 
-              className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
-              variants={sectionVariants}
-              whileHover={{ y: -4, scale: 1.01 }}
-              transition={{ duration: 0.3 }}
-            >
-              <TrueLayerAccounts />
-            </motion.section>
-
-            {/* Account Overview Section */}
-            <motion.section 
-              className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 py-6 px-6 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
-              variants={sectionVariants}
-              whileHover={{ y: -4, scale: 1.01 }}
-              transition={{ duration: 0.3 }}
-            >
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Account Overview</h2>
-              <AccountConnections 
-                accounts={dashboardData.connectedAccounts}
-              />
-            </motion.section>
-
             {/* Financial Management Section */}
             <motion.section 
               className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 py-6 px-6 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
@@ -297,6 +274,20 @@ export default function Dashboard() {
             >
               <h2 className="text-xl font-bold text-gray-900 mb-4">Financial Management</h2>
               <div className="space-y-6">
+                {/* TrueLayer Connected Accounts */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Connected Bank Accounts</h3>
+                  <TrueLayerAccounts />
+                </div>
+                
+                {/* Dummy Account Overview */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Account Overview</h3>
+                  <AccountConnections 
+                    accounts={dashboardData.connectedAccounts}
+                  />
+                </div>
+                
                 <SpendingOverview 
                   spending={dashboardData.spending}
                 />
