@@ -13,6 +13,9 @@ import qs from 'qs';
 // Load environment variables
 dotenv.config();
 
+// Store access token globally (in production, use a proper session store)
+let accessToken: string | null = null;
+
 // TrueLayer OAuth callback interface
 interface TrueLayerTokenResponse {
   access_token: string;
@@ -76,7 +79,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       );
 
-      const accessToken = response.data.access_token;
+      accessToken = response.data.access_token;
       const refreshToken = response.data.refresh_token;
 
       console.log("✅ Access Token:", accessToken);
@@ -84,9 +87,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // You can now fetch data using the access token (accounts, balances, etc)
       res.send("✅ Successfully connected to Mock Bank and received access token!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ Token exchange failed:", error.response?.data || error.message);
       res.send("❌ Token exchange failed: " + (error.response?.data?.error_description || error.message));
+    }
+  });
+
+  // GET /accounts — fetch user's bank accounts from Mock Bank
+  app.get("/accounts", async (req, res) => {
+    if (!accessToken) {
+      return res.status(401).send("Access token not available.");
+    }
+
+    try {
+      const response = await axios.get("https://api.truelayer-sandbox.com/data/v1/accounts", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      res.json(response.data);
+    } catch (error: any) {
+      console.error("❌ Account fetch failed:", error.response?.data || error.message);
+      res.status(500).send("❌ Account fetch failed: " + (error.response?.data?.message || error.message));
     }
   });
 
