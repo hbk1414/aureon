@@ -220,6 +220,13 @@ Changelog:
   - Enhanced callback page to fetch and display real account data using bearer token authentication
   - Added comprehensive error handling and logging for OAuth flow and API requests
   - Full TrueLayer integration now functional from authentication through data fetching
+- July 24, 2025. Troubleshooting TrueLayer "invalid_client" error with comprehensive debugging
+  - Updated token exchange to use axios and qs for proper URL encoding per TrueLayer documentation
+  - Added detailed debug logging showing client_id, partial client_secret, redirect_uri, and authorization code
+  - Verified environment variables are loading correctly (client_id: sandbox-aureon-52c96f, client_secret starts with "sandbo...")
+  - Authorization codes are being received successfully from TrueLayer OAuth flow
+  - Despite correct parameters, TrueLayer API consistently returns "invalid_client" error
+  - Issue appears to be with TrueLayer app configuration rather than implementation
 ```
 
 ## User Preferences
