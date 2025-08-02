@@ -11,7 +11,6 @@ import { MicroInvesting } from "@/components/dashboard/micro-investing-firestore
 import AiTasks from "@/components/dashboard/ai-tasks";
 import { EmergencyFund } from "@/components/dashboard/emergency-fund-firestore";
 import Couples from "@/components/dashboard/couples";
-import QuickStats from "@/components/dashboard/quick-stats";
 import QuickActions from "@/components/dashboard/quick-actions";
 import SmartInsights from "@/components/dashboard/smart-insights";
 import DashboardSkeleton from "@/components/dashboard/dashboard-skeleton";
@@ -331,22 +330,6 @@ export default function Dashboard() {
               <h2 className="text-xl font-bold text-gray-900 mb-4">AI Assistant</h2>
               <AiTasks 
                 tasks={[]}
-              />
-            </motion.section>
-            
-            <motion.section 
-              className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 py-6 px-6 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
-              variants={sectionVariants}
-              whileHover={{ y: -4, scale: 1.01 }}
-              transition={{ duration: 0.3 }}
-            >
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Stats</h2>
-              <QuickStats 
-                stats={{
-                  creditScore: dashboardData.stats?.creditScore || 750,
-                  savingsRate: dashboardData.stats?.savingsRate || 15,
-                  debtFreeDays: 0
-                }}
               />
             </motion.section>
           </motion.div>
