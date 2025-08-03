@@ -68,7 +68,7 @@ export default function TrueLayerAccounts({ className }: TrueLayerAccountsProps)
   const fetchAccounts = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/accounts');
+      const response = await fetch('/api/accounts');
       
       if (!response.ok) {
         throw new Error('Failed to fetch accounts');
@@ -97,7 +97,7 @@ export default function TrueLayerAccounts({ className }: TrueLayerAccountsProps)
   const fetchAllBalances = async (accountsList: TrueLayerAccount[]) => {
     const balancePromises = accountsList.map(async (account) => {
       try {
-        const response = await fetch(`/accounts/${account.account_id}/balance`);
+        const response = await fetch(`/api/accounts/${account.account_id}/balance`);
         
         if (response.ok) {
           const balanceData = await response.json();
@@ -126,7 +126,7 @@ export default function TrueLayerAccounts({ className }: TrueLayerAccountsProps)
     setLoadingTransactions(prev => ({ ...prev, [accountId]: true }));
 
     try {
-      const response = await fetch(`/accounts/${accountId}/transactions`);
+      const response = await fetch(`/api/accounts/${accountId}/transactions`);
 
       if (response.ok) {
         const transactionData = await response.json();

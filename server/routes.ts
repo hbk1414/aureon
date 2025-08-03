@@ -94,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /accounts — fetch user's bank accounts from Mock Bank
-  app.get("/accounts", async (req, res) => {
+  app.get("/api/accounts", async (req, res) => {
     if (!accessToken) {
       return res.status(401).send("Access token not available.");
     }
@@ -114,7 +114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /accounts/:accountId/balance — fetch account balance
-  app.get("/accounts/:accountId/balance", async (req, res) => {
+  app.get("/api/accounts/:accountId/balance", async (req, res) => {
     const { accountId } = req.params;
     
     if (!accessToken) {
@@ -136,7 +136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /accounts/:accountId/transactions — fetch account transactions
-  app.get("/accounts/:accountId/transactions", async (req, res) => {
+  app.get("/api/accounts/:accountId/transactions", async (req, res) => {
     const { accountId } = req.params;
     
     if (!accessToken) {
