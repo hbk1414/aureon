@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import BudgetSummaryCard from "@/components/dashboard/budget-summary-card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Sector } from "recharts";
-import { ArrowUpRight, ArrowDownLeft, AlertCircle, TrendingUp, PiggyBank } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, AlertCircle, TrendingUp, PiggyBank, ChevronDown, ChevronRight } from "lucide-react";
 import { useTrueLayerData } from "@/hooks/use-truelayer-data";
 
 const COLORS = ["#6366f1", "#06b6d4", "#f59e42", "#f43f5e", "#10b981", "#a78bfa", "#fbbf24", "#f472b6", "#818cf8", "#f87171"];
@@ -20,6 +20,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 function BudgetCardTrueLayer() {
   const { data: trueLayerData, loading, error } = useTrueLayerData();
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   const chartData = useMemo(() => {
     if (!trueLayerData) return [];
@@ -245,36 +246,92 @@ function BudgetCardTrueLayer() {
           </div>
         </div>
 
-        {/* Category Breakdown */}
+        {/* Category Breakdown with Expandable Transaction Details */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Category Breakdown</h3>
           <div className="space-y-3">
-            {trueLayerData.spendingCategories.map((category, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
+            {trueLayerData.spendingCategories.map((category, index) => {
+              const isExpanded = expandedCategories.has(category.name);
+              const categoryTransactions = trueLayerData.allTransactions.filter(
+                tx => tx.category?.toLowerCase() === category.name.toLowerCase()
+              );
+
+              return (
+                <div key={index} className="bg-gray-50 rounded-lg overflow-hidden">
                   <div 
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  ></div>
-                  <div>
-                    <div className="font-medium text-gray-900">
-                      {CATEGORY_ICONS[category.name]} {category.name}
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => {
+                      const newExpanded = new Set(expandedCategories);
+                      if (isExpanded) {
+                        newExpanded.delete(category.name);
+                      } else {
+                        newExpanded.add(category.name);
+                      }
+                      setExpandedCategories(newExpanded);
+                    }}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2">
+                        {isExpanded ? (
+                          <ChevronDown className="w-4 h-4 text-gray-500" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-gray-500" />
+                        )}
+                        <div 
+                          className="w-4 h-4 rounded-full"
+                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                        ></div>
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">
+                          {CATEGORY_ICONS[category.name]} {category.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {category.transactions} transaction{category.transactions !== 1 ? 's' : ''}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {category.transactions} transaction{category.transactions !== 1 ? 's' : ''}
+                    <div className="text-right">
+                      <div className="text-lg font-semibold text-gray-900">
+                        £{category.amount.toFixed(2)}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {category.percentage.toFixed(1)}%
+                      </div>
                     </div>
                   </div>
+                  
+                  {/* Expanded Transaction Details */}
+                  {isExpanded && (
+                    <div className="border-t border-gray-200 bg-white">
+                      <div className="p-4 space-y-2">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">Recent Transactions:</h4>
+                        {categoryTransactions.slice(0, 5).map((transaction, txIndex) => (
+                          <div key={txIndex} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded">
+                            <div className="flex items-center space-x-3">
+                              <div className="text-xs text-gray-500">
+                                {new Date(transaction.date).toLocaleDateString()}
+                              </div>
+                              <div className="font-medium text-sm text-gray-900">
+                                {transaction.description || transaction.merchant_name || 'Unknown Merchant'}
+                              </div>
+                            </div>
+                            <div className="text-sm font-semibold text-red-600">
+                              -£{Math.abs(transaction.amount).toFixed(2)}
+                            </div>
+                          </div>
+                        ))}
+                        {categoryTransactions.length > 5 && (
+                          <div className="text-xs text-gray-500 text-center pt-2">
+                            And {categoryTransactions.length - 5} more transactions...
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="text-right">
-                  <div className="text-lg font-semibold text-gray-900">
-                    £{category.amount.toFixed(2)}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {category.percentage.toFixed(1)}%
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
