@@ -17,6 +17,36 @@ const CATEGORY_ICONS: Record<string, string> = {
   Other: "📦",
 };
 
+// Categorization function (matches the one in use-truelayer-data.ts)
+const categorizeTransaction = (transaction: any): string => {
+  const description = transaction.description?.toLowerCase() || '';
+  const merchantName = transaction.merchant_name?.toLowerCase() || '';
+
+  if (description.includes('tesco') || description.includes('sainsbury') || description.includes('asda') || merchantName.includes('tesco') || merchantName.includes('sainsbury')) {
+    return 'Groceries';
+  }
+  if (description.includes('shell') || description.includes('petrol') || description.includes('fuel') || merchantName.includes('shell')) {
+    return 'Transport';
+  }
+  if (description.includes('netflix') || description.includes('spotify') || description.includes('disney') || merchantName.includes('netflix') || merchantName.includes('spotify')) {
+    return 'Subscriptions';
+  }
+  if (description.includes('coffee') || description.includes('starbucks') || description.includes('costa') || merchantName.includes('starbucks') || merchantName.includes('costa')) {
+    return 'Dining';
+  }
+  if (description.includes('amazon') || merchantName.includes('amazon')) {
+    return 'Shopping';
+  }
+  if (description.includes('rent') || description.includes('council') || description.includes('gas') || description.includes('electric') || description.includes('internet')) {
+    return 'Bills';
+  }
+  if (description.includes('bus') || description.includes('tfl') || merchantName.includes('tfl')) {
+    return 'Transport';
+  }
+  
+  return 'Other';
+};
+
 function BudgetCardTrueLayer() {
   const { data: trueLayerData, loading, error } = useTrueLayerData();
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
@@ -252,8 +282,10 @@ function BudgetCardTrueLayer() {
           <div className="space-y-3">
             {trueLayerData.spendingCategories.map((category, index) => {
               const isExpanded = expandedCategories.has(category.name);
-              const categoryTransactions = trueLayerData.allTransactions.filter(
-                tx => tx.category?.toLowerCase() === category.name.toLowerCase()
+              // Get all transactions from all accounts for this category
+              const allTransactions = Object.values(trueLayerData.transactions || {}).flat();
+              const categoryTransactions = allTransactions.filter(
+                tx => tx.transaction_type === 'DEBIT' && categorizeTransaction(tx) === category.name
               );
 
               return (
@@ -310,7 +342,7 @@ function BudgetCardTrueLayer() {
                           <div key={txIndex} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded">
                             <div className="flex items-center space-x-3">
                               <div className="text-xs text-gray-500">
-                                {new Date(transaction.date).toLocaleDateString()}
+                                {new Date(transaction.timestamp).toLocaleDateString()}
                               </div>
                               <div className="font-medium text-sm text-gray-900">
                                 {transaction.description || transaction.merchant_name || 'Unknown Merchant'}
