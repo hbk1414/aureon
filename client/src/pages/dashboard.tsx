@@ -16,6 +16,7 @@ import SmartInsights from "@/components/dashboard/smart-insights";
 import DashboardSkeleton from "@/components/dashboard/dashboard-skeleton";
 import TrueLayerAccounts from "@/components/dashboard/truelayer-accounts";
 import { useAuth } from "@/hooks/use-auth";
+import { useTrueLayerData } from "@/hooks/use-truelayer-data";
 import {
   dummyUser,
   dummyAccounts,
@@ -33,12 +34,15 @@ import {
   dummyNotifications
 } from "@/lib/dummyData";
 import BudgetCard from "@/components/dashboard/budget-card";
+import BudgetCardTrueLayer from "@/components/dashboard/budget-card-truelayer";
+import IncomeOverview from "@/components/dashboard/income-overview";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [trueLayerData, setTrueLayerData] = useState<any>(null);
   const [isLoadingTrueLayer, setIsLoadingTrueLayer] = useState(false);
+  const { data: realTrueLayerData, loading: trueLayerLoading, error: trueLayerError } = useTrueLayerData();
 
   // Check for TrueLayer token in URL and fetch data
   useEffect(() => {
@@ -85,10 +89,20 @@ export default function Dashboard() {
     handleTrueLayerToken();
   }, [toast]);
 
-  // Use dummy data directly
+  // Create dashboard data that merges dummy data with real TrueLayer data
   const dashboardData = {
-    user: { ...dummyUser, name: dummyUser.displayName || dummyUser.firstName || "User" },
-    portfolio: dummyPortfolio,
+    user: user ? {
+      firstName: user.displayName || user.email?.split('@')[0] || "User",
+      name: user.displayName || "User",
+      initials: (user.displayName || user.email || "U").substring(0, 2).toUpperCase()
+    } : { ...dummyUser, name: dummyUser.displayName || dummyUser.firstName || "User" },
+    portfolio: realTrueLayerData ? {
+      totalBalance: realTrueLayerData.totalBalance,
+      totalGrowth: dummyPortfolio.totalGrowth, // Keep dummy for now
+      growthPercentage: dummyPortfolio.growthPercentage, // Keep dummy for now
+      monthlyChange: dummyPortfolio.monthlyChange || 0,
+      accounts: dummyPortfolio.accounts || []
+    } : dummyPortfolio,
     connectedAccounts: dummyAccounts.map(acc => ({
       ...acc,
       bankName: acc.name,
@@ -113,13 +127,20 @@ export default function Dashboard() {
     recurringPayments: dummyRecurringPayments,
     spareChangeInvestments: dummySpareChangeInvestments,
     notifications: dummyNotifications,
-    spending: {
+    spending: realTrueLayerData ? {
+      total: realTrueLayerData.totalSpent,
+      budget: 2000, // Keep dummy budget
+      remaining: 2000 - realTrueLayerData.totalSpent,
+      totalThisMonth: realTrueLayerData.totalSpent,
+      categories: realTrueLayerData.spendingCategories
+    } : {
       total: 1200,
       budget: 2000,
       remaining: 800,
       totalThisMonth: 1200,
       categories: []
-    }
+    },
+    trueLayerData: realTrueLayerData
   };
   
   if (!dashboardData) {
@@ -262,8 +283,8 @@ export default function Dashboard() {
             className="col-span-12 lg:col-span-9 space-y-6"
             variants={sectionVariants}
           >
-            {/* Budget Card - premium summary and chart */}
-            <BudgetCard />
+            {/* Budget Card - real TrueLayer data */}
+            <BudgetCardTrueLayer />
             {/* Financial Management Section */}
             <motion.section 
               className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 py-6 px-6 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
@@ -290,6 +311,14 @@ export default function Dashboard() {
                 <SpendingOverview 
                   spending={dashboardData.spending}
                 />
+                
+                {/* Income Overview */}
+                {dashboardData.trueLayerData && (
+                  <IncomeOverview 
+                    totalIncome={dashboardData.trueLayerData.totalIncome}
+                    incomeCategories={dashboardData.trueLayerData.incomeCategories}
+                  />
+                )}
                 <DebtPayoffStrategy 
                   debtAccounts={dashboardData.debtAccounts}
                 />
