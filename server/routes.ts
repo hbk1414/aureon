@@ -95,14 +95,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // GET /accounts — fetch user's bank accounts with fallback demo data
   app.get("/api/accounts", async (req, res) => {
-    // Enhanced demo accounts for consistent display
+    // Enhanced demo accounts for consistent display - only 2 accounts
     const demoAccounts = {
       results: [
         {
           update_timestamp: new Date().toISOString(),
           account_id: "56c7b029e0f8ec5a2334fb0ffc2fface",
           account_type: "TRANSACTION",
-          display_name: "TRANSACTION ACCOUNT 1",
+          display_name: "TRANSACTION ACCOUNT",
           currency: "GBP",
           account_number: {
             iban: "GB08CLRB04066800003435",
@@ -120,66 +120,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           update_timestamp: new Date().toISOString(),
           account_id: "3c6edb9484ecd581dc1cedde8bedb1f1",
           account_type: "SAVINGS",
-          display_name: "SAVINGS ACCOUNT 1",
+          display_name: "SAVINGS ACCOUNT",
           currency: "GBP",
           account_number: {
             iban: "GB08CLRB04066800003435",
             swift_bic: "CPBKGB00",
             number: "20000000",
-            sort_code: "01-21-31"
-          },
-          provider: {
-            display_name: "MOCK",
-            provider_id: "mock",
-            logo_uri: "https://truelayer-client-logos.s3-eu-west-1.amazonaws.com/banks/banks-icons/mock-icon.svg"
-          }
-        },
-        {
-          update_timestamp: new Date().toISOString(),
-          account_id: "89c3139784a055b9b47998f9dce9122e",
-          account_type: "TRANSACTION",
-          display_name: "TRANSACTION ACCOUNT 2",
-          currency: "GBP",
-          account_number: {
-            iban: "GB08CLRB04066800003435",
-            swift_bic: "CPBKGB00",
-            number: "30000000",
-            sort_code: "01-21-31"
-          },
-          provider: {
-            display_name: "MOCK",
-            provider_id: "mock",
-            logo_uri: "https://truelayer-client-logos.s3-eu-west-1.amazonaws.com/banks/banks-icons/mock-icon.svg"
-          }
-        },
-        {
-          update_timestamp: new Date().toISOString(),
-          account_id: "328df3a40b828340fa4c3100e17de121",
-          account_type: "SAVINGS",
-          display_name: "SAVINGS ACCOUNT 2",
-          currency: "GBP",
-          account_number: {
-            iban: "GB08CLRB04066800003435",
-            swift_bic: "CPBKGB00",
-            number: "40000000",
-            sort_code: "01-21-31"
-          },
-          provider: {
-            display_name: "MOCK",
-            provider_id: "mock",
-            logo_uri: "https://truelayer-client-logos.s3-eu-west-1.amazonaws.com/banks/banks-icons/mock-icon.svg"
-          }
-        },
-        {
-          update_timestamp: new Date().toISOString(),
-          account_id: "8de2de9eab01b935b21abcbed11adf26",
-          account_type: "TRANSACTION",
-          display_name: "TRANSACTION ACCOUNT 3",
-          currency: "GBP",
-          account_number: {
-            iban: "GB08CLRB04066800003435",
-            swift_bic: "CPBKGB00",
-            number: "50000000",
             sort_code: "01-21-31"
           },
           provider: {
@@ -215,13 +161,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/accounts/:accountId/balance", async (req, res) => {
     const { accountId } = req.params;
     
-    // Enhanced demo balances for consistent display
+    // Enhanced demo balances for consistent display - only 2 accounts
     const enhancedBalances: Record<string, any> = {
       "56c7b029e0f8ec5a2334fb0ffc2fface": { currency: "GBP", current: 2340.50, available: 2340.50, overdraft: 0 },
-      "3c6edb9484ecd581dc1cedde8bedb1f1": { currency: "GBP", current: 5680.25, available: 5680.25, overdraft: 0 },
-      "89c3139784a055b9b47998f9dce9122e": { currency: "GBP", current: 1250.00, available: 1750.00, overdraft: 500 },
-      "328df3a40b828340fa4c3100e17de121": { currency: "GBP", current: 8950.75, available: 8950.75, overdraft: 0 },
-      "8de2de9eab01b935b21abcbed11adf26": { currency: "GBP", current: 3200.40, available: 3700.40, overdraft: 500 }
+      "3c6edb9484ecd581dc1cedde8bedb1f1": { currency: "GBP", current: 5680.25, available: 5680.25, overdraft: 0 }
     };
 
     // Always provide enhanced balances for demonstration
@@ -266,25 +209,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      // Enhanced mock transactions for better demonstration
+      // Enhanced mock transactions with more variety - only 2 accounts
       const enhancedTransactions: Record<string, any[]> = {
         "56c7b029e0f8ec5a2334fb0ffc2fface": [
-          { transaction_id: "tx1", amount: -45.60, currency: "GBP", description: "TESCO EXTRA", transaction_type: "DEBIT", timestamp: "2025-08-03T14:30:00Z", merchant_name: "Tesco" },
-          { transaction_id: "tx2", amount: 2500.00, currency: "GBP", description: "SALARY PAYMENT", transaction_type: "CREDIT", timestamp: "2025-08-01T09:00:00Z", merchant_name: "Employer Ltd" },
-          { transaction_id: "tx3", amount: -12.50, currency: "GBP", description: "COSTA COFFEE", transaction_type: "DEBIT", timestamp: "2025-07-31T08:15:00Z", merchant_name: "Costa Coffee" },
+          { transaction_id: "tx1", amount: 2500.00, currency: "GBP", description: "SALARY PAYMENT", transaction_type: "CREDIT", timestamp: "2025-08-01T09:00:00Z", merchant_name: "Employer Ltd" },
+          { transaction_id: "tx2", amount: -850.00, currency: "GBP", description: "RENT PAYMENT", transaction_type: "DEBIT", timestamp: "2025-08-01T10:00:00Z", merchant_name: "Property Management" },
+          { transaction_id: "tx3", amount: -45.60, currency: "GBP", description: "TESCO EXTRA", transaction_type: "DEBIT", timestamp: "2025-08-03T14:30:00Z", merchant_name: "Tesco" },
           { transaction_id: "tx4", amount: -89.99, currency: "GBP", description: "AMAZON.CO.UK", transaction_type: "DEBIT", timestamp: "2025-07-30T16:45:00Z", merchant_name: "Amazon" },
-          { transaction_id: "tx5", amount: -850.00, currency: "GBP", description: "RENT PAYMENT", transaction_type: "DEBIT", timestamp: "2025-07-28T10:00:00Z", merchant_name: "Property Management" }
+          { transaction_id: "tx5", amount: -12.50, currency: "GBP", description: "COSTA COFFEE", transaction_type: "DEBIT", timestamp: "2025-07-31T08:15:00Z", merchant_name: "Costa Coffee" },
+          { transaction_id: "tx6", amount: -67.80, currency: "GBP", description: "SHELL PETROL", transaction_type: "DEBIT", timestamp: "2025-07-29T07:45:00Z", merchant_name: "Shell" },
+          { transaction_id: "tx7", amount: -125.40, currency: "GBP", description: "SAINSBURYS", transaction_type: "DEBIT", timestamp: "2025-07-28T19:30:00Z", merchant_name: "Sainsburys" },
+          { transaction_id: "tx8", amount: -35.99, currency: "GBP", description: "NETFLIX", transaction_type: "DEBIT", timestamp: "2025-07-28T00:01:00Z", merchant_name: "Netflix" },
+          { transaction_id: "tx9", amount: -8.40, currency: "GBP", description: "STARBUCKS", transaction_type: "DEBIT", timestamp: "2025-07-27T08:20:00Z", merchant_name: "Starbucks" },
+          { transaction_id: "tx10", amount: -15.99, currency: "GBP", description: "SPOTIFY", transaction_type: "DEBIT", timestamp: "2025-07-26T12:00:00Z", merchant_name: "Spotify" },
+          { transaction_id: "tx11", amount: -2.50, currency: "GBP", description: "BUS FARE", transaction_type: "DEBIT", timestamp: "2025-07-26T09:15:00Z", merchant_name: "TfL" },
+          { transaction_id: "tx12", amount: -78.50, currency: "GBP", description: "ELECTRICITY BILL", transaction_type: "DEBIT", timestamp: "2025-07-25T14:30:00Z", merchant_name: "British Gas" },
+          { transaction_id: "tx13", amount: -42.00, currency: "GBP", description: "INTERNET BILL", transaction_type: "DEBIT", timestamp: "2025-07-24T11:00:00Z", merchant_name: "BT" },
+          { transaction_id: "tx14", amount: -18.99, currency: "GBP", description: "DISNEY+", transaction_type: "DEBIT", timestamp: "2025-07-23T00:01:00Z", merchant_name: "Disney Plus" },
+          { transaction_id: "tx15", amount: -120.00, currency: "GBP", description: "COUNCIL TAX", transaction_type: "DEBIT", timestamp: "2025-07-22T10:00:00Z", merchant_name: "Local Council" }
         ],
         "3c6edb9484ecd581dc1cedde8bedb1f1": [
-          { transaction_id: "tx6", amount: 500.00, currency: "GBP", description: "MONTHLY SAVINGS", transaction_type: "CREDIT", timestamp: "2025-08-01T10:00:00Z", merchant_name: "Transfer" },
-          { transaction_id: "tx7", amount: 1200.00, currency: "GBP", description: "BONUS PAYMENT", transaction_type: "CREDIT", timestamp: "2025-07-25T15:30:00Z", merchant_name: "Employer Ltd" },
-          { transaction_id: "tx8", amount: -200.00, currency: "GBP", description: "INVESTMENT TRANSFER", transaction_type: "DEBIT", timestamp: "2025-07-20T11:00:00Z", merchant_name: "Investment Fund" }
-        ],
-        "89c3139784a055b9b47998f9dce9122e": [
-          { transaction_id: "tx9", amount: -125.40, currency: "GBP", description: "SAINSBURYS", transaction_type: "DEBIT", timestamp: "2025-08-02T19:30:00Z", merchant_name: "Sainsburys" },
-          { transaction_id: "tx10", amount: -67.80, currency: "GBP", description: "SHELL PETROL", transaction_type: "DEBIT", timestamp: "2025-08-01T07:45:00Z", merchant_name: "Shell" },
-          { transaction_id: "tx11", amount: 1500.00, currency: "GBP", description: "FREELANCE PAYMENT", transaction_type: "CREDIT", timestamp: "2025-07-29T14:20:00Z", merchant_name: "Client Ltd" },
-          { transaction_id: "tx12", amount: -35.99, currency: "GBP", description: "NETFLIX", transaction_type: "DEBIT", timestamp: "2025-07-28T00:01:00Z", merchant_name: "Netflix" }
+          { transaction_id: "tx16", amount: 500.00, currency: "GBP", description: "MONTHLY SAVINGS", transaction_type: "CREDIT", timestamp: "2025-08-01T10:00:00Z", merchant_name: "Transfer" },
+          { transaction_id: "tx17", amount: 1200.00, currency: "GBP", description: "BONUS PAYMENT", transaction_type: "CREDIT", timestamp: "2025-07-25T15:30:00Z", merchant_name: "Employer Ltd" },
+          { transaction_id: "tx18", amount: 300.00, currency: "GBP", description: "FREELANCE WORK", transaction_type: "CREDIT", timestamp: "2025-07-20T14:00:00Z", merchant_name: "Client Ltd" },
+          { transaction_id: "tx19", amount: -200.00, currency: "GBP", description: "INVESTMENT TRANSFER", transaction_type: "DEBIT", timestamp: "2025-07-20T11:00:00Z", merchant_name: "Investment Fund" },
+          { transaction_id: "tx20", amount: 25.00, currency: "GBP", description: "CASHBACK REWARD", transaction_type: "CREDIT", timestamp: "2025-07-18T16:30:00Z", merchant_name: "Bank Reward" },
+          { transaction_id: "tx21", amount: 150.00, currency: "GBP", description: "TAX REFUND", transaction_type: "CREDIT", timestamp: "2025-07-15T09:00:00Z", merchant_name: "HMRC" },
+          { transaction_id: "tx22", amount: 75.00, currency: "GBP", description: "DIVIDEND PAYMENT", transaction_type: "CREDIT", timestamp: "2025-07-10T11:30:00Z", merchant_name: "Investment Co" },
+          { transaction_id: "tx23", amount: 450.00, currency: "GBP", description: "EMERGENCY FUND", transaction_type: "CREDIT", timestamp: "2025-07-01T12:00:00Z", merchant_name: "Transfer" },
+          { transaction_id: "tx24", amount: -100.00, currency: "GBP", description: "CHARITY DONATION", transaction_type: "DEBIT", timestamp: "2025-06-28T10:00:00Z", merchant_name: "Charity" },
+          { transaction_id: "tx25", amount: 800.00, currency: "GBP", description: "HOLIDAY SAVINGS", transaction_type: "CREDIT", timestamp: "2025-06-25T14:00:00Z", merchant_name: "Transfer" }
         ]
       };
 
