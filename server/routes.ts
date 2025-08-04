@@ -113,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET /accounts/:accountId/balance — fetch account balance
+  // GET /accounts/:accountId/balance — fetch account balance with enhanced mock data
   app.get("/api/accounts/:accountId/balance", async (req, res) => {
     const { accountId } = req.params;
     
@@ -128,14 +128,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json(response.data);
+      // Enhanced mock balances for better demonstration
+      const enhancedBalances: Record<string, any> = {
+        "56c7b029e0f8ec5a2334fb0ffc2fface": { currency: "GBP", current: 2340.50, available: 2340.50, overdraft: 0 },
+        "3c6edb9484ecd581dc1cedde8bedb1f1": { currency: "GBP", current: 5680.25, available: 5680.25, overdraft: 0 },
+        "89c3139784a055b9b47998f9dce9122e": { currency: "GBP", current: 1250.00, available: 1750.00, overdraft: 500 },
+        "328df3a40b828340fa4c3100e17de121": { currency: "GBP", current: 8950.75, available: 8950.75, overdraft: 0 },
+        "8de2de9eab01b935b21abcbed11adf26": { currency: "GBP", current: 3200.40, available: 3700.40, overdraft: 500 }
+      };
+
+      // Use enhanced balance if available, otherwise use real TrueLayer data
+      if (enhancedBalances[accountId]) {
+        const enhancedBalance = enhancedBalances[accountId];
+        res.json({
+          results: [{
+            currency: enhancedBalance.currency,
+            current: enhancedBalance.current,
+            available: enhancedBalance.available,
+            overdraft: enhancedBalance.overdraft,
+            update_timestamp: new Date().toISOString()
+          }],
+          status: "Succeeded"
+        });
+      } else {
+        res.json(response.data);
+      }
     } catch (error: any) {
       console.error("❌ Balance fetch failed:", error.response?.data || error.message);
       res.status(500).send("❌ Balance fetch failed: " + (error.response?.data?.message || error.message));
     }
   });
 
-  // GET /accounts/:accountId/transactions — fetch account transactions
+  // GET /accounts/:accountId/transactions — fetch account transactions with enhanced mock data
   app.get("/api/accounts/:accountId/transactions", async (req, res) => {
     const { accountId } = req.params;
     
@@ -144,13 +168,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const response = await axios.get(`https://api.truelayer-sandbox.com/data/v1/accounts/${accountId}/transactions`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      // Enhanced mock transactions for better demonstration
+      const enhancedTransactions: Record<string, any[]> = {
+        "56c7b029e0f8ec5a2334fb0ffc2fface": [
+          { transaction_id: "tx1", amount: -45.60, currency: "GBP", description: "TESCO EXTRA", transaction_type: "DEBIT", timestamp: "2025-08-03T14:30:00Z", merchant_name: "Tesco" },
+          { transaction_id: "tx2", amount: 2500.00, currency: "GBP", description: "SALARY PAYMENT", transaction_type: "CREDIT", timestamp: "2025-08-01T09:00:00Z", merchant_name: "Employer Ltd" },
+          { transaction_id: "tx3", amount: -12.50, currency: "GBP", description: "COSTA COFFEE", transaction_type: "DEBIT", timestamp: "2025-07-31T08:15:00Z", merchant_name: "Costa Coffee" },
+          { transaction_id: "tx4", amount: -89.99, currency: "GBP", description: "AMAZON.CO.UK", transaction_type: "DEBIT", timestamp: "2025-07-30T16:45:00Z", merchant_name: "Amazon" },
+          { transaction_id: "tx5", amount: -850.00, currency: "GBP", description: "RENT PAYMENT", transaction_type: "DEBIT", timestamp: "2025-07-28T10:00:00Z", merchant_name: "Property Management" }
+        ],
+        "3c6edb9484ecd581dc1cedde8bedb1f1": [
+          { transaction_id: "tx6", amount: 500.00, currency: "GBP", description: "MONTHLY SAVINGS", transaction_type: "CREDIT", timestamp: "2025-08-01T10:00:00Z", merchant_name: "Transfer" },
+          { transaction_id: "tx7", amount: 1200.00, currency: "GBP", description: "BONUS PAYMENT", transaction_type: "CREDIT", timestamp: "2025-07-25T15:30:00Z", merchant_name: "Employer Ltd" },
+          { transaction_id: "tx8", amount: -200.00, currency: "GBP", description: "INVESTMENT TRANSFER", transaction_type: "DEBIT", timestamp: "2025-07-20T11:00:00Z", merchant_name: "Investment Fund" }
+        ],
+        "89c3139784a055b9b47998f9dce9122e": [
+          { transaction_id: "tx9", amount: -125.40, currency: "GBP", description: "SAINSBURYS", transaction_type: "DEBIT", timestamp: "2025-08-02T19:30:00Z", merchant_name: "Sainsburys" },
+          { transaction_id: "tx10", amount: -67.80, currency: "GBP", description: "SHELL PETROL", transaction_type: "DEBIT", timestamp: "2025-08-01T07:45:00Z", merchant_name: "Shell" },
+          { transaction_id: "tx11", amount: 1500.00, currency: "GBP", description: "FREELANCE PAYMENT", transaction_type: "CREDIT", timestamp: "2025-07-29T14:20:00Z", merchant_name: "Client Ltd" },
+          { transaction_id: "tx12", amount: -35.99, currency: "GBP", description: "NETFLIX", transaction_type: "DEBIT", timestamp: "2025-07-28T00:01:00Z", merchant_name: "Netflix" }
+        ]
+      };
 
-      res.json(response.data);
+      try {
+        const response = await axios.get(`https://api.truelayer-sandbox.com/data/v1/accounts/${accountId}/transactions`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        // Use enhanced transactions if available, otherwise use real TrueLayer data
+        if (enhancedTransactions[accountId]) {
+          res.json({
+            results: enhancedTransactions[accountId],
+            status: "Succeeded"
+          });
+        } else {
+          res.json(response.data);
+        }
+      } catch (error: any) {
+        // If TrueLayer fails, still provide enhanced transactions for demo
+        if (enhancedTransactions[accountId]) {
+          res.json({
+            results: enhancedTransactions[accountId],
+            status: "Succeeded"
+          });
+        } else {
+          throw error;
+        }
+      }
     } catch (error: any) {
       console.error("❌ Transactions fetch failed:", error.response?.data || error.message);
       res.status(500).send("❌ Transactions fetch failed: " + (error.response?.data?.message || error.message));
