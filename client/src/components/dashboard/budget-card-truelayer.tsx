@@ -195,12 +195,12 @@ function BudgetCardTrueLayer() {
           </div>
         </div>
 
-        {/* Spending by Category Chart */}
+        {/* Spending by Category Chart - Large Focal Point */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Spending by Category</h3>
-          <div className="bg-gray-50 rounded-lg p-4">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Spending by Category</h3>
+          <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-8 shadow-inner border border-gray-100">
             {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={750}>
                 <PieChart>
                   <Pie
                     activeIndex={activeIndex}
@@ -208,8 +208,8 @@ function BudgetCardTrueLayer() {
                     data={chartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={40}
-                    outerRadius={80}
+                    innerRadius={120}
+                    outerRadius={240}
                     fill="#8884d8"
                     dataKey="value"
                     onMouseEnter={(_, index) => setActiveIndex(index)}
@@ -224,9 +224,9 @@ function BudgetCardTrueLayer() {
                       if (active && payload && payload.length) {
                         const data = payload[0].payload;
                         return (
-                          <div className="bg-white p-3 rounded-lg shadow-lg border">
-                            <p className="font-medium">{data.icon} {data.name}</p>
-                            <p className="text-sm text-gray-600">
+                          <div className="bg-white p-4 rounded-xl shadow-2xl border border-gray-200">
+                            <p className="font-bold text-lg">{data.icon} {data.name}</p>
+                            <p className="text-gray-600 text-base">
                               £{data.value.toFixed(2)} ({data.percentage.toFixed(1)}%)
                             </p>
                           </div>
@@ -238,7 +238,7 @@ function BudgetCardTrueLayer() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-32 text-gray-500 text-xl">
                 No spending data available
               </div>
             )}
