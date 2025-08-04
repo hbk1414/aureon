@@ -195,73 +195,53 @@ function BudgetCardTrueLayer() {
           </div>
         </div>
 
-        {/* Accounts Overview */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Connected Accounts</h3>
-            <div className="space-y-3">
-              {accounts.map((account) => (
-                <div key={account.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <div className="font-medium text-gray-900">{account.name}</div>
-                    <div className="text-sm text-gray-500">Account ID: {account.id.slice(0, 8)}...</div>
-                  </div>
-                  <div className="text-lg font-semibold text-gray-900">
-                    £{account.balance.toLocaleString()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Spending by Category Chart */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Spending by Category</h3>
-            <div className="bg-gray-50 rounded-lg p-4">
-              {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      activeIndex={activeIndex}
-                      activeShape={renderActiveShape}
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      onMouseEnter={(_, index) => setActiveIndex(index)}
-                      onMouseLeave={() => setActiveIndex(undefined)}
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload;
-                          return (
-                            <div className="bg-white p-3 rounded-lg shadow-lg border">
-                              <p className="font-medium">{data.icon} {data.name}</p>
-                              <p className="text-sm text-gray-600">
-                                £{data.value.toFixed(2)} ({data.percentage.toFixed(1)}%)
-                              </p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  No spending data available
-                </div>
-              )}
-            </div>
+        {/* Spending by Category Chart */}
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Spending by Category</h3>
+          <div className="bg-gray-50 rounded-lg p-4">
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    activeIndex={activeIndex}
+                    activeShape={renderActiveShape}
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    onMouseEnter={(_, index) => setActiveIndex(index)}
+                    onMouseLeave={() => setActiveIndex(undefined)}
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-white p-3 rounded-lg shadow-lg border">
+                            <p className="font-medium">{data.icon} {data.name}</p>
+                            <p className="text-sm text-gray-600">
+                              £{data.value.toFixed(2)} ({data.percentage.toFixed(1)}%)
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                No spending data available
+              </div>
+            )}
           </div>
         </div>
 
