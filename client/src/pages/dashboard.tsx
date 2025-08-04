@@ -12,7 +12,7 @@ import AiTasks from "@/components/dashboard/ai-tasks";
 import { EmergencyFund } from "@/components/dashboard/emergency-fund-firestore";
 import Couples from "@/components/dashboard/couples";
 import QuickActions from "@/components/dashboard/quick-actions";
-import SmartInsights from "@/components/dashboard/smart-insights";
+
 import DashboardSkeleton from "@/components/dashboard/dashboard-skeleton";
 import TrueLayerAccounts from "@/components/dashboard/truelayer-accounts";
 import { useAuth } from "@/hooks/use-auth";
@@ -379,21 +379,7 @@ export default function Dashboard() {
         </motion.section>
       </div>
 
-      {/* Insights & Analytics Section - Full Width */}
-      <motion.section 
-        className="bg-gradient-to-br from-gray-50 to-gray-100 py-6 mt-6"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
-      >
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-12 gap-6">
-            <div className="col-span-12">
-              <SmartInsights />
-            </div>
-          </div>
-        </div>
-      </motion.section>
+
 
     </motion.div>
   );
