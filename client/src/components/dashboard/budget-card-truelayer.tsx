@@ -138,34 +138,61 @@ function BudgetCardTrueLayer() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <BudgetSummaryCard
-            title="Total Balance"
-            value={`£${trueLayerData.totalBalance.toLocaleString()}`}
-            icon={<TrendingUp className="h-5 w-5" />}
-            trend={null}
-            color="blue"
-          />
-          <BudgetSummaryCard
-            title="Total Income"
-            value={`£${trueLayerData.totalIncome.toLocaleString()}`}
-            icon={<ArrowDownLeft className="h-5 w-5" />}
-            trend={null}
-            color="green"
-          />
-          <BudgetSummaryCard
-            title="Total Spent"
-            value={`£${trueLayerData.totalSpent.toLocaleString()}`}
-            icon={<ArrowUpRight className="h-5 w-5" />}
-            trend={null}
-            color="red"
-          />
-          <BudgetSummaryCard
-            title="Net Income"
-            value={`£${(trueLayerData.totalIncome - trueLayerData.totalSpent).toLocaleString()}`}
-            icon={<PiggyBank className="h-5 w-5" />}
-            trend={null}
-            color={trueLayerData.totalIncome - trueLayerData.totalSpent >= 0 ? "green" : "red"}
-          />
+          <div className="bg-blue-50 p-6 rounded-xl border border-blue-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                </div>
+                <h3 className="text-sm font-medium text-blue-900">Total Balance</h3>
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-blue-900">
+              £{trueLayerData.totalBalance.toLocaleString()}
+            </div>
+          </div>
+          
+          <div className="bg-green-50 p-6 rounded-xl border border-green-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <ArrowDownLeft className="h-5 w-5 text-green-600" />
+                </div>
+                <h3 className="text-sm font-medium text-green-900">Total Income</h3>
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-green-900">
+              £{trueLayerData.totalIncome.toLocaleString()}
+            </div>
+          </div>
+          
+          <div className="bg-red-50 p-6 rounded-xl border border-red-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <ArrowUpRight className="h-5 w-5 text-red-600" />
+                </div>
+                <h3 className="text-sm font-medium text-red-900">Total Spent</h3>
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-red-900">
+              £{trueLayerData.totalSpent.toLocaleString()}
+            </div>
+          </div>
+          
+          <div className={`${trueLayerData.totalIncome - trueLayerData.totalSpent >= 0 ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'} p-6 rounded-xl border`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className={`p-2 ${trueLayerData.totalIncome - trueLayerData.totalSpent >= 0 ? 'bg-green-100' : 'bg-red-100'} rounded-lg`}>
+                  <PiggyBank className={`h-5 w-5 ${trueLayerData.totalIncome - trueLayerData.totalSpent >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                </div>
+                <h3 className={`text-sm font-medium ${trueLayerData.totalIncome - trueLayerData.totalSpent >= 0 ? 'text-green-900' : 'text-red-900'}`}>Net Income</h3>
+              </div>
+            </div>
+            <div className={`text-2xl font-bold ${trueLayerData.totalIncome - trueLayerData.totalSpent >= 0 ? 'text-green-900' : 'text-red-900'}`}>
+              £{(trueLayerData.totalIncome - trueLayerData.totalSpent).toLocaleString()}
+            </div>
+          </div>
         </div>
 
         {/* Accounts Overview */}

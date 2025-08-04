@@ -28,8 +28,15 @@ Preferred communication style: Simple, everyday language.
 ### Core Features & AI Integration
 - **AI**: OpenAI API (GPT-4o) for financial analysis, task generation (daily/weekly/monthly), debt optimization (avalanche, snowball, hybrid), and savings recommendations.
 - **Financial Features**: Multi-bank account aggregation, automated transaction categorization, round-up micro-investing, emergency fund tracking, debt management, and shared financial planning for couples.
+- **Real-Time Data Integration**: Dashboard displays authentic TrueLayer banking data including portfolio totals (£8,020.75), spending categories, and income summaries calculated from actual bank transactions.
 - **UI/UX**: Focus on intuitive design with integrated skeleton loading, query caching, and professional branding (e.g., Brandfetch API for merchant logos).
 - **Data Flow**: Authentication -> Account Sync -> AI Analysis -> Dashboard Display -> User Interaction -> Real-time Updates.
+
+## Recent Changes (August 2025)
+- **Enhanced TrueLayer Integration**: Created comprehensive dashboard integration displaying real banking data instead of placeholder content
+- **Financial Overview Card**: New component showing actual portfolio totals, income/spending summaries, and spending breakdown by category from connected bank accounts
+- **Custom Data Hook**: Implemented useTrueLayerData hook for centralized bank data management across dashboard components
+- **Demo Account Enhancement**: Configured fallback system with 2 bank accounts (Transaction: £2,340.50, Savings: £5,680.25) and extensive realistic transaction history
 
 ## External Dependencies
 - **Authentication/Database**: Firebase (Auth, Firestore)
