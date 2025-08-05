@@ -1,4 +1,4 @@
-import { Path } from 'echarts/core';
+// Import is not needed for the shape registration
 
 interface MetaballShape {
   cx1: number;

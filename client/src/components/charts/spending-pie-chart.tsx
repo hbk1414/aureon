@@ -103,12 +103,16 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
   };
 
   const metaballOptions = {
+    backgroundColor: 'transparent',
     tooltip: {
       trigger: 'item',
       formatter: (params: any) => {
-        const amount = params.value[3];
-        const label = params.value[4];
-        return `${label}<br/>£${amount.toFixed(2)}`;
+        if (params.value && params.value.length >= 5) {
+          const amount = params.value[3];
+          const label = params.value[4];
+          return `${label}<br/>£${amount.toFixed(2)}`;
+        }
+        return 'Transaction';
       },
       backgroundColor: 'rgba(0, 0, 0, 0.8)',
       borderColor: 'transparent',
@@ -117,33 +121,40 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
         fontSize: 12
       }
     },
+    animation: true,
+    animationDuration: 800,
+    animationEasing: 'bounceOut',
     series: [
       {
-        type: 'custom',
+        type: 'scatter',
         coordinateSystem: 'cartesian2d',
-        data: metaballData,
-        animationDuration: 1000,
-        animationEasing: 'elasticOut',
-        renderItem: (params: any, api: any) => {
-          const value = api.value();
-          const coord = api.coord([value[0], value[1]]);
-          const radius = value[2];
-          
-          return {
-            type: 'circle',
-            shape: {
-              cx: coord[0],
-              cy: coord[1],
-              r: radius
-            },
-            style: {
-              fill: params.color,
-              stroke: '#fff',
-              lineWidth: 2,
-              shadowBlur: 10,
-              shadowColor: 'rgba(0, 0, 0, 0.3)'
-            }
-          };
+        data: metaballData.map((item, index) => [
+          item.value[0], // x
+          item.value[1], // y
+          item.value[2], // size for symbolSize
+          item.value[3], // amount for tooltip
+          item.value[4]  // label for tooltip
+        ]),
+        symbolSize: (value: number[]) => Math.max(value[2], 10),
+        itemStyle: {
+          color: (params: any) => {
+            const colors = [
+              '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
+              '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD'
+            ];
+            return colors[params.dataIndex % colors.length];
+          },
+          shadowBlur: 10,
+          shadowColor: 'rgba(0, 0, 0, 0.3)',
+          opacity: 0.8
+        },
+        emphasis: {
+          scale: true,
+          scaleSize: 15,
+          itemStyle: {
+            shadowBlur: 20,
+            opacity: 1
+          }
         }
       }
     ],
@@ -151,13 +162,21 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
       type: 'value',
       show: false,
       min: 0,
-      max: 400
+      max: 400,
+      splitLine: { show: false }
     },
     yAxis: {
-      type: 'value',
+      type: 'value', 
       show: false,
       min: 0,
-      max: 400
+      max: 400,
+      splitLine: { show: false }
+    },
+    grid: {
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0
     }
   };
 
@@ -166,36 +185,37 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
   const createMetaballData = (transactions: Transaction[]) => {
     const centerX = 200; // Chart center
     const centerY = 200;
-    const baseRadius = 20;
+    const maxAmount = Math.max(...transactions.map(t => t.amount));
     
     return transactions.map((transaction, index) => {
       const angle = (index / transactions.length) * Math.PI * 2;
-      const distance = 60 + (index % 3) * 30; // Varied distances for organic look
-      const radius = Math.max(baseRadius * (transaction.amount / 100), 8); // Size based on amount
+      const ringIndex = index % 3; // Create 3 rings
+      const distance = 50 + ringIndex * 40; // Rings at different distances
+      const radius = Math.max((transaction.amount / maxAmount) * 30, 10); // Size based on relative amount
       
       return {
         value: [
           centerX + Math.cos(angle) * distance, // x position
           centerY + Math.sin(angle) * distance, // y position
-          radius, // radius
+          radius, // radius for bubble size
           transaction.amount, // amount for tooltip
           transaction.merchant || transaction.description, // label
           transaction.id // unique id
-        ],
-        itemStyle: {
-          color: `hsl(${(index * 137.5) % 360}, 70%, 60%)` // Generate varied colors
-        }
+        ]
       };
     });
   };
 
   const handleChartClick = (params: any) => {
+    console.log('Chart clicked:', params);
     if (params.componentType === 'series' && params.data && !showMetaballs) {
       const category = params.data.category;
+      console.log('Selected category:', category);
       setSelectedCategory(category);
       
       // Create metaball data from transactions
       const metaballs = createMetaballData(category.transactions);
+      console.log('Created metaballs:', metaballs);
       setMetaballData(metaballs);
       setShowMetaballs(true);
     }
@@ -210,6 +230,8 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
   const onChartReady = (chartInstance: any) => {
     chartInstance.on('click', handleChartClick);
     console.log('Chart ready, data:', data);
+    console.log('Show metaballs:', showMetaballs);
+    console.log('Metaball data:', metaballData);
   };
 
   const formatAmount = (amount: number) => {
