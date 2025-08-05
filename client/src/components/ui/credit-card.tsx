@@ -37,6 +37,13 @@ const CreditCard: React.FC<CreditCardProps> = ({
           <Wifi className="w-6 h-6 text-white/80" />
         </div>
 
+        {/* Visa Logo - Top Right (below wireless icon) */}
+        <div className="absolute top-12 right-4">
+          <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
+            <span className="text-white font-bold text-sm tracking-wider">VISA</span>
+          </div>
+        </div>
+
         {/* Bank Name */}
         <div className="mb-8">
           <h3 className="text-lg font-bold tracking-wider">{bankName}</h3>
@@ -61,12 +68,7 @@ const CreditCard: React.FC<CreditCardProps> = ({
           </div>
         </div>
 
-        {/* Visa Logo - Bottom Right (repositioned lower) */}
-        <div className="absolute bottom-2 right-4">
-          <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
-            <span className="text-white font-bold text-sm tracking-wider">VISA</span>
-          </div>
-        </div>
+
 
         {/* Decorative Elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-2xl pointer-events-none">
