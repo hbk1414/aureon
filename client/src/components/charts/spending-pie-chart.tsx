@@ -2,6 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { graphic } from 'echarts/core';
+import MetaballPath from './metaball-path';
+
+// Register the metaball shape
+graphic.registerShape('metaball', MetaballPath as any);
 
 interface Transaction {
   id: string;
@@ -25,7 +30,8 @@ interface SpendingPieChartProps {
 
 const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "" }) => {
   const [selectedCategory, setSelectedCategory] = useState<SpendingCategory | null>(null);
-  const [bubblePosition, setBubblePosition] = useState({ x: 0, y: 0 });
+  const [showMetaballs, setShowMetaballs] = useState(false);
+  const [metaballData, setMetaballData] = useState<any[]>([]);
   const chartRef = useRef<any>(null);
 
   console.log('SpendingPieChart received data:', data);
@@ -41,7 +47,7 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
     );
   }
 
-  const chartOptions = {
+  const pieChartOptions = {
     tooltip: {
       trigger: 'item',
       formatter: '{a} <br/>{b}: £{c} ({d}%)',
@@ -68,7 +74,7 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
           borderWidth: 2
         },
         label: {
-          show: true,
+          show: !showMetaballs,
           position: 'outside',
           formatter: '{b}\n£{c}',
           fontSize: 11,
@@ -96,17 +102,109 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
     ]
   };
 
+  const metaballOptions = {
+    tooltip: {
+      trigger: 'item',
+      formatter: (params: any) => {
+        const amount = params.value[3];
+        const label = params.value[4];
+        return `${label}<br/>£${amount.toFixed(2)}`;
+      },
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      borderColor: 'transparent',
+      textStyle: {
+        color: '#fff',
+        fontSize: 12
+      }
+    },
+    series: [
+      {
+        type: 'custom',
+        coordinateSystem: 'cartesian2d',
+        data: metaballData,
+        animationDuration: 1000,
+        animationEasing: 'elasticOut',
+        renderItem: (params: any, api: any) => {
+          const value = api.value();
+          const coord = api.coord([value[0], value[1]]);
+          const radius = value[2];
+          
+          return {
+            type: 'circle',
+            shape: {
+              cx: coord[0],
+              cy: coord[1],
+              r: radius
+            },
+            style: {
+              fill: params.color,
+              stroke: '#fff',
+              lineWidth: 2,
+              shadowBlur: 10,
+              shadowColor: 'rgba(0, 0, 0, 0.3)'
+            }
+          };
+        }
+      }
+    ],
+    xAxis: {
+      type: 'value',
+      show: false,
+      min: 0,
+      max: 400
+    },
+    yAxis: {
+      type: 'value',
+      show: false,
+      min: 0,
+      max: 400
+    }
+  };
+
+  const chartOptions = showMetaballs ? metaballOptions : pieChartOptions;
+
+  const createMetaballData = (transactions: Transaction[]) => {
+    const centerX = 200; // Chart center
+    const centerY = 200;
+    const baseRadius = 20;
+    
+    return transactions.map((transaction, index) => {
+      const angle = (index / transactions.length) * Math.PI * 2;
+      const distance = 60 + (index % 3) * 30; // Varied distances for organic look
+      const radius = Math.max(baseRadius * (transaction.amount / 100), 8); // Size based on amount
+      
+      return {
+        value: [
+          centerX + Math.cos(angle) * distance, // x position
+          centerY + Math.sin(angle) * distance, // y position
+          radius, // radius
+          transaction.amount, // amount for tooltip
+          transaction.merchant || transaction.description, // label
+          transaction.id // unique id
+        ],
+        itemStyle: {
+          color: `hsl(${(index * 137.5) % 360}, 70%, 60%)` // Generate varied colors
+        }
+      };
+    });
+  };
+
   const handleChartClick = (params: any) => {
-    if (params.componentType === 'series' && params.data) {
+    if (params.componentType === 'series' && params.data && !showMetaballs) {
       const category = params.data.category;
       setSelectedCategory(category);
       
-      // Use a default position for the bubble since event position is unreliable
-      setBubblePosition({
-        x: window.innerWidth / 2,
-        y: window.innerHeight / 2
-      });
+      // Create metaball data from transactions
+      const metaballs = createMetaballData(category.transactions);
+      setMetaballData(metaballs);
+      setShowMetaballs(true);
     }
+  };
+
+  const hideMetaballs = () => {
+    setShowMetaballs(false);
+    setSelectedCategory(null);
+    setMetaballData([]);
   };
 
   const onChartReady = (chartInstance: any) => {
@@ -136,109 +234,50 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
         lazyUpdate={true}
       />
 
-      {/* Transaction Bubble Modal */}
+      {/* Controls */}
       <AnimatePresence>
-        {selectedCategory && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
-              onClick={() => setSelectedCategory(null)}
-            />
-            
-            {/* Bubble */}
-            <motion.div
-              initial={{ 
-                opacity: 0, 
-                scale: 0
-              }}
-              animate={{ 
-                opacity: 1, 
-                scale: 1
-              }}
-              exit={{ 
-                opacity: 0, 
-                scale: 0.8,
-                transition: { duration: 0.2 }
-              }}
-              transition={{
-                type: "spring",
-                damping: 20,
-                stiffness: 300,
-                duration: 0.4
-              }}
-              className="fixed z-50 w-96 max-h-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+        {showMetaballs && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="absolute top-4 right-4 z-10"
+          >
+            <button
+              onClick={hideMetaballs}
+              className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-colors"
             >
-              {/* Header */}
-              <div 
-                className="p-4 border-b border-gray-200 dark:border-gray-700"
-                style={{ backgroundColor: `${selectedCategory.color}15` }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div 
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: selectedCategory.color }}
-                    />
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">
-                        {selectedCategory.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        {formatAmount(selectedCategory.value)} total
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setSelectedCategory(null)}
-                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                  >
-                    <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                  </button>
-                </div>
-              </div>
+              Back to Chart
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-              {/* Transactions List */}
-              <div className="p-4 max-h-64 overflow-y-auto">
-                <div className="space-y-3">
-                  {selectedCategory.transactions.slice(0, 10).map((transaction) => (
-                    <motion.div
-                      key={transaction.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                          {transaction.merchant || transaction.description}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {formatDate(transaction.date)}
-                        </p>
-                      </div>
-                      <div className="flex-shrink-0 ml-3">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                          {formatAmount(transaction.amount)}
-                        </p>
-                      </div>
-                    </motion.div>
-                  ))}
-                  
-                  {selectedCategory.transactions.length > 10 && (
-                    <div className="text-center py-2">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        +{selectedCategory.transactions.length - 10} more transactions
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          </>
+      {/* Info overlay for metaballs */}
+      <AnimatePresence>
+        {showMetaballs && selectedCategory && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="absolute bottom-4 left-4 bg-white dark:bg-gray-800 rounded-lg p-3 shadow-lg border border-gray-200 dark:border-gray-700"
+          >
+            <div className="flex items-center space-x-2 mb-2">
+              <div 
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: selectedCategory.color }}
+              />
+              <span className="font-medium text-gray-900 dark:text-white text-sm">
+                {selectedCategory.name}
+              </span>
+            </div>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              {selectedCategory.transactions.length} transactions • {formatAmount(selectedCategory.value)} total
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+              Each bubble represents a transaction. Size indicates amount.
+            </p>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
