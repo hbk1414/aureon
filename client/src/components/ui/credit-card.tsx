@@ -61,16 +61,11 @@ const CreditCard: React.FC<CreditCardProps> = ({
           </div>
         </div>
 
-        {/* Visa Logo - Bottom Right */}
-        <div className="absolute bottom-4 right-4">
+        {/* Visa Logo - Bottom Right (repositioned lower) */}
+        <div className="absolute bottom-2 right-4">
           <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
             <span className="text-white font-bold text-sm tracking-wider">VISA</span>
           </div>
-        </div>
-
-        {/* Card Chip - Bottom Left */}
-        <div className="absolute bottom-4 left-4">
-          <div className="w-8 h-6 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-sm"></div>
         </div>
 
         {/* Decorative Elements */}
