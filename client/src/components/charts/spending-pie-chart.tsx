@@ -32,6 +32,7 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
   const [selectedCategory, setSelectedCategory] = useState<SpendingCategory | null>(null);
   const [showMetaballs, setShowMetaballs] = useState(false);
   const [metaballData, setMetaballData] = useState<any[]>([]);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const chartRef = useRef<any>(null);
 
   console.log('SpendingPieChart received data:', data);
@@ -205,23 +206,26 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
 
   const handleChartClick = (params: any) => {
     console.log('Chart clicked:', params);
-    if (params.componentType === 'series' && params.data && !showMetaballs) {
+    if (params.componentType === 'series' && params.data && !showMetaballs && !isTransitioning) {
       const category = params.data.category;
       console.log('Selected category:', category);
       
       if (category && category.transactions) {
-        // Create metaball data from transactions first
+        setIsTransitioning(true);
+        
+        // Create metaball data from transactions
         const metaballs = createMetaballData(category.transactions);
         console.log('Created metaballs:', metaballs);
         
-        // Set all state in sequence
+        // Set state and show metaballs
         setSelectedCategory(category);
         setMetaballData(metaballs);
+        setShowMetaballs(true);
         
-        // Small delay to ensure state is set before showing metaballs
+        // Reset transition state
         setTimeout(() => {
-          setShowMetaballs(true);
-        }, 50);
+          setIsTransitioning(false);
+        }, 1000);
       }
     }
   };
@@ -278,15 +282,26 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
         transition={{ duration: 0.8, ease: "easeInOut" }}
         className="relative"
       >
-        <ReactECharts
-          ref={chartRef}
-          option={chartOptions}
-          style={{ height: '400px', width: '100%' }}
-          onChartReady={onChartReady}
-          notMerge={false}
-          lazyUpdate={false}
-          key={showMetaballs ? `metaballs-${metaballData.length}` : 'pie'}
-        />
+        {showMetaballs && metaballData.length > 0 ? (
+          <ReactECharts
+            ref={chartRef}
+            option={metaballOptions}
+            style={{ height: '400px', width: '100%' }}
+            notMerge={true}
+            lazyUpdate={false}
+            key={`metaballs-${metaballData.length}`}
+          />
+        ) : (
+          <ReactECharts
+            ref={chartRef}
+            option={pieChartOptions}
+            style={{ height: '400px', width: '100%' }}
+            onChartReady={onChartReady}
+            notMerge={false}
+            lazyUpdate={false}
+            key="pie"
+          />
+        )}
       </motion.div>
 
       {/* Controls */}
