@@ -5,8 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import CreditCard from "@/components/ui/credit-card";
 import { 
-  CreditCard, 
+  CreditCard as CreditCardIcon, 
   PiggyBank, 
   ChevronDown, 
   ChevronUp,
@@ -177,7 +178,7 @@ export default function TrueLayerAccounts({ className }: TrueLayerAccountsProps)
         return <PiggyBank className="h-5 w-5" />;
       case 'transaction':
       default:
-        return <CreditCard className="h-5 w-5" />;
+        return <CreditCardIcon className="h-5 w-5" />;
     }
   };
 
@@ -224,36 +225,22 @@ export default function TrueLayerAccounts({ className }: TrueLayerAccountsProps)
 
   return (
     <div className={className}>
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {accounts.map((account) => (
           <motion.div
             key={account.account_id}
             layout
-            className="border rounded-lg p-4 space-y-3"
+            className="space-y-4"
           >
-            {/* Account Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {getAccountIcon(account.account_type)}
-                <div>
-                  <div className="font-medium">
-                    {account.provider.display_name} - {account.account_type}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {formatAccountNumber(account.account_number.number)}
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center gap-1 font-semibold text-lg">
-                  <span className="text-sm">£</span>
-                  {balances[account.account_id]?.toFixed(2) || '0.00'}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {account.currency}
-                </div>
-              </div>
-            </div>
+            {/* Credit Card Display */}
+            <CreditCard
+              bankName="HSBC"
+              accountName={account.display_name}
+              accountNumber={account.account_number.number}
+              balance={balances[account.account_id] || 0}
+              accountType={account.account_type}
+              className="mb-4"
+            />
 
             {/* Account Details */}
             <div className="flex items-center justify-between text-sm text-muted-foreground">
