@@ -28,6 +28,19 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
   const [bubblePosition, setBubblePosition] = useState({ x: 0, y: 0 });
   const chartRef = useRef<any>(null);
 
+  console.log('SpendingPieChart received data:', data);
+
+  // Ensure we have valid data
+  if (!data || data.length === 0) {
+    return (
+      <div className={`relative ${className}`}>
+        <div className="h-96 flex items-center justify-center">
+          <p className="text-gray-500 dark:text-gray-400">No spending data available</p>
+        </div>
+      </div>
+    );
+  }
+
   const chartOptions = {
     tooltip: {
       trigger: 'item',
@@ -99,6 +112,7 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
 
   const onChartReady = (chartInstance: any) => {
     chartInstance.on('click', handleChartClick);
+    console.log('Chart ready, data:', data);
   };
 
   const formatAmount = (amount: number) => {
