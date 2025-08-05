@@ -95,6 +95,9 @@ const CreditCard: React.FC<CreditCardProps> = ({
                 </div>
               </div>
 
+              {/* Glass Shine Overlay */}
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/10 to-white/0 rounded-2xl pointer-events-none"></div>
+
               {/* Decorative Elements */}
               <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-2xl pointer-events-none">
                 {/* Animated circular background glow */}
