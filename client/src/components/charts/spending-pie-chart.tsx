@@ -96,16 +96,15 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
     ]
   };
 
-  const handleChartClick = (params: any, event: any) => {
+  const handleChartClick = (params: any) => {
     if (params.componentType === 'series' && params.data) {
       const category = params.data.category;
       setSelectedCategory(category);
       
-      // Get click position relative to viewport
-      const rect = event.event.target.getBoundingClientRect();
+      // Use a default position for the bubble since event position is unreliable
       setBubblePosition({
-        x: event.event.clientX,
-        y: event.event.clientY
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2
       });
     }
   };
@@ -154,15 +153,11 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
             <motion.div
               initial={{ 
                 opacity: 0, 
-                scale: 0,
-                x: bubblePosition.x - 200,
-                y: bubblePosition.y - 200
+                scale: 0
               }}
               animate={{ 
                 opacity: 1, 
-                scale: 1,
-                x: bubblePosition.x - 200,
-                y: bubblePosition.y - 150
+                scale: 1
               }}
               exit={{ 
                 opacity: 0, 
@@ -175,12 +170,7 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
                 stiffness: 300,
                 duration: 0.4
               }}
-              className="fixed z-50 w-96 max-h-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
-              style={{
-                left: 0,
-                top: 0,
-                transform: `translate(${bubblePosition.x - 200}px, ${bubblePosition.y - 150}px)`
-              }}
+              className="fixed z-50 w-96 max-h-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
             >
               {/* Header */}
               <div 
