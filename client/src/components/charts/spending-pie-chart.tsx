@@ -26,11 +26,13 @@ interface SpendingCategory {
 interface SpendingPieChartProps {
   data: SpendingCategory[];
   className?: string;
+  bubbleColors?: string[]; // Optional custom color palette
 }
 
 const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
   data,
   className = "",
+  bubbleColors,
 }) => {
   const [selectedCategory, setSelectedCategory] =
     useState<SpendingCategory | null>(null);
@@ -123,24 +125,16 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
     const maxAmount = Math.max(...transactions.map((t) => t.amount));
     const minAmount = Math.min(...transactions.map((t) => t.amount));
 
-    // Enhanced color palette with better contrast
-    const colors = [
-      "#FF6B6B",
-      "#4ECDC4",
-      "#45B7D1",
-      "#96CEB4",
-      "#FECA57",
-      "#FF9FF3",
-      "#54A0FF",
-      "#5F27CD",
-      "#FF7675",
-      "#74B9FF",
-      "#00B894",
-      "#FDCB6E",
-      "#A29BFE",
-      "#FD79A8",
-      "#E17055",
-      "#00CEC9",
+    // Professional fintech color palette - clean and trustworthy
+    const colors = bubbleColors || [
+      "#7C3AED", // Violet
+      "#6366F1", // Indigo
+      "#06B6D4", // Cyan
+      "#10B981", // Emerald
+      "#F59E0B", // Amber
+      "#EF4444", // Red
+      "#8B5CF6", // Purple
+      "#3B82F6", // Blue
     ];
 
     // Sort transactions by amount (largest first) for better visual hierarchy
@@ -149,58 +143,63 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
     );
 
     return sortedTransactions.map((transaction, index) => {
+      // Get the label text - be more generous with character limit
+      const name = transaction.merchant || transaction.description;
+      const labelText = name.length > 20 ? name.substring(0, 18) + "..." : name;
+
+      // Calculate label-based size modifier - more aggressive sizing for long text
+      const labelLength = labelText.replace("...", "").length;
+      const labelSizeModifier = Math.max(1.2, labelLength / 6); // More size boost for longer text
+
       // Create concentric circles for better visibility with more spacing
       const itemsPerRing = 5; // Reduced from 6 to give more space for larger bubbles
       const ring = Math.floor(index / itemsPerRing);
       const positionInRing = index % itemsPerRing;
       const angle = (positionInRing / itemsPerRing) * Math.PI * 2;
-      const ringRadius = 20 + ring * 25; // Increased spacing between rings
+      const ringRadius = 20 + ring * 30; // Increased spacing for larger bubbles
 
-      // Much larger size range for dramatic visual impact
+      // Enhanced size calculation with better text accommodation
       const normalizedAmount =
         (transaction.amount - minAmount) / (maxAmount - minAmount || 1);
-      const minSize = 60; // Increased from 40
-      const maxSize = 180; // Increased from 120
-      const radius = minSize + normalizedAmount * (maxSize - minSize);
+      const baseMinSize = 80; // Larger base for better text fit
+      const baseMaxSize = 220; // Larger max size
+      const amountBasedSize =
+        baseMinSize + normalizedAmount * (baseMaxSize - baseMinSize);
+
+      // Apply label size modifier (minimum 1.2x, maximum 2.0x multiplier for long text)
+      const labelMultiplier = Math.min(2.0, labelSizeModifier);
+      const finalRadius = amountBasedSize * labelMultiplier;
 
       return {
         value: [
           centerX + Math.cos(angle) * ringRadius,
           centerY + Math.sin(angle) * ringRadius,
-          radius,
+          finalRadius,
         ],
-        symbolSize: radius,
+        symbolSize: finalRadius,
         itemStyle: {
           color: colors[index % colors.length],
-          shadowBlur: 35,
-          shadowColor: `${colors[index % colors.length]}BB`,
-          opacity: 1,
-          borderColor: "#ffffff",
-          borderWidth: 5,
+          shadowBlur: 15, // Reduced for professional look
+          shadowColor: "rgba(0, 0, 0, 0.15)", // Subtle shadow
+          opacity: 0.95,
+          borderColor: "rgba(255, 255, 255, 0.8)", // Softer border
+          borderWidth: 2, // Thinner, cleaner border
         },
         transaction: transaction,
         label: {
-          show: true, // Show labels on all bubbles
-          formatter: () => {
-            // Show merchant name or description, truncated if too long
-            const name = transaction.merchant || transaction.description;
-            return name.length > 12 ? name.substring(0, 12) + "..." : name;
-          },
+          show: true,
+          formatter: () => labelText,
           position: "inside",
-          fontSize: Math.max(Math.min(radius / 8, 18), 12),
-          fontWeight: "bold",
+          fontSize: Math.max(Math.min(finalRadius / 12, 16), 10), // Better font scaling
+          fontWeight: "600", // Semi-bold for professionalism
           color: "#ffffff",
-          textShadowColor: "rgba(0,0,0,0.9)",
-          textShadowBlur: 4,
-          lineHeight: Math.max(Math.min(radius / 6, 20), 14),
-          rich: {
-            // Allow for multi-line text wrapping
-            name: {
-              fontSize: Math.max(Math.min(radius / 8, 18), 12),
-              fontWeight: "bold",
-              color: "#ffffff",
-            },
-          },
+          textShadowColor: "rgba(0,0,0,0.6)",
+          textShadowBlur: 2, // Subtle text shadow
+          lineHeight: Math.max(Math.min(finalRadius / 10, 18), 12),
+          width: finalRadius * 0.9, // More generous text width
+          overflow: "break",
+          padding: [4, 8], // Internal padding for better text spacing
+          textAlign: "center",
         },
       };
     });
@@ -271,11 +270,11 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
         data: metaballData,
         emphasis: {
           scale: true,
-          scaleSize: 15,
+          scaleSize: 5, // Subtle hover effect
           itemStyle: {
-            shadowBlur: 40,
+            shadowBlur: 20,
             opacity: 1,
-            shadowColor: "rgba(255, 255, 255, 0.8)",
+            shadowColor: "rgba(0, 0, 0, 0.25)",
           },
         },
       },
@@ -348,22 +347,15 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
 
   return (
     <div className={`relative ${className} overflow-hidden rounded-xl`}>
-      {/* Enhanced dark overlay with gradient */}
+      {/* Professional dark overlay */}
       <AnimatePresence>
         {showMetaballs && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.8, ease: "easeInOut" }}
-            className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 z-10"
-            style={{
-              backgroundImage: `
-                radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.2) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.2) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(16, 185, 129, 0.15) 0%, transparent 50%)
-              `,
-            }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-750 to-slate-900 z-10"
           />
         )}
       </AnimatePresence>
