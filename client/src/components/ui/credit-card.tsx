@@ -72,6 +72,8 @@ const CreditCard: React.FC<CreditCardProps> = ({
 
         {/* Decorative Elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-2xl pointer-events-none">
+          {/* Faint circular background glow */}
+          <div className="absolute top-8 left-8 w-40 h-40 rounded-full blur-3xl bg-white/10"></div>
           <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
           <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/5 rounded-full"></div>
         </div>
