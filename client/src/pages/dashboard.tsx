@@ -36,6 +36,7 @@ import {
 import BudgetCard from "@/components/dashboard/budget-card";
 import BudgetCardTrueLayer from "@/components/dashboard/budget-card-truelayer";
 import IncomeOverview from "@/components/dashboard/income-overview";
+import SpendingBreakdown from "@/components/dashboard/spending-breakdown";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -311,6 +312,9 @@ export default function Dashboard() {
                 <SpendingOverview 
                   spending={dashboardData.spending}
                 />
+
+                {/* Spending Breakdown Chart */}
+                <SpendingBreakdown />
                 
                 {/* Income Overview */}
                 {dashboardData.trueLayerData && (
