@@ -270,6 +270,18 @@ export default function Dashboard() {
         </div>
       </motion.section>
 
+      {/* Spending Breakdown Chart - Full Width at Top */}
+      <motion.section 
+        className="bg-white py-6 mb-6 shadow-sm"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+      >
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <SpendingBreakdown />
+        </div>
+      </motion.section>
+
       {/* Main Dashboard Content */}
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div 
@@ -312,9 +324,6 @@ export default function Dashboard() {
                 <SpendingOverview 
                   spending={dashboardData.spending}
                 />
-
-                {/* Spending Breakdown Chart */}
-                <SpendingBreakdown />
                 
                 {/* Income Overview */}
                 {dashboardData.trueLayerData && (
