@@ -124,27 +124,33 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
     animation: true,
     animationDuration: 1200,
     animationEasing: 'elasticOut',
-    animationDelay: (idx: number) => idx * 100,
+    animationDelay: (dataIndex: number) => dataIndex * 100,
     series: [
       {
         type: 'scatter',
         coordinateSystem: 'cartesian2d',
-        data: metaballData.map((item, index) => [
-          item.value[0], // x percentage
-          item.value[1], // y percentage  
-          item.value[2], // size for symbolSize
-          item.value[3], // amount for tooltip
-          item.value[4]  // label for tooltip
-        ]),
+        data: metaballData.map((item) => ({
+          value: [
+            item.value[0], // x percentage
+            item.value[1], // y percentage  
+            item.value[2], // size for symbolSize
+            item.value[3], // amount for tooltip
+            item.value[4]  // label for tooltip
+          ],
+          itemStyle: {
+            color: '#4ECDC4' // Default color, will be overridden by series itemStyle
+          }
+        })),
         symbolSize: (value: number[]) => Math.max(value[2] * 3, 15),
         symbol: 'circle',
         itemStyle: {
           color: (params: any) => {
-            // Use the category color with variations
-            const baseColor = selectedCategory?.color || '#4ECDC4';
-            const hue = parseInt(baseColor.slice(1), 16);
-            const variation = params.dataIndex * 20;
-            return `hsl(${(hue + variation) % 360}, 70%, 60%)`;
+            const colors = [
+              '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
+              '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD',
+              '#FF7675', '#74B9FF', '#00B894', '#FDCB6E'
+            ];
+            return colors[params.dataIndex % colors.length];
           },
           shadowBlur: 15,
           shadowColor: 'rgba(255, 255, 255, 0.3)',
