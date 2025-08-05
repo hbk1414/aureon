@@ -129,8 +129,8 @@ const CreditCard: React.FC<CreditCardProps> = ({
 
               {/* Expiry Date */}
               <div className="mb-4">
-                <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Valid Thru</p>
-                <p className="text-lg font-mono font-bold">{mockExpiry}</p>
+                <p className="text-xs text-gray-300 uppercase tracking-wide mb-1">Valid Thru</p>
+                <p className="text-xl font-mono font-bold text-white">{mockExpiry}</p>
               </div>
 
               {/* Bank Info */}
