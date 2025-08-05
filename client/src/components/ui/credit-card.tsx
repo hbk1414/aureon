@@ -31,16 +31,16 @@ const CreditCard: React.FC<CreditCardProps> = ({
 
   return (
     <div className={`relative w-full max-w-sm mx-auto ${className}`}>
-      <div className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-purple-700 rounded-2xl p-6 text-white shadow-2xl transform transition-all duration-300 hover:scale-105 hover:shadow-3xl">
+      <div className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-purple-700 rounded-2xl p-6 text-white shadow-2xl transform transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_12px_30px_rgba(0,0,0,0.15)]">
         {/* Wireless Icon - Top Right */}
         <div className="absolute top-4 right-4">
           <Wifi className="w-6 h-6 text-white/80" />
         </div>
 
-        {/* Visa Logo - Top Right (below wireless icon) */}
+        {/* Visa Logo - Top Right Glass Badge */}
         <div className="absolute top-12 right-4">
-          <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
-            <span className="text-white font-bold text-sm tracking-wider">VISA</span>
+          <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1 shadow-inner border border-white/30 transform transition-all duration-200 hover:bg-white/25">
+            <span className="text-white font-bold text-sm tracking-wider drop-shadow-sm">VISA</span>
           </div>
         </div>
 
