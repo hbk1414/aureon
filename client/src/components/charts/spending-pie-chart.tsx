@@ -107,9 +107,10 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
     tooltip: {
       trigger: 'item',
       formatter: (params: any) => {
-        if (params.value && params.value.length >= 5) {
-          const amount = params.value[3];
-          const label = params.value[4];
+        const dataIndex = params.dataIndex;
+        if (metaballData[dataIndex]) {
+          const amount = metaballData[dataIndex].value[3];
+          const label = metaballData[dataIndex].value[4];
           return `${label}<br/>£${amount.toFixed(2)}`;
         }
         return 'Transaction';
@@ -124,46 +125,35 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
     animation: true,
     animationDuration: 1200,
     animationEasing: 'elasticOut',
-    animationDelay: (dataIndex: number) => dataIndex * 100,
-    series: [
-      {
+    series: metaballData.map((item, index) => {
+      const colors = [
+        '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
+        '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD',
+        '#FF7675', '#74B9FF', '#00B894', '#FDCB6E'
+      ];
+      return {
         type: 'scatter',
         coordinateSystem: 'cartesian2d',
-        data: metaballData.map((item, index) => {
-          const colors = [
-            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
-            '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD',
-            '#FF7675', '#74B9FF', '#00B894', '#FDCB6E'
-          ];
-          return {
-            value: [
-              item.value[0], // x percentage
-              item.value[1], // y percentage  
-              item.value[2], // size for symbolSize
-              item.value[3], // amount for tooltip
-              item.value[4]  // label for tooltip
-            ],
-            itemStyle: {
-              color: colors[index % colors.length],
-              shadowBlur: 15,
-              shadowColor: 'rgba(255, 255, 255, 0.3)',
-              opacity: 0.9
-            }
-          };
-        }),
-        symbolSize: (value: number[]) => Math.max(value[2] * 3, 15),
+        data: [[item.value[0], item.value[1]]],
+        symbolSize: Math.max(item.value[2] * 3, 15),
         symbol: 'circle',
+        itemStyle: {
+          color: colors[index % colors.length],
+          shadowBlur: 15,
+          shadowColor: 'rgba(255, 255, 255, 0.3)',
+          opacity: 0.9
+        },
         emphasis: {
           scale: true,
-          scaleSize: 20,
           itemStyle: {
             shadowBlur: 25,
             opacity: 1,
             shadowColor: 'rgba(255, 255, 255, 0.5)'
           }
-        }
-      }
-    ],
+        },
+        animationDelay: index * 100
+      };
+    }),
     xAxis: {
       type: 'value',
       show: false,
@@ -292,6 +282,7 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
           onChartReady={onChartReady}
           notMerge={true}
           lazyUpdate={true}
+          key={showMetaballs ? 'metaballs' : 'pie'}
         />
       </motion.div>
 
