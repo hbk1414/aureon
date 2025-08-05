@@ -33,12 +33,16 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
   const [showMetaballs, setShowMetaballs] = useState(false);
   const [metaballData, setMetaballData] = useState<any[]>([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [frozenData, setFrozenData] = useState<SpendingCategory[]>([]);
   const chartRef = useRef<any>(null);
 
   console.log('SpendingPieChart received data:', data);
+  
+  // Freeze data when showing metaballs to prevent re-renders
+  const currentData = showMetaballs ? frozenData : data;
 
   // Ensure we have valid data
-  if (!data || data.length === 0) {
+  if (!currentData || currentData.length === 0) {
     return (
       <div className={`relative ${className}`}>
         <div className="h-96 flex items-center justify-center">
@@ -91,7 +95,7 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
             shadowColor: 'rgba(0, 0, 0, 0.3)'
           }
         },
-        data: data.map(item => ({
+        data: currentData.map(item => ({
           value: item.value,
           name: item.name,
           itemStyle: {
@@ -213,6 +217,9 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
       if (category && category.transactions) {
         setIsTransitioning(true);
         
+        // Freeze current data to prevent re-renders
+        setFrozenData([...data]);
+        
         // Create metaball data from transactions
         const metaballs = createMetaballData(category.transactions);
         console.log('Created metaballs:', metaballs);
@@ -236,6 +243,7 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
     setTimeout(() => {
       setSelectedCategory(null);
       setMetaballData([]);
+      setFrozenData([]);
     }, 300);
   };
 
