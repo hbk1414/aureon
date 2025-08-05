@@ -82,12 +82,14 @@ const CreditCard: React.FC<CreditCardProps> = ({
                 <div className="text-right">
                   <p className="text-xs text-white/60 uppercase tracking-wide mb-1">Balance</p>
                   <p className="text-lg font-bold">
-                    £<CountUp 
+                    <CountUp 
+                      start={0}
                       end={balance} 
                       decimals={2} 
                       duration={2.5}
                       separator=","
-                      preserveValue
+                      prefix="£"
+                      preserveValue={true}
                     />
                   </p>
                 </div>
@@ -118,23 +120,17 @@ const CreditCard: React.FC<CreditCardProps> = ({
               <div className="absolute top-6 left-0 right-0 h-12 bg-black"></div>
               
               {/* CVV Section */}
-              <div className="mt-20 mb-6">
-                <div className="bg-white text-black p-2 rounded text-right text-sm font-mono">
-                  CVV: {mockCVV}
+              <div className="mt-20 mb-8">
+                <div className="bg-white text-black p-3 rounded text-right font-mono">
+                  <span className="text-xs text-gray-600">CVV</span><br/>
+                  <span className="text-lg font-bold">{mockCVV}</span>
                 </div>
               </div>
 
-              {/* Card Details */}
-              <div className="space-y-4">
-                <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Valid Thru</p>
-                  <p className="text-sm font-mono">{mockExpiry}</p>
-                </div>
-                
-                <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Account Number</p>
-                  <p className="text-sm font-mono">{formatAccountNumber(accountNumber)}</p>
-                </div>
+              {/* Expiry Date */}
+              <div className="mb-6">
+                <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Valid Thru</p>
+                <p className="text-xl font-mono font-bold">{mockExpiry}</p>
               </div>
 
               {/* Bank Info */}
