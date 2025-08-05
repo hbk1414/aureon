@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactECharts from "echarts-for-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, CreditCard, TrendingUp, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Play, Circle } from "lucide-react";
 import { graphic } from "echarts/core";
 import MetaballPath from "./metaball-path";
 
@@ -26,7 +26,7 @@ interface SpendingCategory {
 interface SpendingPieChartProps {
   data: SpendingCategory[];
   className?: string;
-  bubbleColors?: string[]; // Optional custom color palette
+  bubbleColors?: string[];
 }
 
 const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
@@ -40,11 +40,7 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
   const [metaballData, setMetaballData] = useState<any[]>([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [frozenData, setFrozenData] = useState<SpendingCategory[]>([]);
-  const [hoveredTransaction, setHoveredTransaction] =
-    useState<Transaction | null>(null);
   const chartRef = useRef<any>(null);
-
-  console.log("SpendingPieChart received data:", data);
 
   // Freeze data when showing metaballs to prevent re-renders
   const currentData = showMetaballs ? frozenData : data;
@@ -54,7 +50,7 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
     return (
       <div className={`relative ${className}`}>
         <div className="h-96 flex items-center justify-center">
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-white/60 font-light text-sm">
             No spending data available
           </p>
         </div>
@@ -62,16 +58,57 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
     );
   }
 
+  // Vision Pro futuristic color palette - vibrant and high-contrast
+  const visionProColors = [
+    "#007AFF", // Apple blue
+    "#5856D6", // Purple
+    "#AF52DE", // Violet
+    "#FF2D92", // Pink
+    "#FF3B30", // Red
+    "#FF9500", // Orange
+    "#FFCC00", // Yellow
+    "#30D158", // Green
+    "#64D2FF", // Light blue
+    "#BF5AF2", // Magenta
+  ];
+
   const pieChartOptions = {
     tooltip: {
       trigger: "item",
-      formatter: "{a} <br/>{b}: £{c} ({d}%)",
-      backgroundColor: "rgba(0, 0, 0, 0.8)",
-      borderColor: "transparent",
-      textStyle: {
-        color: "#fff",
-        fontSize: 12,
+      formatter: (params: any) => {
+        return `
+          <div style="
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 12px 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          ">
+            <div style="
+              font-size: 14px; 
+              font-weight: 600; 
+              color: #1d1d1f; 
+              margin-bottom: 4px;
+            ">${params.name}</div>
+            <div style="
+              font-size: 16px; 
+              font-weight: 700; 
+              color: ${params.color};
+              margin-bottom: 2px;
+            ">£${params.value}</div>
+            <div style="
+              font-size: 12px; 
+              color: #86868b; 
+              font-weight: 500;
+            ">${params.percent}% of total</div>
+          </div>
+        `;
       },
+      borderWidth: 0,
+      backgroundColor: "transparent",
+      extraCssText: "box-shadow: none;",
     },
     legend: {
       show: false,
@@ -80,36 +117,90 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
       {
         name: "Spending",
         type: "pie",
-        radius: ["40%", "70%"],
+        radius: ["50%", "85%"], // Larger donut for more impact
         center: ["50%", "50%"],
         avoidLabelOverlap: false,
         itemStyle: {
           borderRadius: 8,
-          borderColor: "#fff",
-          borderWidth: 2,
+          borderColor: "rgba(255, 255, 255, 0.8)",
+          borderWidth: 3,
+          shadowBlur: 15,
+          shadowColor: "rgba(0, 0, 0, 0.1)",
         },
         label: {
           show: true,
           position: "outside",
-          formatter: "{b}\n£{c}",
-          fontSize: 11,
-          color: "#374151",
-          fontWeight: "500",
+          formatter: (params: any) => {
+            return `{name|${params.name}}\n{value|£${params.value}}`;
+          },
+          rich: {
+            name: {
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#1d1d1f",
+              lineHeight: 18,
+            },
+            value: {
+              fontSize: 11,
+              fontWeight: 500,
+              color: "#86868b",
+              lineHeight: 16,
+            },
+          },
+          distance: 25,
+        },
+        labelLine: {
+          show: true,
+          length: 15,
+          length2: 10,
+          lineStyle: {
+            color: "#d2d2d7",
+            width: 2,
+          },
         },
         emphasis: {
           scale: true,
-          scaleSize: 10,
+          scaleSize: 15,
           itemStyle: {
-            shadowBlur: 20,
-            shadowOffsetX: 0,
-            shadowColor: "rgba(0, 0, 0, 0.3)",
+            shadowBlur: 25,
+            shadowColor: "rgba(0, 0, 0, 0.2)",
+            borderWidth: 4,
+            borderColor: "rgba(255, 255, 255, 0.9)",
+          },
+          label: {
+            fontSize: 14,
+            fontWeight: 700,
           },
         },
-        data: currentData.map((item) => ({
+        animationType: "scale",
+        animationEasing: "elasticOut",
+        animationDelay: (idx: number) => idx * 100,
+        data: currentData.map((item, index) => ({
           value: item.value,
           name: item.name,
           itemStyle: {
-            color: item.color,
+            color: {
+              type: "linear",
+              x: 0,
+              y: 0,
+              x2: 1,
+              y2: 1,
+              colorStops: [
+                {
+                  offset: 0,
+                  color: visionProColors[index % visionProColors.length],
+                },
+                {
+                  offset: 1,
+                  color: `${visionProColors[index % visionProColors.length]}CC`,
+                },
+              ],
+            },
+            borderRadius: 8,
+            borderColor: "rgba(255, 255, 255, 0.8)",
+            borderWidth: 3,
+            shadowBlur: 15,
+            shadowColor: `${visionProColors[index % visionProColors.length]}40`,
           },
           category: item,
         })),
@@ -125,50 +216,35 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
     const maxAmount = Math.max(...transactions.map((t) => t.amount));
     const minAmount = Math.min(...transactions.map((t) => t.amount));
 
-    // Professional fintech color palette - clean and trustworthy
-    const colors = bubbleColors || [
-      "#7C3AED", // Violet
-      "#6366F1", // Indigo
-      "#06B6D4", // Cyan
-      "#10B981", // Emerald
-      "#F59E0B", // Amber
-      "#EF4444", // Red
-      "#8B5CF6", // Purple
-      "#3B82F6", // Blue
-    ];
-
-    // Sort transactions by amount (largest first) for better visual hierarchy
     const sortedTransactions = [...transactions].sort(
       (a, b) => b.amount - a.amount,
     );
 
     return sortedTransactions.map((transaction, index) => {
-      // Get the label text - be more generous with character limit
       const name = transaction.merchant || transaction.description;
-      const labelText = name.length > 20 ? name.substring(0, 18) + "..." : name;
+      const labelText = name.length > 18 ? name.substring(0, 16) + "..." : name;
 
-      // Calculate label-based size modifier - more aggressive sizing for long text
       const labelLength = labelText.replace("...", "").length;
-      const labelSizeModifier = Math.max(1.2, labelLength / 6); // More size boost for longer text
+      const labelSizeModifier = Math.max(1.2, labelLength / 6);
 
-      // Create concentric circles for better visibility with more spacing
-      const itemsPerRing = 5; // Reduced from 6 to give more space for larger bubbles
+      const itemsPerRing = 4;
       const ring = Math.floor(index / itemsPerRing);
       const positionInRing = index % itemsPerRing;
       const angle = (positionInRing / itemsPerRing) * Math.PI * 2;
-      const ringRadius = 20 + ring * 30; // Increased spacing for larger bubbles
+      const ringRadius = 20 + ring * 28;
 
-      // Enhanced size calculation with better text accommodation
       const normalizedAmount =
         (transaction.amount - minAmount) / (maxAmount - minAmount || 1);
-      const baseMinSize = 80; // Larger base for better text fit
-      const baseMaxSize = 220; // Larger max size
+      const baseMinSize = 80;
+      const baseMaxSize = 160;
       const amountBasedSize =
         baseMinSize + normalizedAmount * (baseMaxSize - baseMinSize);
 
-      // Apply label size modifier (minimum 1.2x, maximum 2.0x multiplier for long text)
-      const labelMultiplier = Math.min(2.0, labelSizeModifier);
+      const labelMultiplier = Math.min(1.8, labelSizeModifier);
       const finalRadius = amountBasedSize * labelMultiplier;
+
+      // Assign vibrant color to each bubble
+      const bubbleColor = visionProColors[index % visionProColors.length];
 
       return {
         value: [
@@ -178,35 +254,23 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
         ],
         symbolSize: finalRadius,
         itemStyle: {
-          color: colors[index % colors.length],
-          shadowBlur: 15, // Reduced for professional look
-          shadowColor: "rgba(0, 0, 0, 0.15)", // Subtle shadow
+          color: bubbleColor,
+          borderColor: "rgba(255, 255, 255, 0.4)",
+          borderWidth: 3,
+          shadowBlur: 20,
+          shadowColor: `${bubbleColor}60`,
           opacity: 0.95,
-          borderColor: "rgba(255, 255, 255, 0.8)", // Softer border
-          borderWidth: 2, // Thinner, cleaner border
         },
         transaction: transaction,
-        label: {
-          show: true,
-          formatter: () => labelText,
-          position: "inside",
-          fontSize: Math.max(Math.min(finalRadius / 12, 16), 10), // Better font scaling
-          fontWeight: "600", // Semi-bold for professionalism
-          color: "#ffffff",
-          textShadowColor: "rgba(0,0,0,0.6)",
-          textShadowBlur: 2, // Subtle text shadow
-          lineHeight: Math.max(Math.min(finalRadius / 10, 18), 12),
-          width: finalRadius * 0.9, // More generous text width
-          overflow: "break",
-          padding: [4, 8], // Internal padding for better text spacing
-          textAlign: "center",
-        },
+        labelText: labelText,
+        amount: transaction.amount,
+        bubbleColor: bubbleColor,
       };
     });
   };
 
   const metaballOptions = {
-    backgroundColor: "rgba(30, 41, 59, 0.95)", // Dark semi-transparent background
+    backgroundColor: "transparent",
     tooltip: {
       trigger: "item",
       formatter: (params: any) => {
@@ -218,14 +282,14 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
             month: "short",
           });
           return `
-            <div style="font-size: 13px; line-height: 1.4;">
-              <div style="font-weight: bold; margin-bottom: 4px; color: #fff;">
+            <div style="font-size: 11px; line-height: 1.5; font-weight: 300;">
+              <div style="color: rgba(255, 255, 255, 0.9); margin-bottom: 3px;">
                 ${transaction.merchant || transaction.description}
               </div>
-              <div style="color: #4ECDC4; font-size: 16px; font-weight: bold; margin-bottom: 4px;">
+              <div style="color: rgba(255, 255, 255, 0.7); font-size: 13px; margin-bottom: 2px;">
                 £${transaction.amount.toFixed(2)}
               </div>
-              <div style="color: #ccc; font-size: 11px;">
+              <div style="color: rgba(255, 255, 255, 0.5); font-size: 10px;">
                 ${date}
               </div>
             </div>
@@ -233,18 +297,19 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
         }
         return "Transaction";
       },
-      backgroundColor: "rgba(15, 23, 42, 0.95)",
+      backgroundColor: "rgba(255, 255, 255, 0.08)",
       borderColor: "rgba(255, 255, 255, 0.1)",
       borderWidth: 1,
       textStyle: {
-        color: "#fff",
+        color: "rgba(255, 255, 255, 0.8)",
+        fontWeight: 300,
       },
       extraCssText:
-        "backdrop-filter: blur(10px); border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);",
+        "backdrop-filter: blur(8px); border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);",
     },
     animation: true,
-    animationDuration: 1200,
-    animationEasing: "elasticOut",
+    animationDuration: 800,
+    animationEasing: "cubicOut",
     grid: {
       left: 0,
       right: 0,
@@ -270,11 +335,11 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
         data: metaballData,
         emphasis: {
           scale: true,
-          scaleSize: 5, // Subtle hover effect
+          scaleSize: 8,
           itemStyle: {
-            shadowBlur: 20,
+            shadowBlur: 15,
+            shadowColor: "rgba(255, 255, 255, 0.2)",
             opacity: 1,
-            shadowColor: "rgba(0, 0, 0, 0.25)",
           },
         },
       },
@@ -284,7 +349,6 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
   const chartOptions = showMetaballs ? metaballOptions : pieChartOptions;
 
   const handleChartClick = (params: any) => {
-    console.log("Chart clicked:", params);
     if (
       params.componentType === "series" &&
       params.data &&
@@ -292,14 +356,12 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
       !isTransitioning
     ) {
       const category = params.data.category;
-      console.log("Selected category:", category);
 
       if (category && category.transactions) {
         setIsTransitioning(true);
         setFrozenData([...data]);
 
         const metaballs = createMetaballData(category.transactions);
-        console.log("Created metaballs:", metaballs);
 
         setSelectedCategory(category);
         setMetaballData(metaballs);
@@ -313,114 +375,232 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
   };
 
   const hideMetaballs = () => {
+    setIsTransitioning(true);
     setShowMetaballs(false);
     setTimeout(() => {
       setSelectedCategory(null);
       setMetaballData([]);
       setFrozenData([]);
-      setHoveredTransaction(null);
-    }, 300);
+      setIsTransitioning(false);
+    }, 400);
   };
 
   const onChartReady = (chartInstance: any) => {
     chartInstance.on("click", handleChartClick);
-    console.log("Chart ready, data:", data);
   };
 
   const formatAmount = (amount: number) => {
     return `£${Math.abs(amount).toFixed(2)}`;
   };
 
-  const getTransactionStats = (transactions: Transaction[]) => {
-    if (!transactions || transactions.length === 0)
-      return { avg: 0, highest: 0, mostRecent: null };
-
-    const amounts = transactions.map((t) => t.amount);
-    const avg = amounts.reduce((a, b) => a + b, 0) / amounts.length;
-    const highest = Math.max(...amounts);
-    const mostRecent = transactions.reduce((a, b) =>
-      new Date(a.date) > new Date(b.date) ? a : b,
-    );
-
-    return { avg, highest, mostRecent };
-  };
-
   return (
-    <div className={`relative ${className} overflow-hidden rounded-xl`}>
-      {/* Professional dark overlay */}
+    <div className={`relative ${className} overflow-hidden`}>
+      {/* Clean light background with subtle gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-100" />
+
+      {/* Glassmorphism overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-white/20 to-white/10 backdrop-blur-sm" />
+
+      {/* Light metaball overlay */}
       <AnimatePresence>
         {showMetaballs && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-            className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-750 to-slate-900 z-10"
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="absolute inset-0 bg-gradient-to-br from-gray-100 via-gray-50 to-white z-10 rounded-3xl"
           />
         )}
       </AnimatePresence>
 
-      {/* Chart container with enhanced transition effects */}
+      {/* Light floating particles for depth */}
+      <AnimatePresence>
+        {showMetaballs && (
+          <div className="absolute inset-0 z-5 pointer-events-none">
+            {[...Array(12)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 bg-gray-300/40 rounded-full"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+                animate={{
+                  y: [0, -20, 0],
+                  opacity: [0.2, 0.6, 0.2],
+                  scale: [1, 1.3, 1],
+                }}
+                transition={{
+                  duration: 3 + Math.random() * 2,
+                  repeat: Infinity,
+                  delay: Math.random() * 2,
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Chart container with futuristic transitions */}
       <motion.div
         animate={{
-          scale: showMetaballs ? 1.05 : 1,
-          rotateX: showMetaballs ? 2 : 0,
+          scale: showMetaballs ? 0.95 : 1,
+          opacity: showMetaballs ? 0.3 : 1,
+          filter: "blur(0px)",
         }}
-        transition={{ duration: 1, ease: "easeInOut" }}
+        transition={{ duration: 0.8, ease: "easeInOut" }}
         className="relative z-20"
       >
-        <ReactECharts
-          ref={chartRef}
-          option={chartOptions}
-          style={{ height: "500px", width: "100%" }}
-          onChartReady={onChartReady}
-          notMerge={true}
-          lazyUpdate={false}
-          key={showMetaballs ? `metaballs-${metaballData.length}` : "pie"}
-        />
+        {showMetaballs ? (
+          // Custom vibrant bubble visualization - completely bypassing ECharts
+          <div className="h-[500px] relative overflow-hidden">
+            {/* Generate bubbles directly in JSX */}
+            <AnimatePresence>
+              {selectedCategory?.transactions?.map((transaction, index) => {
+                const name = transaction.merchant || transaction.description;
+                const labelText =
+                  name.length > 18 ? name.substring(0, 16) + "..." : name;
+
+                // Position calculation
+                const itemsPerRing = 4;
+                const ring = Math.floor(index / itemsPerRing);
+                const positionInRing = index % itemsPerRing;
+                const angle = (positionInRing / itemsPerRing) * Math.PI * 2;
+                const ringRadius = 15 + ring * 25; // percentage from center
+
+                const centerX = 50; // center of container
+                const centerY = 50;
+                const x = centerX + Math.cos(angle) * ringRadius;
+                const y = centerY + Math.sin(angle) * ringRadius;
+
+                // Size calculation
+                const maxAmount = Math.max(
+                  ...selectedCategory.transactions.map((t) => t.amount),
+                );
+                const minAmount = Math.min(
+                  ...selectedCategory.transactions.map((t) => t.amount),
+                );
+                const normalizedAmount =
+                  (transaction.amount - minAmount) /
+                  (maxAmount - minAmount || 1);
+                const size = 80 + normalizedAmount * 80; // 80px to 160px
+
+                // Color from palette
+                const bubbleColor =
+                  visionProColors[index % visionProColors.length];
+
+                return (
+                  <motion.div
+                    key={`bubble-${transaction.id}-${index}`}
+                    initial={{ scale: 0, opacity: 0, y: 30 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0, opacity: 0, y: -30 }}
+                    transition={{
+                      duration: 0.8,
+                      delay: index * 0.15,
+                      type: "spring",
+                      stiffness: 120,
+                    }}
+                    whileHover={{
+                      scale: 1.15,
+                      boxShadow: `0 25px 50px ${bubbleColor}40`,
+                      filter: "brightness(1.2)",
+                    }}
+                    className="absolute rounded-full flex items-center justify-center cursor-pointer group transition-all duration-300"
+                    style={{
+                      left: `${x}%`,
+                      top: `${y}%`,
+                      width: `${size}px`,
+                      height: `${size}px`,
+                      transform: "translate(-50%, -50%)",
+                      background: `linear-gradient(135deg, ${bubbleColor} 0%, ${bubbleColor}CC 100%)`,
+                      border: `3px solid rgba(255, 255, 255, 0.4)`,
+                      boxShadow: `0 15px 35px ${bubbleColor}30, 0 5px 15px rgba(0, 0, 0, 0.12)`,
+                    }}
+                  >
+                    <div className="text-center px-3">
+                      <div className="text-white text-sm font-bold leading-tight mb-1 drop-shadow-lg">
+                        {labelText}
+                      </div>
+                      <div className="text-white/90 text-xs font-semibold drop-shadow-md">
+                        £{transaction.amount.toFixed(0)}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        ) : (
+          <ReactECharts
+            ref={chartRef}
+            option={chartOptions}
+            style={{ height: "500px", width: "100%" }}
+            onChartReady={onChartReady}
+            notMerge={true}
+            lazyUpdate={false}
+          />
+        )}
       </motion.div>
 
-      {/* Enhanced Controls */}
+      {/* Vision Pro center control button - redesigned for light theme */}
+      {!showMetaballs && (
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30"
+        >
+          <div className="w-20 h-20 bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer group">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+              <Circle className="w-5 h-5 text-white" fill="currentColor" />
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Apple-style back button */}
       <AnimatePresence>
         {showMetaballs && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: -20 }}
+            initial={{ opacity: 0, scale: 0.8, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: -20 }}
-            transition={{ delay: 0.6, duration: 0.4 }}
+            exit={{ opacity: 0, scale: 0.8, y: -10 }}
+            transition={{ delay: 0.4, duration: 0.4, type: "spring" }}
             className="absolute top-6 right-6 z-30"
           >
             <button
               onClick={hideMetaballs}
-              className="bg-white/10 backdrop-blur-xl hover:bg-white/20 border border-white/20 rounded-xl px-6 py-3 text-sm font-medium text-white shadow-2xl transition-all duration-300 hover:scale-105 flex items-center gap-2"
+              className="bg-white/95 backdrop-blur-md hover:bg-white border border-gray-200/60 rounded-2xl px-5 py-3 text-sm font-semibold text-gray-700 shadow-lg transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
-              <ArrowLeft size={16} />
-              Back to Chart
+              <ArrowLeft size={14} />
+              Back
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Compact Category header */}
+      {/* Compact category header */}
       <AnimatePresence>
         {showMetaballs && selectedCategory && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -15 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ delay: 0.8, duration: 0.4 }}
-            className="absolute top-6 left-6 bg-white/10 backdrop-blur-xl rounded-xl p-4 shadow-xl border border-white/20 z-30"
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ delay: 0.6, duration: 0.4 }}
+            className="absolute top-6 left-6 bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-gray-200/60 z-30"
           >
             <div className="flex items-center space-x-3">
               <div
-                className="w-4 h-4 rounded-full shadow-lg"
+                className="w-4 h-4 rounded-full shadow-md"
                 style={{ backgroundColor: selectedCategory.color }}
               />
               <div>
-                <span className="font-bold text-white text-lg">
+                <span className="font-semibold text-gray-800 text-base">
                   {selectedCategory.name}
                 </span>
-                <div className="text-sm text-white/80">
+                <div className="text-sm text-gray-600 font-medium">
                   {selectedCategory.transactions?.length || 0} transactions •{" "}
                   {formatAmount(selectedCategory.value)}
                 </div>
@@ -430,50 +610,17 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Enhanced instruction overlay */}
+      {/* Modern instruction overlay */}
       {!showMetaballs && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="absolute top-6 right-6 text-sm text-gray-500 dark:text-gray-400 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl px-4 py-2 z-20 shadow-lg"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.2 }}
+          className="absolute top-6 right-6 text-sm text-gray-600 font-medium bg-white/60 backdrop-blur-md rounded-2xl px-4 py-2 z-20 border border-gray-200/40 shadow-lg"
         >
-          <span className="font-medium">💡 Click segments for details</span>
+          ✨ Tap segments for details
         </motion.div>
       )}
-
-      {/* Animated particles background for metaballs */}
-      <AnimatePresence>
-        {showMetaballs && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ delay: 1, duration: 2 }}
-            className="absolute inset-0 z-0 pointer-events-none"
-          >
-            {[...Array(20)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-1 h-1 bg-white/20 rounded-full"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                }}
-                animate={{
-                  y: [0, -20, 0],
-                  opacity: [0.2, 0.8, 0.2],
-                }}
-                transition={{
-                  duration: 3 + Math.random() * 2,
-                  repeat: Infinity,
-                  delay: Math.random() * 2,
-                }}
-              />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

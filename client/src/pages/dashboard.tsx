@@ -270,12 +270,24 @@ export default function Dashboard() {
         </div>
       </motion.section>
 
-      {/* Spending Breakdown Chart - Full Width at Top */}
+      {/* Financial Overview - Full Width */}
       <motion.section 
         className="bg-white py-6 mb-6 shadow-sm"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.3 }}
+      >
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <BudgetCardTrueLayer />
+        </div>
+      </motion.section>
+
+      {/* Spending Breakdown Chart - Full Width */}
+      <motion.section 
+        className="bg-white py-6 mb-6 shadow-sm"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
       >
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <SpendingBreakdown />
@@ -296,8 +308,7 @@ export default function Dashboard() {
             className="col-span-12 lg:col-span-9 space-y-6"
             variants={sectionVariants}
           >
-            {/* Budget Card - real TrueLayer data */}
-            <BudgetCardTrueLayer />
+
             {/* Financial Management Section */}
             <motion.section 
               className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 py-6 px-6 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
