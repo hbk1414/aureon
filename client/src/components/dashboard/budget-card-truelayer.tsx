@@ -3,6 +3,7 @@ import BudgetSummaryCard from "@/components/dashboard/budget-summary-card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Sector } from "recharts";
 import { ArrowUpRight, ArrowDownLeft, AlertCircle, TrendingUp, PiggyBank, ChevronDown, ChevronRight } from "lucide-react";
 import { useTrueLayerData } from "@/hooks/use-truelayer-data";
+import SpendingBreakdown from "@/components/dashboard/spending-breakdown";
 
 const COLORS = ["#6366f1", "#06b6d4", "#f59e42", "#f43f5e", "#10b981", "#a78bfa", "#fbbf24", "#f472b6", "#818cf8", "#f87171"];
 
@@ -226,7 +227,10 @@ function BudgetCardTrueLayer() {
           </div>
         </div>
 
-
+        {/* Interactive Spending Chart */}
+        <div className="mb-8">
+          <SpendingBreakdown />
+        </div>
 
         {/* Category Breakdown with Expandable Transaction Details */}
         <div>
