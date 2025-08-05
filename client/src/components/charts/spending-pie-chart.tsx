@@ -144,7 +144,10 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
       }),
       symbolSize: (data: any[]) => data[2],
       itemStyle: {
-        color: (params: any) => params.data[3],
+        color: (params: any) => {
+          console.log('Color params:', params);
+          return params.data[3] || '#4ECDC4';
+        },
         shadowBlur: 15,
         shadowColor: 'rgba(255, 255, 255, 0.3)',
         opacity: 0.9
@@ -207,21 +210,29 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
       console.log('Selected category:', category);
       
       if (category && category.transactions) {
-        setSelectedCategory(category);
-        
-        // Create metaball data from transactions
+        // Create metaball data from transactions first
         const metaballs = createMetaballData(category.transactions);
         console.log('Created metaballs:', metaballs);
+        
+        // Set all state in sequence
+        setSelectedCategory(category);
         setMetaballData(metaballs);
-        setShowMetaballs(true);
+        
+        // Small delay to ensure state is set before showing metaballs
+        setTimeout(() => {
+          setShowMetaballs(true);
+        }, 50);
       }
     }
   };
 
   const hideMetaballs = () => {
     setShowMetaballs(false);
-    setSelectedCategory(null);
-    setMetaballData([]);
+    // Small delay before clearing data to allow smooth transition
+    setTimeout(() => {
+      setSelectedCategory(null);
+      setMetaballData([]);
+    }, 300);
   };
 
   const onChartReady = (chartInstance: any) => {
@@ -272,9 +283,9 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
           option={chartOptions}
           style={{ height: '400px', width: '100%' }}
           onChartReady={onChartReady}
-          notMerge={true}
-          lazyUpdate={true}
-          key={showMetaballs ? 'metaballs' : 'pie'}
+          notMerge={false}
+          lazyUpdate={false}
+          key={showMetaballs ? `metaballs-${metaballData.length}` : 'pie'}
         />
       </motion.div>
 
