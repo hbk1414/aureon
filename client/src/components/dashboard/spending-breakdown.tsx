@@ -7,6 +7,36 @@ interface SpendingBreakdownProps {
   className?: string;
 }
 
+// Helper function to categorize transactions (matching the backend logic)
+const categorizeTransaction = (transaction: any): string => {
+  const description = transaction.description.toLowerCase();
+  const merchantName = transaction.merchant_name?.toLowerCase() || '';
+
+  if (description.includes('tesco') || description.includes('sainsbury') || description.includes('asda') || merchantName.includes('tesco') || merchantName.includes('sainsbury')) {
+    return 'Groceries';
+  }
+  if (description.includes('shell') || description.includes('petrol') || description.includes('fuel') || merchantName.includes('shell')) {
+    return 'Transport';
+  }
+  if (description.includes('netflix') || description.includes('spotify') || description.includes('disney') || merchantName.includes('netflix') || merchantName.includes('spotify')) {
+    return 'Subscriptions';
+  }
+  if (description.includes('coffee') || description.includes('starbucks') || description.includes('costa') || merchantName.includes('starbucks') || merchantName.includes('costa')) {
+    return 'Dining';
+  }
+  if (description.includes('amazon') || merchantName.includes('amazon')) {
+    return 'Shopping';
+  }
+  if (description.includes('rent') || description.includes('council') || description.includes('gas') || description.includes('electric') || description.includes('internet')) {
+    return 'Bills';
+  }
+  if (description.includes('bus') || description.includes('tfl') || merchantName.includes('tfl')) {
+    return 'Transport';
+  }
+  
+  return 'Other';
+};
+
 const SpendingBreakdown: React.FC<SpendingBreakdownProps> = ({ className = "" }) => {
   const { data, loading } = useTrueLayerData();
 
@@ -99,35 +129,7 @@ const SpendingBreakdown: React.FC<SpendingBreakdownProps> = ({ className = "" })
     }));
   }
 
-  // Helper function to categorize transactions (matching the backend logic)
-  const categorizeTransaction = (transaction: any): string => {
-    const description = transaction.description.toLowerCase();
-    const merchantName = transaction.merchant_name?.toLowerCase() || '';
 
-    if (description.includes('tesco') || description.includes('sainsbury') || description.includes('asda') || merchantName.includes('tesco') || merchantName.includes('sainsbury')) {
-      return 'Groceries';
-    }
-    if (description.includes('shell') || description.includes('petrol') || description.includes('fuel') || merchantName.includes('shell')) {
-      return 'Transport';
-    }
-    if (description.includes('netflix') || description.includes('spotify') || description.includes('disney') || merchantName.includes('netflix') || merchantName.includes('spotify')) {
-      return 'Subscriptions';
-    }
-    if (description.includes('coffee') || description.includes('starbucks') || description.includes('costa') || merchantName.includes('starbucks') || merchantName.includes('costa')) {
-      return 'Dining';
-    }
-    if (description.includes('amazon') || merchantName.includes('amazon')) {
-      return 'Shopping';
-    }
-    if (description.includes('rent') || description.includes('council') || description.includes('gas') || description.includes('electric') || description.includes('internet')) {
-      return 'Bills';
-    }
-    if (description.includes('bus') || description.includes('tfl') || merchantName.includes('tfl')) {
-      return 'Transport';
-    }
-    
-    return 'Other';
-  };
 
   return (
     <Card className={`w-full ${className}`}>
