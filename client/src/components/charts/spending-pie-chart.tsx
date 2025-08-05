@@ -107,10 +107,10 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
     tooltip: {
       trigger: 'item',
       formatter: (params: any) => {
-        const dataIndex = params.dataIndex;
-        if (metaballData[dataIndex]) {
-          const amount = metaballData[dataIndex].value[3];
-          const label = metaballData[dataIndex].value[4];
+        const seriesIndex = params.seriesIndex;
+        if (metaballData[seriesIndex]) {
+          const amount = metaballData[seriesIndex].value[3];
+          const label = metaballData[seriesIndex].value[4];
           return `${label}<br/>£${amount.toFixed(2)}`;
         }
         return 'Transaction';
@@ -123,37 +123,38 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({ data, className = "
       }
     },
     animation: true,
-    animationDuration: 1200,
-    animationEasing: 'elasticOut',
-    series: metaballData.map((item, index) => {
-      const colors = [
-        '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
-        '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD',
-        '#FF7675', '#74B9FF', '#00B894', '#FDCB6E'
-      ];
-      return {
-        type: 'scatter',
-        coordinateSystem: 'cartesian2d',
-        data: [[item.value[0], item.value[1]]],
-        symbolSize: Math.max(item.value[2] * 3, 15),
-        symbol: 'circle',
-        itemStyle: {
-          color: colors[index % colors.length],
-          shadowBlur: 15,
-          shadowColor: 'rgba(255, 255, 255, 0.3)',
-          opacity: 0.9
-        },
-        emphasis: {
-          scale: true,
+    animationDuration: 800,
+    animationEasing: 'bounceOut',
+    series: [{
+      type: 'scatter',
+      coordinateSystem: 'cartesian2d',
+      data: metaballData.map((item, index) => {
+        const colors = [
+          '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
+          '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD',
+          '#FF7675', '#74B9FF', '#00B894', '#FDCB6E'
+        ];
+        return {
+          value: [item.value[0], item.value[1]],
+          symbolSize: Math.max(item.value[2] * 4, 20),
           itemStyle: {
-            shadowBlur: 25,
-            opacity: 1,
-            shadowColor: 'rgba(255, 255, 255, 0.5)'
+            color: colors[index % colors.length],
+            shadowBlur: 15,
+            shadowColor: 'rgba(255, 255, 255, 0.3)',
+            opacity: 0.9
           }
-        },
-        animationDelay: index * 100
-      };
-    }),
+        };
+      }),
+      emphasis: {
+        scale: true,
+        itemStyle: {
+          shadowBlur: 25,
+          opacity: 1,
+          shadowColor: 'rgba(255, 255, 255, 0.5)'
+        }
+      },
+      animationDelay: (dataIndex: number) => dataIndex * 100
+    }],
     xAxis: {
       type: 'value',
       show: false,
