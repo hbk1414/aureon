@@ -398,8 +398,8 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
       {/* Clean light background with subtle gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-100" />
 
-      {/* Glassmorphism overlay for depth */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-white/20 to-white/10 backdrop-blur-sm" />
+      {/* Clean overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-white/20 to-white/10" />
 
       {/* Light metaball overlay */}
       <AnimatePresence>
@@ -447,7 +447,7 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
         animate={{
           scale: showMetaballs ? 0.95 : 1,
           opacity: showMetaballs ? 0.3 : 1,
-          filter: showMetaballs ? "blur(8px)" : "blur(0px)",
+          filter: "blur(0px)",
         }}
         transition={{ duration: 0.8, ease: "easeInOut" }}
         className="relative z-20"
