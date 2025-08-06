@@ -228,7 +228,7 @@ function BudgetCardTrueLayer() {
         </div>
 
         {/* Interactive Spending Chart */}
-        <div className="mb-8">
+        {/* <div className="mb-8">
           <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-8 shadow-inner border border-gray-100">
             <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Interactive Spending Chart</h3>
             <SpendingPieChart 
@@ -254,7 +254,7 @@ function BudgetCardTrueLayer() {
               })}
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Category Breakdown with Expandable Transaction Details */}
         <div>
