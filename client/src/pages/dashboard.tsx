@@ -359,8 +359,8 @@ export default function Dashboard() {
                 <SpendingOverview 
                   spending={dashboardData.spending}
                 />*/}
-
-               
+              </div>
+            </motion.section>
 
             {/* Savings & Investments Section */}
             <motion.section

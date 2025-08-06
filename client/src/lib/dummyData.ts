@@ -76,6 +76,13 @@ export const dummyCouple = {
 
 export const dummyPortfolio = {
   totalBalance: 20000,
+  totalGrowth: 1250.50,
+  growthPercentage: 6.65,
+  monthlyChange: 275.25,
+  accounts: [
+    { id: 1, name: "Investment ISA", balance: 12000, type: "Investment" },
+    { id: 2, name: "Pension", balance: 8000, type: "Pension" }
+  ]
 };
 
 export const dummyBudgets = [

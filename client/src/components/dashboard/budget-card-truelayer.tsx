@@ -53,6 +53,13 @@ function BudgetCardTrueLayer() {
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
+  // Helper function to get color for category by name
+  const getCategoryColor = (categoryName: string): string => {
+    if (!trueLayerData) return COLORS[0];
+    const index = trueLayerData.spendingCategories.findIndex(cat => cat.name === categoryName);
+    return COLORS[index % COLORS.length];
+  };
+
   const chartData = useMemo(() => {
     if (!trueLayerData) return [];
     
@@ -248,7 +255,7 @@ function BudgetCardTrueLayer() {
                 return {
                   name: cat.name,
                   value: cat.amount,
-                  color: cat.color || '#6366f1',
+                  color: getCategoryColor(cat.name),
                   transactions: categoryTransactions
                 };
               })}
