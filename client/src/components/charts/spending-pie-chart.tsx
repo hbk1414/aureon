@@ -507,15 +507,15 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
                       boxShadow: "none",
                       filter: "brightness(1.2)",
                     }}
-                    className="absolute rounded-full flex items-center justify-center cursor-pointer group transition-all duration-300"
+                    className="absolute rounded-full flex items-center justify-center cursor-pointer group"
                     style={{
                       left: `${x}%`,
                       top: `${y}%`,
                       width: `${size}px`,
                       height: `${size}px`,
                       transform: "translate(-50%, -50%)",
-                      background: `linear-gradient(135deg, ${bubbleColor} 0%, ${bubbleColor}CC 100%)`,
-                      border: `3px solid rgba(255, 255, 255, 0.4)`,
+                      background: bubbleColor,
+                      border: `3px solid white`,
                       boxShadow: "none",
                     }}
                   >
@@ -552,7 +552,7 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
           transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
           className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30"
         >
-          <div className="w-20 h-20 bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer group">
+          <div className="w-20 h-20 bg-white/80 border border-gray-200/60 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer group">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
               <Circle className="w-5 h-5 text-white" fill="currentColor" />
             </div>
