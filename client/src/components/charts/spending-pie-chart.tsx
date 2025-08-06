@@ -504,7 +504,7 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
                     }}
                     whileHover={{
                       scale: 1.15,
-                      boxShadow: `0 25px 50px ${bubbleColor}40`,
+                      boxShadow: "none",
                       filter: "brightness(1.2)",
                     }}
                     className="absolute rounded-full flex items-center justify-center cursor-pointer group transition-all duration-300"
@@ -516,14 +516,14 @@ const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
                       transform: "translate(-50%, -50%)",
                       background: `linear-gradient(135deg, ${bubbleColor} 0%, ${bubbleColor}CC 100%)`,
                       border: `3px solid rgba(255, 255, 255, 0.4)`,
-                      boxShadow: `0 15px 35px ${bubbleColor}30, 0 5px 15px rgba(0, 0, 0, 0.12)`,
+                      boxShadow: "none",
                     }}
                   >
                     <div className="text-center px-3">
-                      <div className="text-white text-sm font-bold leading-tight mb-1 drop-shadow-lg">
+                      <div className="text-white text-sm font-bold leading-tight mb-1">
                         {labelText}
                       </div>
-                      <div className="text-white/90 text-xs font-semibold drop-shadow-md">
+                      <div className="text-white/90 text-xs font-semibold">
                         £{transaction.amount.toFixed(0)}
                       </div>
                     </div>
